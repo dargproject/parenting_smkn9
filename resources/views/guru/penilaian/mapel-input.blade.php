@@ -1,7 +1,7 @@
 <div id="pane-guru-mapel-penilaian" class="pane-content hidden-pane fade-transition space-y-6">
     <div>
         <h4 class="font-bold text-slate-100 mb-1 text-xl">Input Nilai Sumatif</h4>
-        <p class="text-slate-400 text-sm">Input nilai Sumatif Lingkup Materi (LM), Sumatif Akhir Semester (SAS), catatan capaian kompetensi, dan nilai PKL/UKK untuk mapel yang Anda ampu.</p>
+        <p class="text-slate-400 text-sm">Pilih kelas dan mata pelajaran yang Anda ampu, lalu input nilai Sumatif Lingkup Materi. Nilai SAS dihitung otomatis dari rata-rata.</p>
     </div>
 
     @if(!$tahunAjaranAktif)
@@ -13,6 +13,20 @@
             $jadwalBinaan = $jadwalPelajarans->where('guru_id', $guru->id)->unique(fn ($j) => $j->mata_pelajaran_id.'-'.$j->kelas_id);
         @endphp
 
+        <div x-data="{ sel: (() => { try { return localStorage.getItem('gmSel') } catch (e) { return null } })() || null, pilih(k) { this.sel = k; try { k ? localStorage.setItem('gmSel', k) : localStorage.removeItem('gmSel') } catch (e) {} } }" class="space-y-6">
+
+        <div x-show="!sel" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            @foreach($jadwalBinaan as $j)
+                @continue(!$j->mataPelajaran || !$j->kelas)
+                <button type="button" @click="pilih('{{ $j->mata_pelajaran_id }}-{{ $j->kelas_id }}')" class="text-left rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5 hover:border-blue-500 transition">
+                    <div class="text-xs text-slate-400 mb-1">{{ $j->mataPelajaran->kategori }}</div>
+                    <div class="text-base font-bold text-slate-100">{{ $j->mataPelajaran->nama_mapel }}</div>
+                    <div class="text-sm text-slate-300 mt-1"><i class="fa-solid fa-users mr-1"></i> {{ $j->kelas->nama_kelas }} &middot; {{ $siswas->where('kelas_id', $j->kelas_id)->count() }} siswa</div>
+                    <div class="text-xs text-blue-400 mt-3 font-semibold">Input nilai &rarr;</div>
+                </button>
+            @endforeach
+        </div>
+
         @forelse($jadwalBinaan as $jadwal)
             @php
                 $mapel = $jadwal->mataPelajaran;
@@ -22,8 +36,11 @@
             @endphp
             @continue(!$mapel || !$kelas)
 
-            <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5 md:p-6 space-y-5">
-                <h5 class="text-lg font-bold text-slate-100">{{ $mapel->nama_mapel }} &middot; {{ $kelas->nama_kelas }}</h5>
+            <div x-show="sel === '{{ $mapel->id }}-{{ $kelas->id }}'" style="display:none" class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5 md:p-6 space-y-5">
+                <div class="flex items-center justify-between gap-3">
+                    <h5 class="text-lg font-bold text-slate-100">{{ $mapel->nama_mapel }} &middot; {{ $kelas->nama_kelas }}</h5>
+                    <button type="button" @click="pilih(null)" class="rounded-lg border border-slate-600 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:border-blue-500"><i class="fa-solid fa-arrow-left mr-1"></i> Ganti Kelas/Mapel</button>
+                </div>
 
                 {{-- Kelola Tujuan Pembelajaran --}}
                 <div class="rounded-xl border border-slate-700/60 bg-slate-900 p-4">
@@ -66,11 +83,16 @@
                                     @foreach($tpMapel as $tp)
                                         <th class="px-3 py-2 text-center">{{ $tp->kode ?: 'TP'.$loop->iteration }}</th>
                                     @endforeach
+                                    <th class="px-3 py-2 text-center">Nilai SAS (Rata-rata)</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-700/60">
                                 @foreach($siswaKelas as $siswa)
-                                    <tr>
+                                    @php
+                                        $nilaiRow = $tpMapel->map(fn ($tp) => $nilaiLmBinaan[$siswa->id.'-'.$tp->id]->nilai ?? null)->filter(fn ($v) => $v !== null);
+                                        $avgAwal = $nilaiRow->isNotEmpty() ? round($nilaiRow->avg()) : '-';
+                                    @endphp
+                                    <tr x-data="{ avg: @js($avgAwal), hitung() { const a = [...this.$el.querySelectorAll('input[type=number]')].map(i => i.value).filter(v => v !== '').map(Number); this.avg = a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : '-' } }" @input="hitung()">
                                         <td class="px-3 py-2 font-semibold text-slate-100">{{ $siswa->nama }}</td>
                                         @foreach($tpMapel as $tp)
                                             @php $nl = $nilaiLmBinaan[$siswa->id.'-'.$tp->id] ?? null; @endphp
@@ -78,6 +100,7 @@
                                                 <input type="number" min="0" max="100" name="nilai[{{ $siswa->id }}][{{ $tp->id }}]" value="{{ $nl->nilai ?? '' }}" class="w-16 rounded-lg border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-slate-100 text-center">
                                             </td>
                                         @endforeach
+                                        <td class="px-3 py-2 text-center font-bold text-slate-100" x-text="avg"></td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -88,34 +111,6 @@
                     </div>
                 </form>
                 @endif
-
-                {{-- Nilai SAS --}}
-                <form method="POST" action="{{ route('guru.penilaian.nilai-sas.store') }}">
-                    @csrf
-                    <input type="hidden" name="mata_pelajaran_id" value="{{ $mapel->id }}">
-                    <h6 class="font-bold text-slate-100 mb-2 text-sm">Nilai Sumatif Akhir Semester (opsional)</h6>
-                    <div class="overflow-x-auto rounded-xl border border-slate-700/60">
-                        <table class="w-full min-w-[400px] text-left text-sm">
-                            <thead class="bg-slate-900 border-b border-slate-700/60 text-xs text-slate-400">
-                                <tr><th class="px-3 py-2">Nama Siswa</th><th class="px-3 py-2 text-center">Nilai SAS</th></tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-700/60">
-                                @foreach($siswaKelas as $siswa)
-                                    @php $sas = $nilaiSasBinaan[$siswa->id.'-'.$mapel->id] ?? null; @endphp
-                                    <tr>
-                                        <td class="px-3 py-2 font-semibold text-slate-100">{{ $siswa->nama }}</td>
-                                        <td class="px-3 py-2 text-center">
-                                            <input type="number" min="0" max="100" name="nilai_sas[{{ $siswa->id }}]" value="{{ $sas->nilai ?? '' }}" class="w-20 rounded-lg border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-slate-100 text-center">
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="flex justify-end mt-2">
-                        <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500">Simpan Nilai SAS</button>
-                    </div>
-                </form>
 
                 {{-- Catatan Capaian Kompetensi --}}
                 {{-- <form method="POST" action="{{ route('guru.penilaian.catatan-kompetensi.store') }}">
@@ -179,5 +174,6 @@
         @empty
             <p class="text-slate-400 text-sm">Belum ada jadwal mengajar tercatat untuk Anda.</p>
         @endforelse
+        </div>
     @endif
 </div>

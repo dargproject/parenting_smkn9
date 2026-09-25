@@ -86,9 +86,22 @@ class PenilaianController extends Controller
                     );
                 }
             }
+
+            $tpIds = TujuanPembelajaran::where('mata_pelajaran_id', $data['mata_pelajaran_id'])->pluck('id');
+            foreach (array_keys($data['nilai']) as $siswaId) {
+                $rata = NilaiLm::where('siswa_id', $siswaId)->whereIn('tujuan_pembelajaran_id', $tpIds)->avg('nilai');
+                if ($rata === null) {
+                    continue;
+                }
+
+                NilaiSas::updateOrCreate(
+                    ['siswa_id' => $siswaId, 'mata_pelajaran_id' => $data['mata_pelajaran_id'], 'tahun_ajaran_id' => $tahunAjaranId],
+                    ['nilai' => (int) round($rata), 'guru_id' => Auth::id()]
+                );
+            }
         });
 
-        return redirect()->route('guru.portal')->with('success', 'Nilai Sumatif Lingkup Materi berhasil disimpan.');
+        return redirect()->route('guru.portal')->with('success', 'Nilai Sumatif Lingkup Materi berhasil disimpan; nilai SAS dihitung otomatis dari rata-rata.');
     }
 
     public function storeNilaiSas(Request $request)

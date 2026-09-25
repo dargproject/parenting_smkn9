@@ -12,6 +12,7 @@
     <!-- ========================================== -->
     @include('kurikulum.legger')
     @include('kurikulum.struktur')
+    @include('kurikulum.wali')
     @include('kurikulum.rapor')
 @endif
 
