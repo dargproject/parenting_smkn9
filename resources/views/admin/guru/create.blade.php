@@ -1,0 +1,2 @@
+@extends('layouts.app')
+@section('content')<div class="admin-dashboard mx-auto max-w-4xl space-y-6"><div><h1 class="text-2xl font-bold">Tambah Guru & Staf</h1><p class="text-sm text-slate-500 dark:text-slate-400">Buat akun dan tentukan multi-role.</p></div>@include('admin.partials.flash')<form method="POST" action="{{ route('admin.guru.store') }}" class="rounded-xl border bg-white p-5 dark:border-slate-700 dark:bg-slate-800/80 md:p-6">@include('admin.guru._form')</form></div>@endsection

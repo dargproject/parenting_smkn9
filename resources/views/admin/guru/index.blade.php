@@ -1,0 +1,1 @@
+@include('admin.partials.crud-index', ['title'=>'Guru & Staf','description'=>'Kelola pengguna guru dan multi-role.','resource'=>'admin.guru','createRoute'=>route('admin.guru.create'),'items'=>$gurus,'columns'=>[['label'=>'Nama','key'=>'nama'],['label'=>'NIP','key'=>'nip'],['label'=>'Email','key'=>'email'],['label'=>'Role','key'=>'roles.*.name']]])

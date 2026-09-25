@@ -1,0 +1,1 @@
+@include('admin.partials.crud-index', ['title'=>'Master Kelas','description'=>'Kelola rombel dan wali kelas.','resource'=>'admin.kelas','createRoute'=>route('admin.kelas.create'),'items'=>$kelases,'columns'=>[['label'=>'Kelas','key'=>'nama_kelas'],['label'=>'Tingkat','key'=>'tingkat'],['label'=>'Jurusan','key'=>'jurusan'],['label'=>'Wali Kelas','key'=>'waliKelas.nama']]])

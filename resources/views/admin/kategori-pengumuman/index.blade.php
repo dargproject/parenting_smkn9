@@ -1,0 +1,1 @@
+@include('admin.partials.crud-index', ['title'=>'Kategori Pengumuman','description'=>'Kelola kategori pengumuman sekolah.','resource'=>'admin.kategori-pengumuman','createRoute'=>route('admin.kategori-pengumuman.create'),'items'=>$items,'columns'=>[['label'=>'Nama','key'=>'nama'],['label'=>'Slug','key'=>'slug']]])

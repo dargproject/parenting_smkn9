@@ -1,0 +1,59 @@
+<div id="pane-guru-wali-nilai-matrix" class="pane-content hidden-pane fade-transition space-y-6">
+    <div>
+        <h4 class="font-bold text-slate-100 mb-1 text-xl">Rekap Nilai Rombel</h4>
+        <p class="text-slate-400 text-sm">Matrix nilai akhir seluruh siswa &times; mata pelajaran untuk kelas binaan Anda, beserta status progres input tiap guru mapel.</p>
+    </div>
+
+    @forelse($matrixPerKelas as $kelasData)
+        @php $kelas = $kelasData['kelas']; @endphp
+        <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5 md:p-6 space-y-4">
+            <h5 class="text-lg font-bold text-slate-100">{{ $kelas->nama_kelas }}</h5>
+
+            @if($kelasData['mapel']->isEmpty())
+                <p class="text-slate-400 text-sm">Belum ada jadwal mata pelajaran untuk kelas ini pada tahun ajaran berjalan.</p>
+            @else
+                <div class="flex flex-wrap gap-2">
+                    @foreach($kelasData['mapel'] as $mp)
+                        @php $lengkap = $mp['total'] > 0 && $mp['submitted'] >= $mp['total']; @endphp
+                        <span class="rounded-full px-3 py-1 text-xs font-semibold {{ $lengkap ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400' }}">
+                            {{ $mp['mapel']->nama_mapel }}: {{ $mp['submitted'] }}/{{ $mp['total'] }} siswa dinilai
+                        </span>
+                    @endforeach
+                </div>
+
+                <div class="overflow-x-auto rounded-xl border border-slate-700/60">
+                    <table class="w-full min-w-[640px] text-left text-sm">
+                        <thead class="bg-slate-900 border-b border-slate-700/60 text-xs text-slate-400">
+                            <tr>
+                                <th class="px-3 py-2">Nama Siswa</th>
+                                @foreach($kelasData['mapel'] as $mp)
+                                    <th class="px-3 py-2 text-center">{{ $mp['mapel']->nama_mapel }}</th>
+                                @endforeach
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-700/60">
+                            @foreach($kelasData['rows'] as $row)
+                                <tr>
+                                    <td class="px-3 py-2 font-semibold text-slate-100">{{ $row['siswa']->nama }}</td>
+                                    @foreach($kelasData['mapel'] as $mp)
+                                        @php $cell = $row['nilai'][$mp['mapel']->id] ?? ['na' => null, 'status' => 'belum ada nilai']; @endphp
+                                        <td class="px-3 py-2 text-center">
+                                            @if($cell['na'] !== null)
+                                                <span class="font-bold text-blue-400">{{ $cell['na'] }}</span>
+                                                <span class="block text-xs {{ $cell['status'] === 'tuntas' ? 'text-emerald-400' : 'text-rose-400' }}">{{ ucfirst($cell['status']) }}</span>
+                                            @else
+                                                <span class="text-slate-500 text-xs">-</span>
+                                            @endif
+                                        </td>
+                                    @endforeach
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+    @empty
+        <p class="text-slate-400 text-sm">Anda belum menjadi guru wali (akademik) untuk kelas manapun.</p>
+    @endforelse
+</div>

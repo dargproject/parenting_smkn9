@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php artisan *)",
+      "Read(//c/Users/p/AppData/Local/Temp/claude/c--xampp-htdocs-SIKNINE/b7e612e9-4ba1-4f5d-a6f4-b03869ffec71/scratchpad/pw/**)",
+      "Bash(node penilaian-e2e.js)",
+      "Bash(php -l app/Http/Requests/UpdateSettingRequest.php)"
+    ]
+  }
+}

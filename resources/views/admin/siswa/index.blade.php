@@ -1,0 +1,1 @@
+@include('admin.partials.crud-index', ['title'=>'Siswa','description'=>'Kelola data peserta didik.','resource'=>'admin.siswa','createRoute'=>route('admin.siswa.create'),'items'=>$siswas,'columns'=>[['label'=>'Nama','key'=>'nama'],['label'=>'NIS','key'=>'nis'],['label'=>'NISN','key'=>'nisn'],['label'=>'Kelas','key'=>'kelas.nama_kelas'],['label'=>'Status','key'=>'status_aktif']]])

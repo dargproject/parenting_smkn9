@@ -1,0 +1,4 @@
+@extends('layouts.app')
+@section('content')
+<div class="admin-dashboard mx-auto max-w-3xl space-y-6"><div><h1 class="text-2xl font-bold">Import Data</h1><p class="text-sm text-slate-500 dark:text-slate-400">Unggah file Excel dengan header kolom sesuai data.</p></div>@include('admin.partials.flash')<div class="grid gap-6 md:grid-cols-2">@foreach([['label'=>'Import Siswa','route'=>'admin.import.siswa'],['label'=>'Import Guru','route'=>'admin.import.guru']] as $form)<form method="POST" action="{{ route($form['route']) }}" enctype="multipart/form-data" class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800/80">@csrf<h2 class="font-bold">{{ $form['label'] }}</h2><input type="file" name="file" accept=".xlsx,.xls,.csv" required class="mt-4 w-full text-sm"><button class="mt-4 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white">Upload & Import</button></form>@endforeach</div></div>
+@endsection
