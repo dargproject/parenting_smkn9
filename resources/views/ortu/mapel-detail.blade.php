@@ -12,7 +12,7 @@
             </div>
             <div class="text-right">
                 <span class="block text-3xl font-bold text-blue-600 dark:text-blue-400">{{ $na ?? '-' }}</span>
-                <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $status === 'tuntas' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : ($status === 'remedial' ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400') }}">{{ ucfirst($status) }}</span>
+                <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $status === 'tuntas' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : ($status === 'remedial' ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400') }}">{{ $status === 'remedial' ? 'Belum Tuntas' : ucfirst($status) }}</span>
             </div>
         </div>
     </div>
