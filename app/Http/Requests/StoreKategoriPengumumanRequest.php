@@ -23,6 +23,7 @@ class StoreKategoriPengumumanRequest extends FormRequest
     public function rules(): array
     {
         $id = $this->route('kategoriPengumuman')?->id;
-        return ['nama'=>'required|string|max:255','slug'=>'required|string|max:255|unique:kategori_pengumumans,slug,'.$id];
+
+        return ['nama' => 'required|string|max:255', 'slug' => 'required|string|max:255|unique:kategori_pengumumans,slug,'.$id];
     }
 }

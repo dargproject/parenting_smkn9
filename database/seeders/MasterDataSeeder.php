@@ -2,23 +2,22 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
-use App\Models\MataPelajaran;
-use App\Models\JadwalPelajaran;
-use App\Models\Presensi;
-use App\Models\Pelanggaran;
-use App\Models\KasusBk;
-use App\Models\PanggilanOrtu;
-use App\Models\Pengumuman;
-use App\Models\JurnalMengajar;
 use App\Models\Guru;
-use App\Models\Kelas;
-use App\Models\Siswa;
-use App\Models\MasterPelanggaran;
-use App\Models\Pasal;
+use App\Models\JadwalPelajaran;
 use App\Models\JenisPelanggaran;
+use App\Models\JurnalMengajar;
+use App\Models\KasusBk;
+use App\Models\Kelas;
+use App\Models\MasterPelanggaran;
+use App\Models\MataPelajaran;
+use App\Models\PanggilanOrtu;
+use App\Models\Pasal;
+use App\Models\Pelanggaran;
+use App\Models\Pengumuman;
+use App\Models\Presensi;
+use App\Models\Siswa;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 
 class MasterDataSeeder extends Seeder
 {
@@ -74,8 +73,12 @@ class MasterDataSeeder extends Seeder
         // 4. Presensi
         foreach ($siswas as $siswa) {
             $status = 'H';
-            if ($siswa->nis == '1004') $status = 'S';
-            if ($siswa->nis == '1005') $status = 'A';
+            if ($siswa->nis == '1004') {
+                $status = 'S';
+            }
+            if ($siswa->nis == '1005') {
+                $status = 'A';
+            }
 
             Presensi::create([
                 'siswa_id' => $siswa->id,

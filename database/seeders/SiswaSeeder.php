@@ -2,12 +2,11 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
-use App\Models\Siswa;
 use App\Models\Kelas;
-use Illuminate\Support\Facades\Hash;
+use App\Models\Siswa;
 use Faker\Factory as Faker;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class SiswaSeeder extends Seeder
 {
@@ -29,7 +28,7 @@ class SiswaSeeder extends Seeder
             if ($kelas->nama_kelas === 'XI TKJ 1') {
                 // Data spesifik untuk XI TKJ 1 agar sesuai dengan mockup
                 Siswa::create([
-                    'nis' => (string)$nisCounter++,
+                    'nis' => (string) $nisCounter++,
                     'nama' => 'Andi Susanto',
                     'kelas_id' => $kelas->id,
                     'password' => Hash::make('password'),
@@ -43,7 +42,7 @@ class SiswaSeeder extends Seeder
                 ]);
 
                 Siswa::create([
-                    'nis' => (string)$nisCounter++,
+                    'nis' => (string) $nisCounter++,
                     'nama' => 'Bunga Citra',
                     'kelas_id' => $kelas->id,
                     'password' => Hash::make('password'),
@@ -57,7 +56,7 @@ class SiswaSeeder extends Seeder
                 ]);
 
                 Siswa::create([
-                    'nis' => (string)$nisCounter++,
+                    'nis' => (string) $nisCounter++,
                     'nama' => 'Caca Marica',
                     'kelas_id' => $kelas->id,
                     'password' => Hash::make('password'),
@@ -71,7 +70,7 @@ class SiswaSeeder extends Seeder
                 ]);
 
                 Siswa::create([
-                    'nis' => (string)$nisCounter++,
+                    'nis' => (string) $nisCounter++,
                     'nama' => 'Dodi Hermawan',
                     'kelas_id' => $kelas->id,
                     'password' => Hash::make('password'),
@@ -85,7 +84,7 @@ class SiswaSeeder extends Seeder
                 ]);
 
                 Siswa::create([
-                    'nis' => (string)$nisCounter++,
+                    'nis' => (string) $nisCounter++,
                     'nama' => 'Eko Saputro',
                     'kelas_id' => $kelas->id,
                     'password' => Hash::make('password'),
@@ -101,7 +100,7 @@ class SiswaSeeder extends Seeder
                 // Generate 5 random students for other classes
                 for ($i = 0; $i < 5; $i++) {
                     Siswa::create([
-                        'nis' => (string)$nisCounter++,
+                        'nis' => (string) $nisCounter++,
                         'nama' => $faker->name,
                         'kelas_id' => $kelas->id,
                         'password' => Hash::make('password'),
@@ -122,7 +121,7 @@ class SiswaSeeder extends Seeder
         if ($xiRpl2) {
             foreach ($this->siswaXiRpl2() as $data) {
                 Siswa::create($data + [
-                    'nis' => (string)$nisCounter++,
+                    'nis' => (string) $nisCounter++,
                     'kelas_id' => $xiRpl2->id,
                     'password' => Hash::make('password'),
                 ]);

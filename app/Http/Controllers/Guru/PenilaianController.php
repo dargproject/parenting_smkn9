@@ -4,12 +4,13 @@ namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
 use App\Models\CatatanKompetensi;
+use App\Models\CatatanWaliKelas;
+use App\Models\Kelas;
 use App\Models\MataPelajaran;
 use App\Models\NilaiLm;
 use App\Models\NilaiPklUkk;
 use App\Models\NilaiSas;
 use App\Models\RaporFinal;
-use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use App\Models\TujuanPembelajaran;
 use App\Services\PenilaianService;
@@ -197,7 +198,7 @@ class PenilaianController extends Controller
     public function storeCatatanWaliKelas(Request $request)
     {
         $guru = Auth::user();
-        $siswaWaliIds = \App\Models\Kelas::where('wali_kelas_id', $guru->id)->with('siswas:id,kelas_id')->get()->flatMap->siswas->pluck('id');
+        $siswaWaliIds = Kelas::where('wali_kelas_id', $guru->id)->with('siswas:id,kelas_id')->get()->flatMap->siswas->pluck('id');
 
         $data = $request->validate([
             'catatan' => 'required|array',
@@ -234,7 +235,7 @@ class PenilaianController extends Controller
     public function rilisRapor(Request $request, PenilaianService $penilaian)
     {
         $guru = Auth::user();
-        $siswaBinaan = \App\Models\Kelas::where('guru_wali_id', $guru->id)->with('siswas')->get()->flatMap->siswas;
+        $siswaBinaan = Kelas::where('guru_wali_id', $guru->id)->with('siswas')->get()->flatMap->siswas;
 
         $data = $request->validate([
             'siswa_ids' => 'required|array',
@@ -248,6 +249,7 @@ class PenilaianController extends Controller
             $siswa = $siswaBinaan->firstWhere('id', (int) $siswaId);
             if (! $siswa || ! $penilaian->siswaLengkap($siswa, $tahunAjaranId)) {
                 $belumLengkap[] = $siswa->nama ?? $siswaId;
+
                 continue;
             }
 
@@ -267,7 +269,7 @@ class PenilaianController extends Controller
     public function batalkanRilis(Request $request)
     {
         $guru = Auth::user();
-        $siswaBinaan = \App\Models\Kelas::where('guru_wali_id', $guru->id)->with('siswas:id,kelas_id')->get()->flatMap->siswas->pluck('id');
+        $siswaBinaan = Kelas::where('guru_wali_id', $guru->id)->with('siswas:id,kelas_id')->get()->flatMap->siswas->pluck('id');
 
         $data = $request->validate([
             'siswa_id' => 'required|in:'.$siswaBinaan->implode(','),

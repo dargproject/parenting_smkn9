@@ -2,10 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\Setting;
 use App\Models\TahunAjaran;
+use Illuminate\Database\Seeder;
 
 class SettingSeeder extends Seeder
 {

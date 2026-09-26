@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
-use App\Models\Guru;
 
 class AuthController extends Controller
 {
@@ -17,14 +17,14 @@ class AuthController extends Controller
     {
         $request->validate([
             'nip' => 'required|string',
-            'password' => 'required|string'
+            'password' => 'required|string',
         ]);
 
         // Bersihkan session sebelumnya
         Session::flush();
 
-        if (\Illuminate\Support\Facades\Auth::attempt(['nip' => $request->nip, 'password' => $request->password])) {
-            $user = \Illuminate\Support\Facades\Auth::user();
+        if (Auth::attempt(['nip' => $request->nip, 'password' => $request->password])) {
+            $user = Auth::user();
 
             // Muat relasi roles
             $roles = $user->roles->pluck('name')->toArray();
@@ -51,9 +51,10 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        \Illuminate\Support\Facades\Auth::logout();
+        Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect()->route('login');
     }
 }

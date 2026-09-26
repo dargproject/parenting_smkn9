@@ -18,7 +18,6 @@ class TahunAjaran extends Model
         return $this->hasMany(JadwalPelajaran::class);
     }
 
-
     public function presensis()
     {
         return $this->hasMany(Presensi::class);

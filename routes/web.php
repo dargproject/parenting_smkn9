@@ -1,24 +1,25 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\KepsekController;
-use App\Http\Controllers\Guru\PortalController;
-use App\Http\Controllers\Guru\PenilaianController;
-use App\Http\Controllers\Guru\KurikulumController;
 use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\SettingController;
-use App\Http\Controllers\Admin\TahunAjaranController;
 use App\Http\Controllers\Admin\GuruController;
-use App\Http\Controllers\Admin\SiswaController;
+use App\Http\Controllers\Admin\ImportController;
+use App\Http\Controllers\Admin\KategoriPengumumanController;
 use App\Http\Controllers\Admin\KelasController;
+use App\Http\Controllers\Admin\MasterPelanggaranController;
 use App\Http\Controllers\Admin\MataPelajaranController;
 use App\Http\Controllers\Admin\RombelController;
-use App\Http\Controllers\Admin\MasterPelanggaranController;
-use App\Http\Controllers\Admin\KategoriPengumumanController;
-use App\Http\Controllers\Admin\ImportController;
-use App\Http\Controllers\OrangTuaAuthController;
+use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\SiswaController;
+use App\Http\Controllers\Admin\TahunAjaranController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Guru\KurikulumController;
+use App\Http\Controllers\Guru\PenilaianController;
+use App\Http\Controllers\Guru\PortalController;
+use App\Http\Controllers\KepsekController;
 use App\Http\Controllers\OrangTua\DashboardController as OrangTuaDashboardController;
+use App\Http\Controllers\OrangTuaAuthController;
+use App\Http\Controllers\ProfilController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -29,8 +30,8 @@ Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware('auth')->prefix('profil')->name('profil.')->group(function () {
-    Route::put('/', [\App\Http\Controllers\ProfilController::class, 'update'])->name('update');
-    Route::put('/password', [\App\Http\Controllers\ProfilController::class, 'updatePassword'])->name('password');
+    Route::put('/', [ProfilController::class, 'update'])->name('update');
+    Route::put('/password', [ProfilController::class, 'updatePassword'])->name('password');
 });
 
 Route::middleware('role:kepsek')->prefix('kepsek')->name('kepsek.')->group(function () {

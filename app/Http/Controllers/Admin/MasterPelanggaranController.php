@@ -29,6 +29,7 @@ class MasterPelanggaranController extends Controller
     public function store(StoreMasterPelanggaranRequest $request)
     {
         MasterPelanggaran::create($request->validated() + ['is_active' => $request->boolean('is_active')]);
+
         return redirect()->route('admin.master-pelanggaran.index')->with('success', 'Jenis pelanggaran berhasil ditambahkan.');
     }
 
@@ -44,12 +45,14 @@ class MasterPelanggaranController extends Controller
     public function update(StoreMasterPelanggaranRequest $request, MasterPelanggaran $masterPelanggaran)
     {
         $masterPelanggaran->update($request->validated() + ['is_active' => $request->boolean('is_active')]);
+
         return redirect()->route('admin.master-pelanggaran.index')->with('success', 'Jenis pelanggaran berhasil diperbarui.');
     }
 
     public function destroy(MasterPelanggaran $masterPelanggaran)
     {
         $masterPelanggaran->delete();
+
         return back()->with('success', 'Jenis pelanggaran berhasil dihapus.');
     }
 }
