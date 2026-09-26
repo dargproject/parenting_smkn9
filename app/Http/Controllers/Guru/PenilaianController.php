@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
 use App\Models\CatatanKompetensi;
-use App\Models\CatatanWaliKelas;
 use App\Models\MataPelajaran;
 use App\Models\NilaiLm;
 use App\Models\NilaiPklUkk;
@@ -198,28 +197,36 @@ class PenilaianController extends Controller
     public function storeCatatanWaliKelas(Request $request)
     {
         $guru = Auth::user();
-        $siswaBinaanIds = \App\Models\Kelas::where('guru_wali_id', $guru->id)->with('siswas:id,kelas_id')->get()->flatMap->siswas->pluck('id');
+        $siswaWaliIds = \App\Models\Kelas::where('wali_kelas_id', $guru->id)->with('siswas:id,kelas_id')->get()->flatMap->siswas->pluck('id');
 
         $data = $request->validate([
-            'siswa_id' => 'required|in:'.$siswaBinaanIds->implode(','),
-            'catatan_karakter' => 'nullable|string',
-            'sakit' => 'nullable|integer|min:0',
-            'izin' => 'nullable|integer|min:0',
-            'tanpa_keterangan' => 'nullable|integer|min:0',
-            'catatan_ekskul' => 'nullable|string',
+            'catatan' => 'required|array',
+            'catatan.*.catatan_karakter' => 'nullable|string|max:2000',
+            'catatan.*.sakit' => 'nullable|integer|min:0|max:365',
+            'catatan.*.izin' => 'nullable|integer|min:0|max:365',
+            'catatan.*.tanpa_keterangan' => 'nullable|integer|min:0|max:365',
         ]);
 
-        CatatanWaliKelas::updateOrCreate(
-            ['siswa_id' => $data['siswa_id'], 'tahun_ajaran_id' => $this->tahunAjaranAktifId()],
-            [
-                'catatan_karakter' => $data['catatan_karakter'] ?? null,
-                'sakit' => $data['sakit'] ?? 0,
-                'izin' => $data['izin'] ?? 0,
-                'tanpa_keterangan' => $data['tanpa_keterangan'] ?? 0,
-                'catatan_ekskul' => $data['catatan_ekskul'] ?? null,
-                'guru_id' => $guru->id,
-            ]
-        );
+        $tahunAjaranId = $this->tahunAjaranAktifId();
+
+        DB::transaction(function () use ($data, $siswaWaliIds, $tahunAjaranId, $guru) {
+            foreach ($data['catatan'] as $siswaId => $row) {
+                if (! $siswaWaliIds->contains((int) $siswaId)) {
+                    continue;
+                }
+
+                \App\Models\CatatanWaliKelas::updateOrCreate(
+                    ['siswa_id' => $siswaId, 'tahun_ajaran_id' => $tahunAjaranId],
+                    [
+                        'catatan_karakter' => $row['catatan_karakter'] ?? null,
+                        'sakit' => $row['sakit'] ?? 0,
+                        'izin' => $row['izin'] ?? 0,
+                        'tanpa_keterangan' => $row['tanpa_keterangan'] ?? 0,
+                        'guru_id' => $guru->id,
+                    ]
+                );
+            }
+        });
 
         return redirect()->route('guru.portal')->with('success', 'Catatan wali kelas berhasil disimpan.');
     }

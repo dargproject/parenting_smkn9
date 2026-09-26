@@ -20,7 +20,6 @@ use App\Models\NilaiLm;
 use App\Models\NilaiSas;
 use App\Models\NilaiPklUkk;
 use App\Models\CatatanKompetensi;
-use App\Models\CatatanWaliKelas;
 use App\Models\RaporFinal;
 use App\Services\PenilaianService;
 
@@ -156,8 +155,9 @@ class PortalController extends Controller
             return ['kelas' => $kelas, 'mapel' => $mapelProgres, 'rows' => $rows];
         });
 
-        $catatanWaliKelasBinaan = $tahunAjaranAktif
-            ? CatatanWaliKelas::whereIn('siswa_id', $siswaBinaan->pluck('id'))->where('tahun_ajaran_id', $tahunAjaranAktifId)->get()->keyBy('siswa_id')
+        $siswaWali = $siswas->whereIn('kelas_id', $kelasList->where('wali_kelas_id', $guru->id)->pluck('id'))->values();
+        $catatanWaliKelasWali = $tahunAjaranAktif
+            ? \App\Models\CatatanWaliKelas::whereIn('siswa_id', $siswaWali->pluck('id'))->where('tahun_ajaran_id', $tahunAjaranAktifId)->get()->keyBy('siswa_id')
             : collect();
         $raporFinalBinaan = $tahunAjaranAktif
             ? RaporFinal::whereIn('siswa_id', $siswaBinaan->pluck('id'))->where('tahun_ajaran_id', $tahunAjaranAktifId)->get()->keyBy('siswa_id')
@@ -173,7 +173,7 @@ class PortalController extends Controller
             'kelasBinaan', 'siswaBinaan', 'rerataBinaan', 'peringkatBinaan',
             'tahunAjaranAktif', 'mapelBinaan', 'tujuanPembelajarans',
             'nilaiLmBinaan', 'nilaiSasBinaan', 'catatanKompetensiBinaan', 'nilaiPklUkkBinaan',
-            'matrixPerKelas', 'catatanWaliKelasBinaan', 'raporFinalBinaan', 'siswaBinaanLengkap'
+            'matrixPerKelas', 'raporFinalBinaan', 'siswaWali', 'catatanWaliKelasWali', 'siswaBinaanLengkap'
         ));
     }
 

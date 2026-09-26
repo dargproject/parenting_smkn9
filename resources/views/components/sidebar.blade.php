@@ -73,7 +73,7 @@
             <div class="px-3 py-2 text-slate-400 small font-bold uppercase tracking-wider mt-2">Wali Kelas</div>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-wali-dashboard', this)"><i class="fa-solid fa-users w-6 text-center mr-2"></i> <span>Dashboard Kelas</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-wali-presensi', this)"><i class="fa-solid fa-calendar-check w-6 text-center mr-2"></i> <span>Rekap Presensi Mapel</span></a>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-wali-catatan', this)"><i class="fa-solid fa-pen-clip w-6 text-center mr-2"></i> <span>Catatan Rapor (Sikap)</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-wali-catatan', this)"><i class="fa-solid fa-pen-clip w-6 text-center mr-2"></i> <span>Catatan Wali Kelas</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-wali-chat', this)"><i class="fa-solid fa-comments w-6 text-center mr-2"></i> <span>Komunikasi Ortu</span></a>
         @endif
 
@@ -83,7 +83,6 @@
             {{-- <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-guru-wali-legger', this)"><i class="fa-solid fa-table-list w-6 text-center mr-2"></i> <span>Legger & Akademik</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-guru-wali-rapor', this)"><i class="fa-solid fa-file-pdf w-6 text-center mr-2"></i> <span>Cetak e-Rapor</span></a> --}}
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-guru-wali-nilai-matrix', this)"><i class="fa-solid fa-table-cells w-6 text-center mr-2"></i> <span>Rekap Nilai Rombel</span></a>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-guru-wali-catatan', this)"><i class="fa-solid fa-note-sticky w-6 text-center mr-2"></i> <span>Catatan Wali Kelas</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-guru-wali-rilis', this)"><i class="fa-solid fa-lock w-6 text-center mr-2"></i> <span>Finalisasi & Rilis Nilai</span></a>
         @endif
 

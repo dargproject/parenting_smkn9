@@ -47,7 +47,7 @@ class MasterDataSeeder extends Seeder
             'nama_mapel' => 'Pemrograman Web & Perangkat Bergerak',
             'kategori' => 'Kejuruan',
             'beban_jp' => 6,
-            'guru_id' => $ibuSiti->id,
+            'guru_id' => $pakDanny->id,
         ]);
 
         // 2. Jadwal Pelajaran
