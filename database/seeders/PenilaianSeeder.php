@@ -27,7 +27,7 @@ class PenilaianSeeder extends Seeder
         Setting::updateOrCreate(['key' => 'kktp_threshold'], ['value' => 75]);
 
         $ta = TahunAjaran::where('is_active', true)->first();
-        $pakHendra = Guru::where('nama', 'like', '%Hendra%')->first();
+        $pakHendra = Guru::where('nama', 'like', '%IKA BUDI%')->first();
         $mapelJaringan = MataPelajaran::where('nama_mapel', 'like', '%Jaringan%')->first();
         $kelasXiTkj1 = Kelas::where('nama_kelas', 'XI TKJ 1')->first();
 

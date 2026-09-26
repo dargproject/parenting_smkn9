@@ -14,9 +14,9 @@ class KelasSeeder extends Seeder
      */
     public function run(): void
     {
-        $ibuSiti = Guru::where('nama', 'like', '%Siti%')->first();
-        $pakHendra = Guru::where('nama', 'like', '%Hendra%')->first();
-        $pakDanny = Guru::where('nama', 'like', '%Danny%')->first();
+        $ibuSiti = Guru::where('nama', 'like', '%SITI JULAIKAH%')->first();
+        $pakHendra = Guru::where('nama', 'like', '%IKA BUDI%')->first();
+        $pakDanny = Guru::where('nama', 'like', '%DANNY ARGA%')->first();
 
         $kelasList = [
             ['nama_kelas' => 'XI TKJ 1', 'tingkat' => 'XI', 'jurusan' => 'TKJ'],

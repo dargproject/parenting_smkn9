@@ -28,10 +28,10 @@ class MasterDataSeeder extends Seeder
      */
     public function run(): void
     {
-        $pakHendra = Guru::where('nama', 'like', '%Hendra%')->first();
-        $ibuSiti = Guru::where('nama', 'like', '%Siti%')->first();
-        $pakDanny = Guru::where('nama', 'like', '%Danny%')->first();
-        $pakAgus = Guru::where('nama', 'like', '%Agus%')->first();
+        $pakHendra = Guru::where('nama', 'like', '%IKA BUDI%')->first();
+        $ibuSiti = Guru::where('nama', 'like', '%SITI JULAIKAH%')->first();
+        $pakDanny = Guru::where('nama', 'like', '%DANNY ARGA%')->first();
+        $pakAgus = Guru::where('nama', 'like', '%FEBRI IRAWAN%')->first();
 
         $kelas = Kelas::where('nama_kelas', 'XI TKJ 1')->first();
         $siswas = Siswa::where('kelas_id', $kelas->id)->get();
