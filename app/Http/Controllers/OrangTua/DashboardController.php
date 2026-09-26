@@ -48,7 +48,11 @@ class DashboardController extends Controller
             $rataLm = $penilaian->rataLm($lmMapel);
             $na = $penilaian->nilaiAkhir($rataLm, $sas?->nilai);
 
-            return ['mapel' => $mapel, 'na' => $na, 'status' => $penilaian->statusNilai($na)];
+            return [
+                'mapel' => $mapel,
+                'na' => $na,
+                'status' => $penilaian->statusMapel($lmMapel, $sas?->nilai !== null ? (float) $sas->nilai : null),
+            ];
         });
 
         return view('ortu.dashboard', [
@@ -93,7 +97,7 @@ class DashboardController extends Controller
             'sas' => $sas,
             'pklUkk' => $pklUkk,
             'na' => $na,
-            'status' => $penilaian->statusNilai($na),
+            'status' => $penilaian->statusMapel($nilaiLm, $sas?->nilai !== null ? (float) $sas->nilai : null),
             'tpRemedial' => $penilaian->tpRemedial($nilaiLm),
             'catatanKompetensi' => $catatanKompetensi,
             'catatanWaliKelas' => $catatanWaliKelas,

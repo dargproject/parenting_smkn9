@@ -32,21 +32,20 @@ class PenilaianService
     }
 
     /**
-     * NA = bobot LM * rata LM + bobot SAS * SAS.
-     * Jika SAS belum diisi, renormalisasi ke 100% LM agar siswa tidak dirugikan
-     * oleh guru yang belum menetapkan kebijakan SAS untuk mapel tersebut.
+     * Nilai akhir disinkronkan langsung dengan nilai SAS dari tabel nilai_sas,
+     * atau menggunakan rata-rata LM jika nilai SAS belum tersedia.
      */
     public function nilaiAkhir(?float $rataLm, ?float $sas): ?float
     {
-        if ($rataLm === null) {
-            return null;
+        if ($sas !== null) {
+            return (float) $sas;
         }
 
-        if ($sas === null) {
+        if ($rataLm !== null) {
             return round($rataLm, 1);
         }
 
-        return round($this->bobotLm() * $rataLm + $this->bobotSas() * $sas, 1);
+        return null;
     }
 
     public function statusNilai(?float $nilai): string
@@ -56,6 +55,35 @@ class PenilaianService
         }
 
         return $nilai >= $this->kktpThreshold() ? 'tuntas' : 'remedial';
+    }
+
+    /**
+     * Menentukan status ketuntasan suatu mata pelajaran bagi siswa.
+     * Jika ada satu saja nilai (LM maupun SAS) yang belum tuntas (< KKTP),
+     * maka status dianggap 'remedial' (Belum Tuntas).
+     */
+    public function statusMapel(Collection $nilaiLms, ?float $sas = null): string
+    {
+        $hasLm = $nilaiLms->isNotEmpty();
+        $hasSas = $sas !== null;
+
+        if (! $hasLm && ! $hasSas) {
+            return 'belum ada nilai';
+        }
+
+        $kktp = $this->kktpThreshold();
+        $hasRemedialLm = $nilaiLms->contains(function ($item) use ($kktp) {
+            $val = is_object($item) ? ($item->nilai ?? null) : ($item['nilai'] ?? $item);
+
+            return $val !== null && (float) $val < $kktp;
+        });
+        $hasRemedialSas = $hasSas && (float) $sas < $kktp;
+
+        if ($hasRemedialLm || $hasRemedialSas) {
+            return 'remedial';
+        }
+
+        return 'tuntas';
     }
 
     public function tpRemedial(Collection $nilaiLms): Collection
