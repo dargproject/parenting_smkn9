@@ -50,8 +50,8 @@ class PenilaianController extends Controller
             'deskripsi' => ['required', 'string', 'max:500', $tpUnik('deskripsi')],
             'urutan' => 'nullable|integer|min:0',
         ], [
-            'kode.unique' => 'Kode TP tersebut sudah dipakai pada mapel ini.',
-            'deskripsi.unique' => 'Tujuan pembelajaran dengan deskripsi yang sama sudah ada pada mapel ini.',
+            'kode.unique' => 'Kode N tersebut sudah dipakai pada mapel ini.',
+            'deskripsi.unique' => 'Nilai (N) dengan deskripsi yang sama sudah ada pada mapel ini.',
         ]);
 
         $this->pastikanMapelMilikGuru($data['mata_pelajaran_id']);
@@ -61,7 +61,7 @@ class PenilaianController extends Controller
             'urutan' => $data['urutan'] ?? 0,
         ]);
 
-        return redirect()->route('guru.portal')->with('success', 'Tujuan pembelajaran berhasil ditambahkan.');
+        return redirect()->route('guru.portal')->with('success', 'Kolom N berhasil ditambahkan.');
     }
 
     public function destroyTujuanPembelajaran(TujuanPembelajaran $tujuanPembelajaran)
@@ -70,7 +70,7 @@ class PenilaianController extends Controller
 
         $tujuanPembelajaran->delete();
 
-        return redirect()->route('guru.portal')->with('success', 'Tujuan pembelajaran berhasil dihapus.');
+        return redirect()->route('guru.portal')->with('success', 'Kolom N berhasil dihapus.');
     }
 
     public function storeNilaiLm(Request $request)
@@ -87,7 +87,7 @@ class PenilaianController extends Controller
         $tpValid = TujuanPembelajaran::where('mata_pelajaran_id', $data['mata_pelajaran_id'])->where('tahun_ajaran_id', $tahunAjaranId)->pluck('id');
         $tpKiriman = collect($data['nilai'])->flatMap(fn ($perTp) => array_keys($perTp))->unique();
         if ($tpKiriman->diff($tpValid)->isNotEmpty()) {
-            return back()->with('error', 'Sebagian Tujuan Pembelajaran bukan milik semester/tahun ajaran aktif. Muat ulang halaman lalu isi kembali.');
+            return back()->with('error', 'Sebagian kolom N bukan milik semester/tahun ajaran aktif. Muat ulang halaman lalu isi kembali.');
         }
 
         DB::transaction(function () use ($data, $tahunAjaranId) {
@@ -162,6 +162,8 @@ class PenilaianController extends Controller
         DB::transaction(function () use ($data, $tahunAjaranId) {
             foreach ($data['catatan'] as $siswaId => $catatan) {
                 if (! trim((string) $catatan)) {
+                    CatatanKompetensi::where(['siswa_id' => $siswaId, 'mata_pelajaran_id' => $data['mata_pelajaran_id'], 'tahun_ajaran_id' => $tahunAjaranId])->delete();
+
                     continue;
                 }
 

@@ -26,6 +26,61 @@ class PenilaianService
         return (int) setting('kktp_threshold', 75);
     }
 
+    public function kktpMargin(): int
+    {
+        return (int) setting('kktp_margin', 10);
+    }
+
+    /**
+     * Deskripsi capaian kompetensi otomatis dari nilai per Tujuan Pembelajaran.
+     * $items: daftar ['nama' => deskripsi TP, 'nilai' => angka]. Mengembalikan null bila belum ada nilai.
+     */
+    public function deskripsiCapaian(iterable $items): ?string
+    {
+        $items = collect($items)->filter(fn ($i) => isset($i['nilai']) && $i['nilai'] !== null && trim((string) ($i['nama'] ?? '')) !== '');
+        if ($items->isEmpty()) {
+            return null;
+        }
+
+        $kktp = $this->kktpThreshold();
+        $batasCukup = $kktp - $this->kktpMargin();
+        $urut = $items->sortByDesc('nilai')->values();
+
+        $menguasai = $urut->filter(fn ($i) => $i['nilai'] >= $kktp)->values();
+        $cukup = $urut->filter(fn ($i) => $i['nilai'] < $kktp && $i['nilai'] >= $batasCukup)->values();
+        $perlu = $urut->filter(fn ($i) => $i['nilai'] < $batasCukup)->sortBy('nilai')->values();
+
+        $daftar = function ($kelompok) {
+            $nama = $kelompok->take(3)->map(fn ($i) => $i['nama'])->all();
+            $sisa = $kelompok->count() - count($nama);
+
+            return implode(', ', $nama).($sisa > 0 ? " dan {$sisa} lainnya" : '');
+        };
+
+        if ($menguasai->count() === $items->count()) {
+            return $items->count() === 1
+                ? "Menguasai capaian {$menguasai[0]['nama']} dengan baik."
+                : "Menguasai seluruh capaian dengan baik, terutama {$menguasai[0]['nama']}.";
+        }
+
+        if ($perlu->count() === $items->count()) {
+            return 'Perlu bimbingan intensif pada seluruh capaian: '.$daftar($perlu).'.';
+        }
+
+        $bagian = [];
+        if ($menguasai->isNotEmpty()) {
+            $bagian[] = 'menguasai '.$daftar($menguasai);
+        }
+        if ($cukup->isNotEmpty()) {
+            $bagian[] = 'cukup menguasai '.$daftar($cukup);
+        }
+        if ($perlu->isNotEmpty()) {
+            $bagian[] = 'perlu bimbingan pada '.$daftar($perlu);
+        }
+
+        return ucfirst(implode(', ', $bagian)).'.';
+    }
+
     public function rataLm(Collection $nilaiLms): ?float
     {
         return $nilaiLms->isEmpty() ? null : round($nilaiLms->avg('nilai'), 1);

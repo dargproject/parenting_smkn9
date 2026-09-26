@@ -47,13 +47,13 @@
 
                 {{-- Kelola Tujuan Pembelajaran --}}
                 <div class="rounded-xl border border-slate-700/60 bg-slate-900 p-4">
-                    <h6 class="font-bold text-slate-100 mb-2 text-sm"><span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-xs text-white mr-1">1</span> Tujuan Pembelajaran (TP) Semester Ini</h6>
+                    <h6 class="font-bold text-slate-100 mb-2 text-sm"><span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-xs text-white mr-1">1</span> Daftar Nilai (N) Semester Ini</h6>
                     @if($tpMapel->isNotEmpty())
                         <div class="flex flex-col gap-1 mb-3">
                             @foreach($tpMapel as $tp)
                                 <div class="flex items-center justify-between text-sm text-slate-400">
-                                    <span><span class="font-semibold text-slate-100">{{ $tp->kode ?: 'TP' }}</span> &mdash; {{ $tp->deskripsi }}</span>
-                                    <form method="POST" action="{{ route('guru.penilaian.tp.destroy', $tp) }}" onsubmit="return confirm('Hapus TP ini? Nilai LM terkait juga akan terhapus.')">
+                                    <span><span class="font-semibold text-slate-100">{{ $tp->kode ?: 'N' }}</span> &mdash; {{ $tp->deskripsi }}</span>
+                                    <form method="POST" action="{{ route('guru.penilaian.tp.destroy', $tp) }}" onsubmit="return confirm('Hapus N ini? Nilai siswa yang terkait juga akan terhapus.')">
                                         @csrf @method('DELETE')
                                         <button class="text-rose-400 hover:text-rose-300 text-xs">Hapus</button>
                                     </form>
@@ -61,14 +61,14 @@
                             @endforeach
                         </div>
                     @else
-                        <p class="text-slate-400 text-sm mb-3">Belum ada TP. Tambahkan minimal satu TP di bawah, lalu kolom nilai siswa akan muncul di langkah 2.</p>
+                        <p class="text-slate-400 text-sm mb-3">Belum ada N. Tambahkan minimal satu N di bawah, lalu kolom nilai siswa akan muncul di langkah 2.</p>
                     @endif
                     <form method="POST" action="{{ route('guru.penilaian.tp.store') }}" class="flex flex-col sm:flex-row gap-2">
                         @csrf
                         <input type="hidden" name="mata_pelajaran_id" value="{{ $mapel->id }}">
-                        <input type="text" name="kode" placeholder="Kode, mis. TP 1" class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 sm:w-40">
-                        <input type="text" name="deskripsi" required placeholder="Deskripsi TP, mis. Konfigurasi Router Mikrotik" class="flex-1 rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
-                        <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500 whitespace-nowrap">+ Tambah TP</button>
+                        <input type="text" name="kode" placeholder="Kode, mis. N1" class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 sm:w-40">
+                        <input type="text" name="deskripsi" required placeholder="Deskripsi N, mis. Konfigurasi Router Mikrotik" class="flex-1 rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+                        <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500 whitespace-nowrap">+ Tambah N</button>
                     </form>
                 </div>
 
@@ -84,9 +84,9 @@
                                 <tr>
                                     <th class="px-3 py-2">Nama Siswa</th>
                                     @foreach($tpMapel as $tp)
-                                        <th class="px-3 py-2 text-center">{{ $tp->kode ?: 'TP'.$loop->iteration }}</th>
+                                        <th class="px-3 py-2 text-center">{{ $tp->kode ?: 'N'.$loop->iteration }}</th>
                                     @endforeach
-                                    <th class="px-3 py-2 text-center">Nilai SAS (Rata-rata)</th>
+                                    <th class="px-3 py-2 text-center">Nilai (Rata-rata)</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-700/60">
@@ -99,7 +99,7 @@
                                         <td class="px-3 py-2 font-semibold text-slate-100">{{ $siswa->nama }}</td>
                                         @foreach($tpMapel as $tp)
                                             @php $nl = $nilaiLmBinaan[$siswa->id.'-'.$tp->id] ?? null; @endphp
-                                            <td class="px-3 py-2">
+                                            <td class="px-3 py-2 text-center">
                                                 <input type="number" min="0" max="100" name="nilai[{{ $siswa->id }}][{{ $tp->id }}]" value="{{ $nl->nilai ?? '' }}" class="w-16 rounded-lg border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-slate-100 text-center">
                                             </td>
                                         @endforeach
@@ -116,28 +116,33 @@
                 @else
                 <div class="rounded-xl border border-dashed border-slate-600 p-4 text-sm text-slate-400">
                     <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-600 text-xs text-white mr-1">2</span>
-                    Input nilai sumatif ({{ $siswaKelas->count() }} siswa) akan tersedia setelah Anda menambahkan TP pada langkah 1.
+                    Input nilai sumatif ({{ $siswaKelas->count() }} siswa) akan tersedia setelah Anda menambahkan N pada langkah 1.
                 </div>
                 @endif
 
-                {{-- Catatan Capaian Kompetensi --}}
-                {{-- <form method="POST" action="{{ route('guru.penilaian.catatan-kompetensi.store') }}">
+                {{-- Catatan tambahan (deskripsi capaian dibuat otomatis) --}}
+                <form method="POST" action="{{ route('guru.penilaian.catatan-kompetensi.store') }}">
                     @csrf
                     <input type="hidden" name="mata_pelajaran_id" value="{{ $mapel->id }}">
-                    <h6 class="font-bold text-slate-100 mb-2 text-sm">Catatan Capaian Kompetensi</h6>
+                    <h6 class="font-bold text-slate-100 mb-1 text-sm"><span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-xs text-white mr-1">3</span> Catatan Tambahan <span class="font-normal text-slate-400">(opsional)</span></h6>
+                    <p class="text-xs text-slate-400 mb-2">Deskripsi capaian dibuat otomatis dari nilai per N dan tampil di rapor orang tua. Isi kolom di bawah hanya bila ada catatan khusus.</p>
                     <div class="flex flex-col gap-2">
                         @foreach($siswaKelas as $siswa)
                             @php $ck = $catatanKompetensiBinaan[$siswa->id.'-'.$mapel->id] ?? null; @endphp
                             <div class="flex flex-col sm:flex-row gap-2 sm:items-start">
-                                <span class="text-sm font-semibold text-slate-100 sm:w-40 sm:pt-2">{{ $siswa->nama }}</span>
-                                <textarea name="catatan[{{ $siswa->id }}]" rows="2" placeholder="Materi yang sudah dikuasai / masih perlu bimbingan..." class="flex-1 rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500">{{ $ck->catatan ?? '' }}</textarea>
+                                <div class="sm:w-56"><span class="block text-sm font-semibold text-slate-100 sm:pt-2">{{ $siswa->nama }}</span>
+                                    @php
+                                        $otomatis = app(\App\Services\PenilaianService::class)->deskripsiCapaian($tpMapel->map(fn ($tp) => ($nl = $nilaiLmBinaan[$siswa->id.'-'.$tp->id] ?? null) ? ['nama' => $tp->deskripsi, 'nilai' => $nl->nilai] : null)->filter());
+                                    @endphp
+                                    <span class="block text-xs text-slate-400">{{ $otomatis ?? 'Belum ada nilai.' }}</span></div>
+                                <textarea name="catatan[{{ $siswa->id }}]" rows="2" placeholder="Catatan tambahan (opsional)..." class="flex-1 rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500">{{ $ck->catatan ?? '' }}</textarea>
                             </div>
                         @endforeach
                     </div>
                     <div class="flex justify-end mt-2">
                         <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500">Simpan Catatan</button>
                     </div>
-                </form> --}}
+                </form>
 
                 @if($mapel->kategori === 'Kejuruan')
                 {{-- PKL/UKK --}}

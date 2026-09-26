@@ -25,6 +25,7 @@ class PenilaianSeeder extends Seeder
         Setting::updateOrCreate(['key' => 'bobot_lm'], ['value' => 60]);
         Setting::updateOrCreate(['key' => 'bobot_sas'], ['value' => 40]);
         Setting::updateOrCreate(['key' => 'kktp_threshold'], ['value' => 75]);
+        Setting::updateOrCreate(['key' => 'kktp_margin'], ['value' => 10]);
 
         $ta = TahunAjaran::where('is_active', true)->first();
         $pakHendra = Guru::where('nama', 'like', '%IKA BUDI%')->first();
@@ -35,8 +36,8 @@ class PenilaianSeeder extends Seeder
             return;
         }
 
-        $tp1 = TujuanPembelajaran::create(['mata_pelajaran_id' => $mapelJaringan->id, 'tahun_ajaran_id' => $ta->id, 'kode' => 'TP 3.1', 'deskripsi' => 'Konfigurasi Router Mikrotik', 'urutan' => 1]);
-        $tp2 = TujuanPembelajaran::create(['mata_pelajaran_id' => $mapelJaringan->id, 'tahun_ajaran_id' => $ta->id, 'kode' => 'TP 3.2', 'deskripsi' => 'Instalasi Server Linux', 'urutan' => 2]);
+        $tp1 = TujuanPembelajaran::create(['mata_pelajaran_id' => $mapelJaringan->id, 'tahun_ajaran_id' => $ta->id, 'kode' => 'N1', 'deskripsi' => 'Konfigurasi Router Mikrotik', 'urutan' => 1]);
+        $tp2 = TujuanPembelajaran::create(['mata_pelajaran_id' => $mapelJaringan->id, 'tahun_ajaran_id' => $ta->id, 'kode' => 'N2', 'deskripsi' => 'Instalasi Server Linux', 'urutan' => 2]);
 
         $siswaXiTkj1 = Siswa::where('kelas_id', $kelasXiTkj1->id)->get();
 
