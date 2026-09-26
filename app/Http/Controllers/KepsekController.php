@@ -6,19 +6,30 @@ use App\Models\Guru;
 use App\Models\Kelas;
 use App\Models\KasusBk;
 use App\Models\KategoriPengumuman;
-use App\Models\Nilai;
 use App\Models\PanggilanOrtu;
 use App\Models\Pelanggaran;
 use App\Models\Pengumuman;
 use App\Models\Presensi;
 use App\Models\Siswa;
+use App\Models\TahunAjaran;
+use App\Services\PenilaianService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class KepsekController extends Controller
 {
-    const KKM = 75;
+    private ?\Illuminate\Support\Collection $nilaiRows = null;
+
+    private function nilaiRows(): \Illuminate\Support\Collection
+    {
+        return $this->nilaiRows ??= app(PenilaianService::class)->nilaiAkhirRows(TahunAjaran::where('is_active', true)->value('id'));
+    }
+
+    private function kkm(): int
+    {
+        return app(PenilaianService::class)->kktpThreshold();
+    }
 
     public function index(Request $request)
     {
@@ -53,6 +64,9 @@ class KepsekController extends Controller
 
     public function exportLaporan(Request $request, string $type)
     {
+        $siswaMap = Siswa::with('kelas')->get()->keyBy('id');
+        $mapelMap = \App\Models\MataPelajaran::pluck('nama_mapel', 'id');
+
         return match ($type) {
             'kehadiran' => $this->streamCsv('rekap-kehadiran', ['NIS', 'Nama Siswa', 'Kelas', 'Tanggal', 'Status', 'Keterangan'],
                 Presensi::with(['siswa.kelas'])->orderBy('tanggal', 'desc')->get()->map(fn ($p) => [
@@ -64,14 +78,18 @@ class KepsekController extends Controller
                     $p->keterangan ?? '-',
                 ])),
             'legger' => $this->streamCsv('legger-nilai', ['NIS', 'Nama Siswa', 'Kelas', 'Mata Pelajaran', 'Nilai Akhir', 'Status'],
-                Nilai::with(['siswa.kelas', 'mataPelajaran'])->get()->map(fn ($n) => [
-                    $n->siswa->nis ?? '-',
-                    $n->siswa->nama ?? '-',
-                    $n->siswa->kelas->nama_kelas ?? '-',
-                    $n->mataPelajaran->nama_mapel ?? '-',
-                    $n->nilai_akhir,
-                    $n->nilai_akhir >= self::KKM ? 'Tuntas' : 'Perlu Remedial',
-                ])),
+                $this->nilaiRows()->map(function ($n) use ($siswaMap, $mapelMap) {
+                    $siswa = $siswaMap[$n->siswa_id] ?? null;
+
+                    return [
+                        $siswa->nis ?? '-',
+                        $siswa->nama ?? '-',
+                        $siswa->kelas->nama_kelas ?? '-',
+                        $mapelMap[$n->mata_pelajaran_id] ?? '-',
+                        $n->nilai_akhir,
+                        $n->nilai_akhir >= $this->kkm() ? 'Tuntas' : 'Perlu Remedial',
+                    ];
+                })),
             'bk' => $this->streamCsv('kasus-bk', ['Nama Siswa', 'Kelas', 'Judul Kasus', 'Kategori', 'Status', 'Konselor'],
                 KasusBk::with(['siswa.kelas', 'konselor'])->orderBy('created_at', 'desc')->get()->map(fn ($k) => [
                     $k->siswa->nama ?? '-',
@@ -112,8 +130,8 @@ class KepsekController extends Controller
         $hadirHariIni = (clone $presensiHariIni)->where('status', 'H')->count();
         $persenKehadiran = $totalPresensiHariIni > 0 ? round($hadirHariIni / $totalPresensiHariIni * 100, 1) : null;
 
-        $totalNilai = Nilai::count();
-        $tuntasNilai = Nilai::where('nilai_akhir', '>=', self::KKM)->count();
+        $totalNilai = $this->nilaiRows()->count();
+        $tuntasNilai = $this->nilaiRows()->where('nilai_akhir', '>=', $this->kkm())->count();
         $persenTuntas = $totalNilai > 0 ? round($tuntasNilai / $totalNilai * 100, 1) : null;
 
         $kasusAktif = KasusBk::where('status', '!=', 'selesai')->count();
@@ -170,13 +188,14 @@ class KepsekController extends Controller
             ->orderBy('nama_kelas')
             ->get()
             ->map(function ($kelas) {
-                $nilaiQuery = Nilai::whereHas('siswa', fn ($q) => $q->where('kelas_id', $kelas->id));
-                $total = (clone $nilaiQuery)->count();
-                $tuntas = (clone $nilaiQuery)->where('nilai_akhir', '>=', self::KKM)->count();
+                $siswaIds = $kelas->siswas()->pluck('id');
+                $nilaiKelas = $this->nilaiRows()->whereIn('siswa_id', $siswaIds);
+                $total = $nilaiKelas->count();
+                $tuntas = $nilaiKelas->where('nilai_akhir', '>=', $this->kkm())->count();
 
                 return [
                     'kelas' => $kelas,
-                    'rata_rata' => $total > 0 ? round((clone $nilaiQuery)->avg('nilai_akhir'), 1) : null,
+                    'rata_rata' => $total > 0 ? round($nilaiKelas->avg('nilai_akhir'), 1) : null,
                     'total_nilai' => $total,
                     'persen_tuntas' => $total > 0 ? round($tuntas / $total * 100, 1) : null,
                 ];

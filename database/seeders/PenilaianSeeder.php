@@ -50,7 +50,7 @@ class PenilaianSeeder extends Seeder
 
             // NIS 1005 (Eko) sengaja belum ada SAS untuk mendemokan status "belum lengkap".
             if ($siswa->nis !== '1005') {
-                NilaiSas::create(['siswa_id' => $siswa->id, 'mata_pelajaran_id' => $mapelJaringan->id, 'tahun_ajaran_id' => $ta->id, 'nilai' => rand(75, 95), 'guru_id' => $pakHendra->id]);
+                NilaiSas::create(['siswa_id' => $siswa->id, 'mata_pelajaran_id' => $mapelJaringan->id, 'tahun_ajaran_id' => $ta->id, 'nilai' => (int) round(($skor1 + $skor2) / 2), 'guru_id' => $pakHendra->id]);
             }
 
             CatatanKompetensi::create([

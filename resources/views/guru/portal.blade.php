@@ -505,7 +505,7 @@
                         @forelse($peringkatBinaan as $i => $top)
                             <div class="flex items-center justify-between rounded-lg bg-slate-900/50 px-3 py-2">
                                 <span class="text-sm font-semibold text-slate-100">{{ $i + 1 }}. {{ $top->nama }}</span>
-                                <span class="text-sm font-bold text-emerald-400">{{ round($top->nilais->avg('nilai_akhir'), 1) }}</span>
+                                <span class="text-sm font-bold text-emerald-400">{{ round($top->rata, 1) }}</span>
                             </div>
                         @empty
                             <p class="text-slate-400 small m-0">Belum ada nilai tercatat untuk kelas binaan.</p>

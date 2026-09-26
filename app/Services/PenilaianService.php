@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Models\JadwalPelajaran;
+use App\Models\NilaiLm;
 use App\Models\NilaiSas;
 use App\Models\Siswa;
+use App\Models\TujuanPembelajaran;
 use Illuminate\Support\Collection;
 
 class PenilaianService
@@ -80,5 +82,34 @@ class PenilaianService
             ->pluck('mata_pelajaran_id');
 
         return $mapelIds->diff($mapelDenganSas)->isEmpty();
+    }
+
+    /**
+     * Sumber tunggal nilai akhir per siswa per mapel (dari nilai_lms + nilai_sas).
+     * Mengembalikan koleksi objek {siswa_id, mata_pelajaran_id, nilai_akhir}.
+     */
+    public function nilaiAkhirRows(?int $tahunAjaranId = null): Collection
+    {
+        $tpMapel = TujuanPembelajaran::pluck('mata_pelajaran_id', 'id');
+
+        $rataLm = NilaiLm::query()
+            ->when($tahunAjaranId, fn ($q) => $q->where('tahun_ajaran_id', $tahunAjaranId))
+            ->get(['siswa_id', 'tujuan_pembelajaran_id', 'nilai'])
+            ->groupBy(fn ($n) => $n->siswa_id.'-'.($tpMapel[$n->tujuan_pembelajaran_id] ?? 0))
+            ->map(fn ($g) => $this->rataLm($g));
+
+        $sas = NilaiSas::query()
+            ->when($tahunAjaranId, fn ($q) => $q->where('tahun_ajaran_id', $tahunAjaranId))
+            ->whereNotNull('nilai')
+            ->get(['siswa_id', 'mata_pelajaran_id', 'nilai'])
+            ->keyBy(fn ($n) => $n->siswa_id.'-'.$n->mata_pelajaran_id);
+
+        return $rataLm->keys()->merge($sas->keys())->unique()->map(function ($key) use ($rataLm, $sas) {
+            [$siswaId, $mapelId] = array_map('intval', explode('-', $key));
+            $na = $this->nilaiAkhir($rataLm[$key] ?? null, isset($sas[$key]) ? (float) $sas[$key]->nilai : null)
+                ?? (isset($sas[$key]) ? (float) $sas[$key]->nilai : null);
+
+            return (object) ['siswa_id' => $siswaId, 'mata_pelajaran_id' => $mapelId, 'nilai_akhir' => $na];
+        })->filter(fn ($r) => $r->nilai_akhir !== null && $r->mata_pelajaran_id > 0)->values();
     }
 }

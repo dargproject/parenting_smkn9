@@ -14,7 +14,6 @@ use App\Models\MasterPelanggaran;
 use App\Models\PanggilanOrtu;
 use App\Models\JadwalPelajaran;
 use App\Models\MataPelajaran;
-use App\Models\Nilai;
 use App\Models\TahunAjaran;
 use App\Models\TujuanPembelajaran;
 use App\Models\NilaiLm;
@@ -40,7 +39,7 @@ class PortalController extends Controller
         }
 
         // Ambil data master untuk ditampilkan di portal
-        $siswas = Siswa::with(['kelas', 'nilais.mataPelajaran'])->get();
+        $siswas = Siswa::with('kelas')->get();
         $kasusBks = KasusBk::with(['siswa', 'konselor'])->get();
         $pelanggarans = Pelanggaran::with(['siswa', 'pelapor'])->orderBy('tanggal', 'desc')->get();
         $panggilanOrtus = PanggilanOrtu::with(['siswa', 'pemanggil'])->orderBy('tanggal', 'desc')->get();
@@ -67,16 +66,20 @@ class PortalController extends Controller
         // Data untuk Guru Wali: hanya kelas binaan guru yang login
         $kelasBinaan = $kelasList->where('guru_wali_id', $guru->id)->values();
         $siswaBinaan = $siswas->whereIn('kelas_id', $kelasBinaan->pluck('id'))->values();
-        $nilaiBinaan = $siswaBinaan->flatMap->nilais;
-        $rerataBinaan = $nilaiBinaan->isNotEmpty() ? round($nilaiBinaan->avg('nilai_akhir'), 1) : null;
-        $peringkatBinaan = $siswaBinaan
-            ->filter(fn ($s) => $s->nilais->isNotEmpty())
-            ->sortByDesc(fn ($s) => $s->nilais->avg('nilai_akhir'))
-            ->take(3)
-            ->values();
-
         $tahunAjaranAktif = TahunAjaran::where('is_active', true)->first();
         $tahunAjaranAktifId = $tahunAjaranAktif?->id;
+
+        // Nilai akhir seluruh siswa (sumber tunggal: nilai_lms + nilai_sas), dipakai legger & dashboard guru wali.
+        $nilaiAkhirRows = $penilaian->nilaiAkhirRows($tahunAjaranAktifId);
+        $nilaiAkhirMap = $nilaiAkhirRows->keyBy(fn ($r) => $r->siswa_id.'-'.$r->mata_pelajaran_id);
+        $nilaiBinaan = $nilaiAkhirRows->whereIn('siswa_id', $siswaBinaan->pluck('id'));
+        $rerataBinaan = $nilaiBinaan->isNotEmpty() ? round($nilaiBinaan->avg('nilai_akhir'), 1) : null;
+        $peringkatBinaan = $siswaBinaan
+            ->map(fn ($s) => (object) ['nama' => $s->nama, 'rata' => $nilaiBinaan->where('siswa_id', $s->id)->avg('nilai_akhir')])
+            ->filter(fn ($s) => $s->rata !== null)
+            ->sortByDesc('rata')
+            ->take(3)
+            ->values();
 
         // Data untuk Guru Mapel: mapel yang diampu, TP semester berjalan, dan nilai yang sudah diinput
         $mapelBinaan = $mataPelajarans->where('guru_id', $guru->id)->values();
@@ -165,7 +168,7 @@ class PortalController extends Controller
 
         return view('guru.portal', compact(
             'guru', 'siswas', 'kasusBks', 'pelanggarans', 'panggilanOrtus',
-            'jadwalPelajarans', 'mataPelajarans', 'kelasList',
+            'jadwalPelajarans', 'mataPelajarans', 'kelasList', 'nilaiAkhirMap',
             'masterPelanggarans', 'masterPelanggaranAktif', 'rekapPoin', 'absensiBermasalah',
             'kelasBinaan', 'siswaBinaan', 'rerataBinaan', 'peringkatBinaan',
             'tahunAjaranAktif', 'mapelBinaan', 'tujuanPembelajarans',

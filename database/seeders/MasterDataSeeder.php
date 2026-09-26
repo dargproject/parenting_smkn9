@@ -6,7 +6,6 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\MataPelajaran;
 use App\Models\JadwalPelajaran;
-use App\Models\Nilai;
 use App\Models\Presensi;
 use App\Models\Pelanggaran;
 use App\Models\KasusBk;
@@ -71,21 +70,6 @@ class MasterDataSeeder extends Seeder
             'jam_selesai' => '07:45',
             'ruang' => 'Lab RPS 1',
         ]);
-
-        // 3. Nilai
-        foreach ($siswas as $siswa) {
-            $baseScore = $siswa->nis == '1004' ? 65 : ($siswa->nis == '1005' ? 74 : rand(80, 95));
-            Nilai::create([
-                'siswa_id' => $siswa->id,
-                'mata_pelajaran_id' => $mapelJaringan->id,
-                'nilai_tugas1' => $baseScore - 3,
-                'nilai_tugas2' => $baseScore - 1,
-                'nilai_uts' => $baseScore + 1,
-                'nilai_uas' => $baseScore,
-                'nilai_akhir' => $baseScore,
-                'catatan_guru' => $baseScore >= 75 ? 'Tuntas' : 'Perlu Remedial',
-            ]);
-        }
 
         // 4. Presensi
         foreach ($siswas as $siswa) {

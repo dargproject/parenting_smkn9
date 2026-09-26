@@ -88,8 +88,7 @@
                             $jumlahMapelDenganNilai = 0;
 
                             foreach ($mataPelajarans as $mapel) {
-                                $nilai = $siswa->nilais->where('mata_pelajaran_id', $mapel->id)->first();
-                                $nilaiAkhir = $nilai ? $nilai->nilai_akhir : null;
+                                $nilaiAkhir = isset($nilaiAkhirMap[$siswa->id.'-'.$mapel->id]) ? round($nilaiAkhirMap[$siswa->id.'-'.$mapel->id]->nilai_akhir) : null;
                                 $nilaiPerMapel[$mapel->id] = $nilaiAkhir;
 
                                 if ($nilaiAkhir !== null) {
@@ -101,7 +100,7 @@
                             $avg = $jumlahMapelDenganNilai > 0
                                 ? number_format($totalNilai / $jumlahMapelDenganNilai, 1)
                                 : '-';
-                            $isTuntas = $jumlahMapelDenganNilai > 0 && ($totalNilai / $jumlahMapelDenganNilai) >= 75;
+                            $isTuntas = $jumlahMapelDenganNilai > 0 && ($totalNilai / $jumlahMapelDenganNilai) >= setting('kktp_threshold', 75);
                         @endphp
                         <tr class="legger-row" data-kelas-id="{{ $siswa->kelas_id }}">
                             <td class="font-bold">{{ $siswa->nama }} <span class="block text-slate-400 small" style="font-size: 10px;">NIS: {{ $siswa->nis }}</span></td>
@@ -109,7 +108,7 @@
                             @foreach($mataPelajarans as $mapel)
                                 <td class="text-center font-monospace legger-mapel-cell" data-mapel-id="{{ $mapel->id }}">
                                     @if($nilaiPerMapel[$mapel->id] !== null)
-                                        <span class="{{ $nilaiPerMapel[$mapel->id] < 75 ? 'text-danger font-bold' : '' }}">{{ $nilaiPerMapel[$mapel->id] }}</span>
+                                        <span class="{{ $nilaiPerMapel[$mapel->id] < setting('kktp_threshold', 75) ? 'text-danger font-bold' : '' }}">{{ $nilaiPerMapel[$mapel->id] }}</span>
                                     @else
                                         <span class="text-muted">—</span>
                                     @endif

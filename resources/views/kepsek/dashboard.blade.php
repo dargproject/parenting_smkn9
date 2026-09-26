@@ -163,7 +163,7 @@
     <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
             <h4 class="font-bold m-0 text-slate-100 text-xl">Pantau Ketuntasan Akademik</h4>
-            <p class="text-slate-400 text-sm m-0">Rekapitulasi nilai akhir seluruh rombel (KKM {{ \App\Http\Controllers\KepsekController::KKM }}).</p>
+            <p class="text-slate-400 text-sm m-0">Rekapitulasi nilai akhir seluruh rombel (KKM {{ setting('kktp_threshold', 75) }}).</p>
         </div>
         <form method="GET" action="{{ route('kepsek.dashboard') }}#akademik" class="flex items-center gap-2">
             <select name="jurusan" onchange="this.form.submit()" class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
@@ -352,7 +352,7 @@
                 <span class="font-semibold">{{ $stats['nilai_count'] }}</span>
             </div>
             <div class="flex justify-between text-sm text-slate-400 mt-2">
-                <span>Tuntas (KKM {{ \App\Http\Controllers\KepsekController::KKM }})</span>
+                <span>Tuntas (KKM {{ setting('kktp_threshold', 75) }})</span>
                 <span class="font-semibold text-emerald-400">{{ $stats['tuntas_count'] }}</span>
             </div>
         </div>
