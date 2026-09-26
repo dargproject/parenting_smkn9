@@ -640,6 +640,16 @@
                 filterAcademicGrid(1);
             }
 
+            // Setelah simpan/hapus (redirect), kembali ke pane terakhir yang dibuka, bukan pane awal.
+            try {
+                const saved = sessionStorage.getItem('activePane:' + location.pathname);
+                if (saved && document.getElementById(saved)) {
+                    const link = [...document.querySelectorAll('#sidebar-menu-list a[onclick*="showPane"]')]
+                        .find(a => a.getAttribute('onclick').includes("'" + saved + "'"));
+                    showPane(saved, link || null);
+                }
+            } catch (e) {}
+
             // Jika belum ada pane yang aktif (mis. peran tanpa pane default), tampilkan menu pertama yang tersedia.
             if (!document.querySelector('.pane-content:not(.hidden-pane)')) {
                 const firstLink = document.querySelector('#sidebar-menu-list a[onclick*="showPane"]');
@@ -735,6 +745,8 @@
             if (targetPane) {
                 targetPane.classList.remove('hidden-pane');
             }
+
+            try { sessionStorage.setItem('activePane:' + location.pathname, paneId); } catch (e) {}
 
             // Update active state on sidebar
             document.querySelectorAll('#sidebar-menu-list a').forEach(a => {

@@ -14,9 +14,9 @@ use Illuminate\Http\Request;
 
 class KurikulumController extends Controller
 {
-    public function storeJadwal(Request $request)
+    private function validasiJadwal(Request $request): array
     {
-        $data = $request->validate([
+        return $request->validate([
             'kelas_id' => 'required|exists:kelas,id',
             'mata_pelajaran_id' => 'required|exists:mata_pelajarans,id',
             'hari' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu',
@@ -24,28 +24,56 @@ class KurikulumController extends Controller
             'jam_selesai' => 'required|after:jam_mulai',
             'ruang' => 'nullable|string|max:100',
         ]);
+    }
 
-        $mapel = MataPelajaran::findOrFail($data['mata_pelajaran_id']);
-        $tahunAjaranId = TahunAjaran::where('is_active', true)->value('id');
-
+    private function cariBentrok(array $data, int $guruId, ?int $abaikanId = null): ?string
+    {
         $bentrok = JadwalPelajaran::where('hari', $data['hari'])
-            ->where(fn ($q) => $q->where('kelas_id', $data['kelas_id'])->orWhere('guru_id', $mapel->guru_id))
+            ->when($abaikanId, fn ($q) => $q->where('id', '!=', $abaikanId))
+            ->where(fn ($q) => $q->where('kelas_id', $data['kelas_id'])->orWhere('guru_id', $guruId))
             ->where('jam_mulai', '<', $data['jam_selesai'])
             ->where('jam_selesai', '>', $data['jam_mulai'])
             ->with(['kelas', 'guru'])
             ->first();
 
-        if ($bentrok) {
-            $pihak = $bentrok->kelas_id == $data['kelas_id'] ? "Kelas {$bentrok->kelas->nama_kelas}" : "Guru {$bentrok->guru->nama}";
-            return back()->withInput()->with('error', "Jadwal bentrok: {$pihak} sudah punya jadwal lain pada {$data['hari']} jam {$bentrok->jam_mulai}-{$bentrok->jam_selesai}.");
+        if (!$bentrok) {
+            return null;
+        }
+
+        $pihak = $bentrok->kelas_id == $data['kelas_id'] ? "Kelas {$bentrok->kelas->nama_kelas}" : "Guru {$bentrok->guru->nama}";
+
+        return "Jadwal bentrok: {$pihak} sudah punya jadwal lain pada {$data['hari']} jam {$bentrok->jam_mulai}-{$bentrok->jam_selesai}.";
+    }
+
+    public function storeJadwal(Request $request)
+    {
+        $data = $this->validasiJadwal($request);
+        $mapel = MataPelajaran::findOrFail($data['mata_pelajaran_id']);
+
+        if ($pesan = $this->cariBentrok($data, $mapel->guru_id)) {
+            return back()->withInput()->with('error', $pesan);
         }
 
         JadwalPelajaran::create($data + [
             'guru_id' => $mapel->guru_id,
-            'tahun_ajaran_id' => $tahunAjaranId,
+            'tahun_ajaran_id' => TahunAjaran::where('is_active', true)->value('id'),
         ]);
 
         return redirect()->route('guru.portal')->with('success', 'Jadwal pelajaran berhasil ditambahkan.');
+    }
+
+    public function updateJadwal(Request $request, JadwalPelajaran $jadwalPelajaran)
+    {
+        $data = $this->validasiJadwal($request);
+        $mapel = MataPelajaran::findOrFail($data['mata_pelajaran_id']);
+
+        if ($pesan = $this->cariBentrok($data, $mapel->guru_id, $jadwalPelajaran->id)) {
+            return back()->withInput()->with('error', $pesan);
+        }
+
+        $jadwalPelajaran->update($data + ['guru_id' => $mapel->guru_id]);
+
+        return redirect()->route('guru.portal')->with('success', 'Jadwal pelajaran berhasil diperbarui.');
     }
 
     public function updateWali(Request $request)

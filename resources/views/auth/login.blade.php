@@ -35,6 +35,7 @@
             </div>
           @endif
 
+          <script>try { Object.keys(sessionStorage).filter(k => k.startsWith('activePane:')).forEach(k => sessionStorage.removeItem(k)); } catch (e) {}</script>
           <form action="{{ route('login.post') }}" method="POST">
             @csrf
             <div class="space-y-5">

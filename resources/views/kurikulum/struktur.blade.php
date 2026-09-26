@@ -3,9 +3,10 @@
     <p class="text-slate-400 small mb-4">Kelola sebaran jadwal KBM (kelas, mata pelajaran, hari, jam, ruang). Beban JP dan guru pengampu tiap mapel dikelola di Admin &rarr; Mata Pelajaran.</p>
 
     <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-4 md:p-6 text-slate-100 mb-4">
-        <h6 class="font-bold text-slate-100 mb-3"><i class="fa-regular fa-clock text-primary mr-1"></i> Input Sebaran Jadwal Pelajaran (KBM)</h6>
-        <form method="POST" action="{{ route('guru.kurikulum.jadwal.store') }}" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <h6 class="font-bold text-slate-100 mb-3"><i class="fa-regular fa-clock text-primary mr-1"></i> <span id="jadwal-form-title">Input Sebaran Jadwal Pelajaran (KBM)</span></h6>
+        <form id="jadwal-form" method="POST" action="{{ route('guru.kurikulum.jadwal.store') }}" data-store-action="{{ route('guru.kurikulum.jadwal.store') }}" class="grid grid-cols-1 md:grid-cols-3 gap-3">
             @csrf
+            <input type="hidden" name="_method" value="POST" id="jadwal-form-method">
             <div>
                 <label class="mb-1.5 block text-sm font-medium text-slate-400">Kelas</label>
                 <select name="kelas_id" required class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
@@ -44,11 +45,34 @@
                 <label class="mb-1.5 block text-sm font-medium text-slate-400">Ruang</label>
                 <input type="text" name="ruang" value="{{ old('ruang') }}" placeholder="mis. Lab RPS 1" class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500">
             </div>
-            <div class="md:col-span-3 flex justify-end">
-                <button type="submit" class="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-500">Terbitkan Slot Jadwal</button>
+            <div class="md:col-span-3 flex justify-end gap-2">
+                <button type="button" id="jadwal-batal" onclick="resetJadwalForm()" class="hidden rounded-lg border border-slate-600 px-4 py-2.5 text-sm font-semibold text-slate-300 hover:border-blue-500">Batal</button>
+                <button type="submit" id="jadwal-submit" class="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-500">Terbitkan Slot Jadwal</button>
             </div>
         </form>
     </div>
+    <script>
+        function editJadwal(btn) {
+            const f = document.getElementById('jadwal-form');
+            const d = btn.dataset;
+            f.action = d.action;
+            document.getElementById('jadwal-form-method').value = 'PUT';
+            ['kelas_id', 'mata_pelajaran_id', 'hari', 'jam_mulai', 'jam_selesai', 'ruang'].forEach(n => { f.elements[n].value = d[n] || ''; });
+            document.getElementById('jadwal-form-title').textContent = 'Edit Jadwal Pelajaran';
+            document.getElementById('jadwal-submit').textContent = 'Simpan Perubahan';
+            document.getElementById('jadwal-batal').classList.remove('hidden');
+            f.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        function resetJadwalForm() {
+            const f = document.getElementById('jadwal-form');
+            f.reset();
+            f.action = f.dataset.storeAction;
+            document.getElementById('jadwal-form-method').value = 'POST';
+            document.getElementById('jadwal-form-title').textContent = 'Input Sebaran Jadwal Pelajaran (KBM)';
+            document.getElementById('jadwal-submit').textContent = 'Terbitkan Slot Jadwal';
+            document.getElementById('jadwal-batal').classList.add('hidden');
+        }
+    </script>
 
     <!-- List of active schedules -->
     <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5 md:p-6 text-slate-100 mb-4">
@@ -76,11 +100,19 @@
                             <td>{{ $jadwal->kelas->nama_kelas ?? '-' }}</td>
                             <td>{{ $jadwal->mataPelajaran->nama_mapel ?? '-' }}</td>
                             <td><span class="badge bg-secondary">{{ $jadwal->ruang }}</span></td>
-                            <td class="text-center">
-                                <form method="POST" action="{{ route('guru.kurikulum.jadwal.destroy', $jadwal) }}" onsubmit="return confirm('Hapus jadwal ini?')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-outline-danger btn-xs py-0.5 px-2" style="font-size: 11px;"><i class="fa-solid fa-trash"></i></button>
-                                </form>
+                            <td class="text-center whitespace-nowrap">
+                                <div class="flex items-center justify-center gap-1">
+                                    <button type="button" onclick="editJadwal(this)"
+                                        data-action="{{ route('guru.kurikulum.jadwal.update', $jadwal) }}"
+                                        data-kelas_id="{{ $jadwal->kelas_id }}" data-mata_pelajaran_id="{{ $jadwal->mata_pelajaran_id }}"
+                                        data-hari="{{ $jadwal->hari }}" data-jam_mulai="{{ substr($jadwal->jam_mulai, 0, 5) }}"
+                                        data-jam_selesai="{{ substr($jadwal->jam_selesai, 0, 5) }}" data-ruang="{{ $jadwal->ruang }}"
+                                        class="btn btn-outline-primary btn-xs py-0.5 px-2" style="font-size: 11px;" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                                    <form method="POST" action="{{ route('guru.kurikulum.jadwal.destroy', $jadwal) }}" onsubmit="return confirm('Hapus jadwal ini?')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="btn btn-outline-danger btn-xs py-0.5 px-2" style="font-size: 11px;" title="Hapus"><i class="fa-solid fa-trash"></i></button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     @endforeach
