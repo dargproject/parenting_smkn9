@@ -98,14 +98,5 @@
         @endif
     </div>
 
-    <!-- Footer logout button -->
-    <div class="p-3 border-t border-slate-700/60 border-slate-700/60">
-        <form action="{{ route('logout') }}" method="POST">
-            @csrf
-            <button type="submit"
-                class="btn btn-outline-danger btn-sm w-full d-flex items-center justify-content-center gap-2 py-2">
-                <i class="fa-solid fa-power-off"></i> Keluar Portal
-            </button>
-        </form>
-    </div>
 </nav>
+<script>try { if (window.innerWidth >= 768 && localStorage.getItem('sidebarCollapsed') === '1') document.getElementById('sidebar-wrapper').classList.add('sidebar-collapsed'); } catch (e) {}</script>

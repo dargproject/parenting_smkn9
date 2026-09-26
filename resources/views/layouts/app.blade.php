@@ -305,6 +305,10 @@
             border-color: var(--border-color) !important;
         }
 
+        @media (min-width: 768px) {
+            #sidebar-wrapper.sidebar-collapsed { display: none !important; }
+        }
+
         /* Sidebar & Header Overrides */
         #sidebar-wrapper, .app-header {
             background-color: var(--bg-card) !important;
@@ -533,6 +537,13 @@
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar-wrapper');
             const overlay = document.getElementById('sidebar-overlay');
+
+            if (window.innerWidth >= 768) {
+                const collapsed = sidebar.classList.toggle('sidebar-collapsed');
+                try { localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0'); } catch (e) {}
+                window.dispatchEvent(new Event('resize'));
+                return;
+            }
 
             sidebar.classList.toggle('-translate-x-full');
             overlay.classList.toggle('hidden');

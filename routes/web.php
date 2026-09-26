@@ -28,6 +28,11 @@ Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+Route::middleware('auth')->prefix('profil')->name('profil.')->group(function () {
+    Route::put('/', [\App\Http\Controllers\ProfilController::class, 'update'])->name('update');
+    Route::put('/password', [\App\Http\Controllers\ProfilController::class, 'updatePassword'])->name('password');
+});
+
 Route::middleware('role:kepsek')->prefix('kepsek')->name('kepsek.')->group(function () {
     Route::get('/dashboard', [KepsekController::class, 'index'])->name('dashboard');
     Route::post('/pengumuman', [KepsekController::class, 'broadcastPengumuman'])->name('pengumuman.store');
