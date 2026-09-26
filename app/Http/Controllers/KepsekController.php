@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Guru;
-use App\Models\Kelas;
 use App\Models\KasusBk;
 use App\Models\KategoriPengumuman;
+use App\Models\Kelas;
+use App\Models\MataPelajaran;
 use App\Models\PanggilanOrtu;
 use App\Models\Pelanggaran;
 use App\Models\Pengumuman;
@@ -15,13 +15,14 @@ use App\Models\TahunAjaran;
 use App\Services\PenilaianService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
 class KepsekController extends Controller
 {
-    private ?\Illuminate\Support\Collection $nilaiRows = null;
+    private ?Collection $nilaiRows = null;
 
-    private function nilaiRows(): \Illuminate\Support\Collection
+    private function nilaiRows(): Collection
     {
         return $this->nilaiRows ??= app(PenilaianService::class)->nilaiAkhirRows(TahunAjaran::where('is_active', true)->value('id'));
     }
@@ -65,7 +66,7 @@ class KepsekController extends Controller
     public function exportLaporan(Request $request, string $type)
     {
         $siswaMap = Siswa::with('kelas')->get()->keyBy('id');
-        $mapelMap = \App\Models\MataPelajaran::pluck('nama_mapel', 'id');
+        $mapelMap = MataPelajaran::pluck('nama_mapel', 'id');
 
         return match ($type) {
             'kehadiran' => $this->streamCsv('rekap-kehadiran', ['NIS', 'Nama Siswa', 'Kelas', 'Tanggal', 'Status', 'Keterangan'],

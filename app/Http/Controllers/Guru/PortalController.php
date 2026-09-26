@@ -3,38 +3,39 @@
 namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Guru;
-use App\Models\Siswa;
-use App\Models\KasusBk;
-use App\Models\Pelanggaran;
-use App\Models\MasterPelanggaran;
-use App\Models\PanggilanOrtu;
-use App\Models\JadwalPelajaran;
-use App\Models\MataPelajaran;
-use App\Models\TahunAjaran;
-use App\Models\TujuanPembelajaran;
-use App\Models\NilaiLm;
-use App\Models\NilaiSas;
-use App\Models\NilaiPklUkk;
 use App\Models\CatatanKompetensi;
 use App\Models\CatatanWaliKelas;
+use App\Models\Guru;
+use App\Models\JadwalPelajaran;
+use App\Models\KasusBk;
+use App\Models\Kelas;
+use App\Models\MasterPelanggaran;
+use App\Models\MataPelajaran;
+use App\Models\NilaiLm;
+use App\Models\NilaiPklUkk;
+use App\Models\NilaiSas;
+use App\Models\PanggilanOrtu;
+use App\Models\Pelanggaran;
 use App\Models\RaporFinal;
+use App\Models\Siswa;
+use App\Models\TahunAjaran;
+use App\Models\TujuanPembelajaran;
 use App\Services\PenilaianService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 
 class PortalController extends Controller
 {
     public function index(PenilaianService $penilaian)
     {
         $guruId = Session::get('guru_id');
-        if (!$guruId) {
+        if (! $guruId) {
             return redirect()->route('login');
         }
 
         $guru = Guru::with('roles')->find($guruId);
-        if (!$guru) {
+        if (! $guru) {
             return redirect()->route('login');
         }
 
@@ -45,7 +46,7 @@ class PortalController extends Controller
         $panggilanOrtus = PanggilanOrtu::with(['siswa', 'pemanggil'])->orderBy('tanggal', 'desc')->get();
         $jadwalPelajarans = JadwalPelajaran::with(['kelas', 'mataPelajaran', 'guru'])->get();
         $mataPelajarans = MataPelajaran::all();
-        $kelasList = \App\Models\Kelas::all();
+        $kelasList = Kelas::all();
 
         // Data untuk menu Waka Kesiswaan
         $masterPelanggarans = MasterPelanggaran::with(['pasal', 'jenisPelanggaran'])->orderBy('pasal_id')->orderBy('nama_pelanggaran')->get();
@@ -114,7 +115,7 @@ class PortalController extends Controller
             ? NilaiSas::whereIn('siswa_id', $siswaBinaan->pluck('id'))->where('tahun_ajaran_id', $tahunAjaranAktifId)->get()
             : collect();
 
-        $matrixPerKelas = $kelasBinaan->map(function ($kelas) use ($siswaBinaan, $jadwalPelajarans, $tahunAjaranAktifId, $allNilaiLmKelasBinaan, $allNilaiSasKelasBinaan, $penilaian) {
+        $matrixPerKelas = $kelasBinaan->map(function ($kelas) use ($siswaBinaan, $jadwalPelajarans, $allNilaiLmKelasBinaan, $allNilaiSasKelasBinaan, $penilaian) {
             $siswaKelas = $siswaBinaan->where('kelas_id', $kelas->id)->values();
             $mapelKelas = $jadwalPelajarans
                 ->where('kelas_id', $kelas->id)
@@ -180,11 +181,12 @@ class PortalController extends Controller
     public function getSiswaByJadwal($jadwalId)
     {
         $jadwal = JadwalPelajaran::find($jadwalId);
-        if (!$jadwal) {
+        if (! $jadwal) {
             return response()->json([]);
         }
 
         $siswas = Siswa::where('kelas_id', $jadwal->kelas_id)->get();
+
         return response()->json($siswas);
     }
 

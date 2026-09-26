@@ -2,24 +2,24 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Guru;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response;
-use App\Models\Guru;
 
 class RoleMiddleware
 {
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      * @param  string  ...$roles
      */
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
         // Periksa apakah ada guru_id di session
-        if (!Session::has('guru_id') && !Session::has('role')) {
+        if (! Session::has('guru_id') && ! Session::has('role')) {
             return redirect()->route('login');
         }
 

@@ -11,7 +11,10 @@ class SiswasImport implements ToModel, WithHeadingRow
 {
     public function model(array $row): ?Siswa
     {
-        if (empty($row['nis'])) return null;
+        if (empty($row['nis'])) {
+            return null;
+        }
+
         return new Siswa([
             'nis' => $row['nis'], 'nisn' => $row['nisn'] ?? null, 'nipd' => $row['nipd'] ?? null,
             'nama' => $row['nama'] ?? '', 'kelas_id' => $row['kelas_id'] ?? null,

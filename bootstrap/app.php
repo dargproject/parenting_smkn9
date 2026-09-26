@@ -1,9 +1,12 @@
 <?php
 
+use App\Http\Middleware\RoleMiddleware;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Session\TokenMismatchException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -13,13 +16,13 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'role' => RoleMiddleware::class,
         ]);
 
         $middleware->redirectGuestsTo(fn (Request $request) => $request->is('ortu/*') ? route('ortu.login') : route('login'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->render(function (\Illuminate\Database\QueryException $e, Request $request) {
+        $exceptions->render(function (QueryException $e, Request $request) {
             if ($request->expectsJson() || $request->isMethod('GET')) {
                 return null;
             }
@@ -37,7 +40,7 @@ return Application::configure(basePath: dirname(__DIR__))
             return back()->withInput($request->except('password', 'password_confirmation', 'password_lama'))->with('error', $pesan);
         });
 
-        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, Request $request) {
+        $exceptions->render(function (TokenMismatchException $e, Request $request) {
             return back()->withInput($request->except('password', 'password_confirmation', 'password_lama'))
                 ->with('error', 'Sesi formulir sudah kedaluwarsa. Silakan kirim ulang formulir.');
         });

@@ -18,7 +18,7 @@ class TahunAjaranController extends Controller
 
     public function create()
     {
-        return view('admin.tahun-ajaran.create', ['tahunAjaran' => new TahunAjaran()]);
+        return view('admin.tahun-ajaran.create', ['tahunAjaran' => new TahunAjaran]);
     }
 
     public function store(StoreTahunAjaranRequest $request)
@@ -53,6 +53,7 @@ class TahunAjaranController extends Controller
         }
 
         $tahunAjaran->delete();
+
         return back()->with('success', 'Tahun ajaran berhasil dihapus.');
     }
 

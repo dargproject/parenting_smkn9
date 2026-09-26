@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Guru;
+use App\Models\OrangTua;
 use App\Models\User;
 
 return [
@@ -69,7 +71,7 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\Guru::class),
+            'model' => env('AUTH_MODEL', Guru::class),
         ],
 
         // 'users' => [
@@ -79,7 +81,7 @@ return [
 
         'orangtuas' => [
             'driver' => 'eloquent',
-            'model' => App\Models\OrangTua::class,
+            'model' => OrangTua::class,
         ],
     ],
 

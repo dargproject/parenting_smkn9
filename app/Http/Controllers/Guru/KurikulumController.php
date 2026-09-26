@@ -6,11 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Guru;
 use App\Models\JadwalPelajaran;
 use App\Models\Kelas;
-use App\Models\Role;
-use Illuminate\Support\Facades\DB;
 use App\Models\MataPelajaran;
+use App\Models\Role;
 use App\Models\TahunAjaran;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class KurikulumController extends Controller
 {
@@ -36,7 +36,7 @@ class KurikulumController extends Controller
             ->with(['kelas', 'guru'])
             ->first();
 
-        if (!$bentrok) {
+        if (! $bentrok) {
             return null;
         }
 
@@ -89,7 +89,7 @@ class KurikulumController extends Controller
         DB::transaction(function () use ($data, $roleIds) {
             foreach ($data['wali'] as $kelasId => $row) {
                 $kelas = Kelas::find($kelasId);
-                if (!$kelas) {
+                if (! $kelas) {
                     continue;
                 }
 
@@ -99,7 +99,7 @@ class KurikulumController extends Controller
                 ]);
 
                 foreach (['wali_kelas_id' => 'wali_kelas', 'guru_wali_id' => 'guru_wali'] as $kolom => $role) {
-                    if (!empty($row[$kolom])) {
+                    if (! empty($row[$kolom])) {
                         Guru::find($row[$kolom])?->roles()->syncWithoutDetaching([$roleIds[$role]]);
                     }
                 }
