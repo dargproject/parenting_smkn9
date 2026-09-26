@@ -22,6 +22,6 @@ class StoreKelasRequest extends FormRequest
      */
     public function rules(): array
     {
-        return ['nama_kelas'=>'required|string|max:100','tingkat'=>'required|in:10,11,12','jurusan'=>'nullable|string|max:100','wali_kelas_id'=>'nullable|exists:gurus,id'];
+        return ['nama_kelas'=>'required|string|max:100','tingkat'=>'required|in:10,11,12','jurusan'=>'required|string|max:100','wali_kelas_id'=>'nullable|exists:gurus,id'];
     }
 }

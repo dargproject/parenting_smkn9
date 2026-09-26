@@ -448,6 +448,7 @@
   >
     <!-- ===== Preloader Start ===== -->
     @include('partials.preloader')
+    @include('partials.notify')
     <!-- ===== Preloader End ===== -->
 
     <!-- ===== Page Wrapper Start ===== -->
