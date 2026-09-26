@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Guru;
 use App\Models\JadwalPelajaran;
 use App\Models\Kelas;
+use App\Models\KelasMataPelajaran;
 use App\Models\MataPelajaran;
 use App\Models\Role;
 use App\Models\TahunAjaran;
@@ -16,7 +17,7 @@ class KurikulumController extends Controller
 {
     private function validasiJadwal(Request $request): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'kelas_id' => 'required|exists:kelas,id',
             'mata_pelajaran_id' => 'required|exists:mata_pelajarans,id',
             'hari' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu',
@@ -24,6 +25,11 @@ class KurikulumController extends Controller
             'jam_selesai' => 'required|after:jam_mulai',
             'ruang' => 'nullable|string|max:100',
         ]);
+
+        // Kolom ruang wajib terisi di database; tampilkan '-' bila tidak diisi.
+        $data['ruang'] = $data['ruang'] ?? '-';
+
+        return $data;
     }
 
     private function cariBentrok(array $data, int $guruId, ?int $abaikanId = null): ?string
@@ -48,14 +54,18 @@ class KurikulumController extends Controller
     public function storeJadwal(Request $request)
     {
         $data = $this->validasiJadwal($request);
-        $mapel = MataPelajaran::findOrFail($data['mata_pelajaran_id']);
+        $penetapan = KelasMataPelajaran::where('kelas_id', $data['kelas_id'])->where('mata_pelajaran_id', $data['mata_pelajaran_id'])->first();
 
-        if ($pesan = $this->cariBentrok($data, $mapel->guru_id)) {
+        if (! $penetapan || ! $penetapan->guru_id) {
+            return back()->withInput()->with('error', 'Mata pelajaran ini belum ditetapkan (beserta gurunya) untuk kelas tersebut. Tetapkan dulu pada bagian "Mapel per Kelas".');
+        }
+
+        if ($pesan = $this->cariBentrok($data, $penetapan->guru_id)) {
             return back()->withInput()->with('error', $pesan);
         }
 
         JadwalPelajaran::create($data + [
-            'guru_id' => $mapel->guru_id,
+            'guru_id' => $penetapan->guru_id,
             'tahun_ajaran_id' => TahunAjaran::where('is_active', true)->value('id'),
         ]);
 
@@ -65,15 +75,70 @@ class KurikulumController extends Controller
     public function updateJadwal(Request $request, JadwalPelajaran $jadwalPelajaran)
     {
         $data = $this->validasiJadwal($request);
-        $mapel = MataPelajaran::findOrFail($data['mata_pelajaran_id']);
+        $penetapan = KelasMataPelajaran::where('kelas_id', $data['kelas_id'])->where('mata_pelajaran_id', $data['mata_pelajaran_id'])->first();
 
-        if ($pesan = $this->cariBentrok($data, $mapel->guru_id, $jadwalPelajaran->id)) {
+        if (! $penetapan || ! $penetapan->guru_id) {
+            return back()->withInput()->with('error', 'Mata pelajaran ini belum ditetapkan (beserta gurunya) untuk kelas tersebut. Tetapkan dulu pada bagian "Mapel per Kelas".');
+        }
+
+        if ($pesan = $this->cariBentrok($data, $penetapan->guru_id, $jadwalPelajaran->id)) {
             return back()->withInput()->with('error', $pesan);
         }
 
-        $jadwalPelajaran->update($data + ['guru_id' => $mapel->guru_id]);
+        $jadwalPelajaran->update($data + ['guru_id' => $penetapan->guru_id]);
 
         return redirect()->route('guru.portal')->with('success', 'Jadwal pelajaran berhasil diperbarui.');
+    }
+
+    public function storeKelasMapel(Request $request)
+    {
+        $data = $request->validate([
+            'kelas_id' => 'required|exists:kelas,id',
+            'mata_pelajaran_id' => 'required|array|min:1',
+            'mata_pelajaran_id.*' => 'exists:mata_pelajarans,id',
+            'guru_id' => 'required|exists:gurus,id',
+        ]);
+
+        $guruRole = Role::where('name', 'guru_mapel')->value('id');
+
+        DB::transaction(function () use ($data, $guruRole) {
+            foreach ($data['mata_pelajaran_id'] as $mapelId) {
+                $guruId = $data['guru_id'];
+
+                KelasMataPelajaran::updateOrCreate(
+                    ['kelas_id' => $data['kelas_id'], 'mata_pelajaran_id' => $mapelId],
+                    ['guru_id' => $guruId]
+                );
+
+                JadwalPelajaran::where('kelas_id', $data['kelas_id'])->where('mata_pelajaran_id', $mapelId)->update(['guru_id' => $guruId]);
+                if ($guruId && $guruRole) {
+                    Guru::find($guruId)?->roles()->syncWithoutDetaching([$guruRole]);
+                }
+            }
+        });
+
+        return redirect()->route('guru.portal')->with('success', count($data['mata_pelajaran_id']).' mata pelajaran berhasil ditetapkan untuk kelas tersebut.');
+    }
+
+    public function updateKelasMapel(Request $request, KelasMataPelajaran $kelasMataPelajaran)
+    {
+        $data = $request->validate(['guru_id' => 'required|exists:gurus,id']);
+
+        $kelasMataPelajaran->update($data);
+        JadwalPelajaran::where('kelas_id', $kelasMataPelajaran->kelas_id)->where('mata_pelajaran_id', $kelasMataPelajaran->mata_pelajaran_id)->update(['guru_id' => $data['guru_id']]);
+
+        return redirect()->route('guru.portal')->with('success', 'Guru pengampu berhasil diperbarui.');
+    }
+
+    public function destroyKelasMapel(KelasMataPelajaran $kelasMataPelajaran)
+    {
+        if (JadwalPelajaran::where('kelas_id', $kelasMataPelajaran->kelas_id)->where('mata_pelajaran_id', $kelasMataPelajaran->mata_pelajaran_id)->exists()) {
+            return back()->with('error', 'Mata pelajaran ini masih punya jadwal di kelas tersebut. Hapus jadwalnya terlebih dahulu.');
+        }
+
+        $kelasMataPelajaran->delete();
+
+        return redirect()->route('guru.portal')->with('success', 'Mata pelajaran dihapus dari struktur kelas.');
     }
 
     public function updateWali(Request $request)

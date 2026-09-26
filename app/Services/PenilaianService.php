@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\JadwalPelajaran;
+use App\Models\KelasMataPelajaran;
 use App\Models\NilaiLm;
 use App\Models\NilaiSas;
 use App\Models\Siswa;
@@ -65,11 +65,7 @@ class PenilaianService
 
     public function siswaLengkap(Siswa $siswa, int $tahunAjaranId): bool
     {
-        // NB: jadwal_pelajarans.tahun_ajaran_id tidak selalu terisi di data lama, jadi
-        // tidak difilter berdasarkan tahun ajaran seperti tabel nilai LM/SAS yang baru.
-        $mapelIds = JadwalPelajaran::where('kelas_id', $siswa->kelas_id)
-            ->distinct()
-            ->pluck('mata_pelajaran_id');
+        $mapelIds = KelasMataPelajaran::where('kelas_id', $siswa->kelas_id)->pluck('mata_pelajaran_id');
 
         if ($mapelIds->isEmpty()) {
             return false;

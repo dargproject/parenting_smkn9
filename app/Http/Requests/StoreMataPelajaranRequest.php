@@ -22,6 +22,6 @@ class StoreMataPelajaranRequest extends FormRequest
      */
     public function rules(): array
     {
-        return ['kode_mapel' => 'nullable|string|max:50', 'nama_mapel' => 'required|string|max:255', 'kelompok' => 'nullable|in:A,B,C', 'kategori' => 'required|in:Nasional,Kejuruan', 'beban_jp' => 'required|integer|min:1|max:20', 'guru_id' => 'required|exists:gurus,id'];
+        return ['kode_mapel' => 'nullable|string|max:50', 'nama_mapel' => 'required|string|max:255', 'kelompok' => 'nullable|in:A,B,C', 'kategori' => 'required|in:Nasional,Kejuruan', 'beban_jp' => 'required|integer|min:1|max:20'];
     }
 }

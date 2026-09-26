@@ -577,20 +577,18 @@
             const mapelCols = document.querySelectorAll('.legger-mapel-col');
             const mapelCells = document.querySelectorAll('.legger-mapel-cell');
 
+            const mapelTampil = {};
             mapelCols.forEach(col => {
-                if (subjectId === 'all' || col.getAttribute('data-mapel-id') === subjectId) {
-                    col.style.display = '';
-                } else {
-                    col.style.display = 'none';
-                }
+                const mapelId = col.getAttribute('data-mapel-id');
+                const kelasIds = (col.getAttribute('data-kelas-ids') || '').split(',').filter(Boolean);
+                const cocokMapel = subjectId === 'all' || mapelId === subjectId;
+                const cocokKelas = classId === 'all' || kelasIds.includes(classId);
+                mapelTampil[mapelId] = cocokMapel && cocokKelas;
+                col.style.display = mapelTampil[mapelId] ? '' : 'none';
             });
 
             mapelCells.forEach(cell => {
-                if (subjectId === 'all' || cell.getAttribute('data-mapel-id') === subjectId) {
-                    cell.style.display = '';
-                } else {
-                    cell.style.display = 'none';
-                }
+                cell.style.display = mapelTampil[cell.getAttribute('data-mapel-id')] ? '' : 'none';
             });
 
             // Filter Rows (Kelas) & Pagination

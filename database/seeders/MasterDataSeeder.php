@@ -39,17 +39,19 @@ class MasterDataSeeder extends Seeder
             'nama_mapel' => 'Administrasi Infrastruktur Jaringan',
             'kategori' => 'Kejuruan',
             'beban_jp' => 6,
-            'guru_id' => $pakHendra->id,
         ]);
 
         $mapelPemrograman = MataPelajaran::create([
             'nama_mapel' => 'Pemrograman Web & Perangkat Bergerak',
             'kategori' => 'Kejuruan',
             'beban_jp' => 6,
-            'guru_id' => $pakDanny->id,
         ]);
 
-        // 2. Jadwal Pelajaran
+        // 2. Struktur kurikulum kelas (mapel + guru pengampu per kelas)
+        \App\Models\KelasMataPelajaran::create(['kelas_id' => $kelas->id, 'mata_pelajaran_id' => $mapelJaringan->id, 'guru_id' => $pakHendra->id]);
+        \App\Models\KelasMataPelajaran::create(['kelas_id' => $kelas->id, 'mata_pelajaran_id' => $mapelPemrograman->id, 'guru_id' => $pakDanny->id]);
+
+        // 3. Jadwal Pelajaran
         $jadwalJaringan = JadwalPelajaran::create([
             'kelas_id' => $kelas->id,
             'mata_pelajaran_id' => $mapelJaringan->id,

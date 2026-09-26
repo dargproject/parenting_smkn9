@@ -5,7 +5,6 @@ namespace App\Http\Controllers\OrangTua;
 use App\Http\Controllers\Controller;
 use App\Models\CatatanKompetensi;
 use App\Models\CatatanWaliKelas;
-use App\Models\JadwalPelajaran;
 use App\Models\MataPelajaran;
 use App\Models\NilaiLm;
 use App\Models\NilaiPklUkk;
@@ -31,7 +30,7 @@ class DashboardController extends Controller
             return view('ortu.dashboard', ['siswa' => $siswa, 'dirilis' => false, 'ringkasan' => collect()]);
         }
 
-        $mapelList = JadwalPelajaran::where('kelas_id', $siswa->kelas_id)
+        $mapelList = \App\Models\KelasMataPelajaran::where('kelas_id', $siswa->kelas_id)
             ->with('mataPelajaran')
             ->get()
             ->pluck('mataPelajaran')

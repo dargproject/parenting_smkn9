@@ -73,7 +73,7 @@
                         <th>Siswa</th>
                         <th class="text-center">Kelas</th>
                         @foreach($mataPelajarans as $mapel)
-                            <th class="text-center legger-mapel-col" data-mapel-id="{{ $mapel->id }}">{{ Str::limit($mapel->nama_mapel, 20) }}</th>
+                            <th class="text-center legger-mapel-col" data-mapel-id="{{ $mapel->id }}" data-kelas-ids="{{ $kelasMapelSemua->where('mata_pelajaran_id', $mapel->id)->pluck('kelas_id')->implode(',') }}">{{ Str::limit($mapel->nama_mapel, 20) }}</th>
                         @endforeach
                         <th class="text-center">Rerata Rapor</th>
                         <th>Status Ketuntasan</th>
@@ -87,7 +87,14 @@
                             $totalNilai = 0;
                             $jumlahMapelDenganNilai = 0;
 
+                            $mapelKelasIni = $kelasMapelSemua->where('kelas_id', $siswa->kelas_id)->pluck('mata_pelajaran_id');
+
                             foreach ($mataPelajarans as $mapel) {
+                                if (! $mapelKelasIni->contains($mapel->id)) {
+                                    $nilaiPerMapel[$mapel->id] = false;
+                                    continue;
+                                }
+
                                 $nilaiAkhir = isset($nilaiAkhirMap[$siswa->id.'-'.$mapel->id]) ? round($nilaiAkhirMap[$siswa->id.'-'.$mapel->id]->nilai_akhir) : null;
                                 $nilaiPerMapel[$mapel->id] = $nilaiAkhir;
 
@@ -107,7 +114,9 @@
                             <td class="text-center small text-slate-400">{{ $siswa->kelas->nama_kelas ?? '-' }}</td>
                             @foreach($mataPelajarans as $mapel)
                                 <td class="text-center font-monospace legger-mapel-cell" data-mapel-id="{{ $mapel->id }}">
-                                    @if($nilaiPerMapel[$mapel->id] !== null)
+                                    @if($nilaiPerMapel[$mapel->id] === false)
+                                        <span class="text-slate-400" title="Mapel ini tidak ada di kelas tersebut">n/a</span>
+                                    @elseif($nilaiPerMapel[$mapel->id] !== null)
                                         <span class="{{ $nilaiPerMapel[$mapel->id] < setting('kktp_threshold', 75) ? 'text-danger font-bold' : '' }}">{{ $nilaiPerMapel[$mapel->id] }}</span>
                                     @else
                                         <span class="text-muted">—</span>

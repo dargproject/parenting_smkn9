@@ -10,7 +10,7 @@
         <p class="text-slate-400 text-sm">Anda belum ditugaskan mengampu mata pelajaran apapun.</p>
     @else
         @php
-            $jadwalBinaan = $jadwalPelajarans->filter(fn ($j) => $j->mataPelajaran?->guru_id === $guru->id)->unique(fn ($j) => $j->mata_pelajaran_id.'-'.$j->kelas_id);
+            $jadwalBinaan = $kelasMapelBinaan;
         @endphp
 
         @php

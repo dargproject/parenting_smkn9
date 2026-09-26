@@ -29,7 +29,11 @@ class PenilaianController extends Controller
     private function pastikanMapelMilikGuru(int $mataPelajaranId): MataPelajaran
     {
         $mapel = MataPelajaran::findOrFail($mataPelajaranId);
-        abort_unless($mapel->guru_id === Auth::id(), 403, 'Anda bukan pengampu mata pelajaran ini.');
+        abort_unless(
+            \App\Models\KelasMataPelajaran::where('mata_pelajaran_id', $mapel->id)->where('guru_id', Auth::id())->exists(),
+            403,
+            'Anda bukan pengampu mata pelajaran ini.'
+        );
 
         return $mapel;
     }

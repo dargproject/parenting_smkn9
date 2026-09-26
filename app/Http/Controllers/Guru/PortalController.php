@@ -9,6 +9,7 @@ use App\Models\Guru;
 use App\Models\JadwalPelajaran;
 use App\Models\KasusBk;
 use App\Models\Kelas;
+use App\Models\KelasMataPelajaran;
 use App\Models\MasterPelanggaran;
 use App\Models\MataPelajaran;
 use App\Models\NilaiLm;
@@ -83,7 +84,9 @@ class PortalController extends Controller
             ->values();
 
         // Data untuk Guru Mapel: mapel yang diampu, TP semester berjalan, dan nilai yang sudah diinput
-        $mapelBinaan = $mataPelajarans->where('guru_id', $guru->id)->values();
+        $kelasMapelBinaan = \App\Models\KelasMataPelajaran::with(['kelas', 'mataPelajaran'])->where('guru_id', $guru->id)->get()->filter(fn ($km) => $km->kelas && $km->mataPelajaran)->values();
+        $mapelBinaan = $mataPelajarans->whereIn('id', $kelasMapelBinaan->pluck('mata_pelajaran_id'))->values();
+        $kelasMapelSemua = \App\Models\KelasMataPelajaran::with(['kelas', 'mataPelajaran', 'guru'])->get();
         $tujuanPembelajarans = $tahunAjaranAktif
             ? TujuanPembelajaran::whereIn('mata_pelajaran_id', $mapelBinaan->pluck('id'))
                 ->where('tahun_ajaran_id', $tahunAjaranAktifId)
@@ -115,9 +118,9 @@ class PortalController extends Controller
             ? NilaiSas::whereIn('siswa_id', $siswaBinaan->pluck('id'))->where('tahun_ajaran_id', $tahunAjaranAktifId)->get()
             : collect();
 
-        $matrixPerKelas = $kelasBinaan->map(function ($kelas) use ($siswaBinaan, $jadwalPelajarans, $allNilaiLmKelasBinaan, $allNilaiSasKelasBinaan, $penilaian) {
+        $matrixPerKelas = $kelasBinaan->map(function ($kelas) use ($siswaBinaan, $kelasMapelSemua, $allNilaiLmKelasBinaan, $allNilaiSasKelasBinaan, $penilaian) {
             $siswaKelas = $siswaBinaan->where('kelas_id', $kelas->id)->values();
-            $mapelKelas = $jadwalPelajarans
+            $mapelKelas = $kelasMapelSemua
                 ->where('kelas_id', $kelas->id)
                 ->pluck('mataPelajaran')
                 ->filter()
@@ -170,7 +173,7 @@ class PortalController extends Controller
 
         return view('guru.portal', compact(
             'guru', 'siswas', 'kasusBks', 'pelanggarans', 'panggilanOrtus',
-            'jadwalPelajarans', 'mataPelajarans', 'kelasList', 'nilaiAkhirMap',
+            'jadwalPelajarans', 'mataPelajarans', 'kelasList', 'nilaiAkhirMap', 'kelasMapelBinaan', 'kelasMapelSemua',
             'masterPelanggarans', 'masterPelanggaranAktif', 'rekapPoin', 'absensiBermasalah',
             'kelasBinaan', 'siswaBinaan', 'rerataBinaan', 'peringkatBinaan',
             'tahunAjaranAktif', 'mapelBinaan', 'tujuanPembelajarans',

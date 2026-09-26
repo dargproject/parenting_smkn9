@@ -59,6 +59,9 @@ Route::post('/guru/panggilan-ortu', [PortalController::class, 'storePanggilanOrt
 Route::middleware('role:waka_kurikulum')->prefix('guru/kurikulum')->name('guru.kurikulum.')->group(function () {
     Route::post('/jadwal', [KurikulumController::class, 'storeJadwal'])->name('jadwal.store');
     Route::put('/jadwal/{jadwalPelajaran}', [KurikulumController::class, 'updateJadwal'])->name('jadwal.update');
+    Route::post('/kelas-mapel', [KurikulumController::class, 'storeKelasMapel'])->name('kelas-mapel.store');
+    Route::put('/kelas-mapel/{kelasMataPelajaran}', [KurikulumController::class, 'updateKelasMapel'])->name('kelas-mapel.update');
+    Route::delete('/kelas-mapel/{kelasMataPelajaran}', [KurikulumController::class, 'destroyKelasMapel'])->name('kelas-mapel.destroy');
     Route::put('/wali', [KurikulumController::class, 'updateWali'])->name('wali.update');
     Route::delete('/jadwal/{jadwalPelajaran}', [KurikulumController::class, 'destroyJadwal'])->name('jadwal.destroy');
 });

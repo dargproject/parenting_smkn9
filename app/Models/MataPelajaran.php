@@ -12,13 +12,7 @@ class MataPelajaran extends Model
         'kategori',
         'kelompok',
         'beban_jp',
-        'guru_id',
     ];
-
-    public function guru()
-    {
-        return $this->belongsTo(Guru::class);
-    }
 
     public function tujuanPembelajarans()
     {
