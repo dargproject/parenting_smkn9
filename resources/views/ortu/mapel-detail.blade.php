@@ -6,27 +6,26 @@
                 class="fa-solid fa-arrow-left mr-1"></i> Kembali ke Ringkasan</a>
 
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div>
-                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">{{ $mapel->nama_mapel }}</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">{{ $siswa->nama }} &middot;
-                        {{ $siswa->kelas->nama_kelas ?? '-' }}</p>
-                </div>
-                <div class="text-right">
-                    <span class="block text-3xl font-bold {{ $status === 'tuntas' ? 'text-emerald-600 dark:text-emerald-400' : ($status === 'remedial' ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400') }}">{{ $na ?? '-' }}</span>
-                    <span
-                        class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $status === 'tuntas' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : ($status === 'remedial' ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400') }}">{{ $status === 'remedial' ? 'Belum Tuntas' : ucfirst($status) }}</span>
-                </div>
+            <div>
+                <h2 class="text-xl font-bold text-slate-900 dark:text-white">{{ $mapel->nama_mapel }}</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-400">{{ $siswa->nama }} &middot;
+                    {{ $siswa->kelas->nama_kelas ?? '-' }}
+                </p>
             </div>
         </div>
 
         @if($tpRemedial->isNotEmpty())
-            <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4 dark:border-rose-500/20 dark:bg-rose-500/10">
-                <p class="font-semibold text-rose-700 dark:text-rose-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i>
-                    Materi yang masih perlu bimbingan</p>
-                <ul class="mt-2 list-disc list-inside text-sm text-rose-600 dark:text-rose-400/80">
+            <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4 border-l-4 border-l-rose-500 dark:border-rose-500/40 dark:bg-slate-800">
+                <p class="font-bold text-rose-700 dark:text-rose-400 flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation text-rose-600 dark:text-rose-400"></i>
+                    <span>Materi yang masih perlu bimbingan</span>
+                </p>
+                <ul class="mt-2.5 list-disc list-inside text-sm text-slate-700 dark:text-slate-200 space-y-1">
                     @foreach($tpRemedial as $tp)
-                        <li>{{ $tp->tujuanPembelajaran->deskripsi ?? '-' }} (nilai {{ $tp->nilai }})</li>
+                        <li class="leading-relaxed">
+                            <span class="font-medium text-slate-800 dark:text-slate-100">{{ $tp->tujuanPembelajaran->deskripsi ?? '-' }}</span>
+                            <span class="ml-1 font-semibold text-rose-600 dark:text-rose-400">(nilai {{ $tp->nilai }})</span>
+                        </li>
                     @endforeach
                 </ul>
             </div>
@@ -50,45 +49,36 @@
                                     {{ $lm->tujuanPembelajaran->kode ?? '' }} {{ $lm->tujuanPembelajaran->deskripsi ?? '-' }}
                                 </td>
                                 <td
-                                    class="px-4 py-2.5 text-center font-semibold {{ $lm->nilai < 75 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-800 dark:text-slate-100' }}">
+                                    class="px-4 py-2.5 text-center font-semibold {{ $lm->nilai >= 75 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }}">
                                     {{ $lm->nilai }}
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="2" class="px-4 py-3 text-center text-sm text-slate-500 dark:text-slate-400">Belum ada nilai LM tercatat.</td>
+                                <td colspan="2" class="px-4 py-3 text-center text-sm text-slate-500 dark:text-slate-400">Belum
+                                    ada nilai LM tercatat.</td>
                             </tr>
                         @endforelse
                     </tbody>
-                    <tfoot class="border-t-2 border-slate-200 bg-slate-50/75 dark:border-slate-700 dark:bg-slate-900/50">
-                        <tr>
-                            <td class="px-4 py-2.5 font-medium text-slate-700 dark:text-slate-300">
-                                Nilai Sumatif Akhir Semester (SAS)
-                            </td>
-                            <td class="px-4 py-2.5 text-center font-semibold {{ isset($sas->nilai) && $sas->nilai < 75 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-800 dark:text-slate-100' }}">
-                                {{ $sas?->nilai ?? 'Belum diinput' }}
-                            </td>
-                        </tr>
-                    </tfoot>
                 </table>
             </div>
         </div>
 
         <!-- @if($pklUkk->isNotEmpty())
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-                <h3 class="font-bold text-slate-900 dark:text-white mb-3">Nilai PKL &amp; UKK</h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <span class="block text-xs text-slate-500 dark:text-slate-400">PKL</span>
-                        <span class="text-lg font-bold text-slate-800 dark:text-slate-100">{{ $pklUkk['pkl']->nilai ?? '-' }}</span>
-                    </div>
-                    <div>
-                        <span class="block text-xs text-slate-500 dark:text-slate-400">UKK</span>
-                        <span class="text-lg font-bold text-slate-800 dark:text-slate-100">{{ $pklUkk['ukk']->nilai ?? '-' }}</span>
+                <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+                    <h3 class="font-bold text-slate-900 dark:text-white mb-3">Nilai PKL &amp; UKK</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <span class="block text-xs text-slate-500 dark:text-slate-400">PKL</span>
+                            <span class="text-lg font-bold text-slate-800 dark:text-slate-100">{{ $pklUkk['pkl']->nilai ?? '-' }}</span>
+                        </div>
+                        <div>
+                            <span class="block text-xs text-slate-500 dark:text-slate-400">UKK</span>
+                            <span class="text-lg font-bold text-slate-800 dark:text-slate-100">{{ $pklUkk['ukk']->nilai ?? '-' }}</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-        @endif -->
+            @endif -->
 
         @if($catatanKompetensi || $catatanWaliKelas)
             <div
