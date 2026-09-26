@@ -11,9 +11,14 @@ use Illuminate\Support\Facades\Hash;
 
 class GuruController extends Controller
 {
-    public function index()
+    public function index(\Illuminate\Http\Request $request)
     {
-        return view('admin.guru.index', ['gurus' => Guru::with('roles')->latest()->paginate(15)]);
+        $gurus = Guru::with('roles')
+            ->when($request->filled('q'), fn ($q) => $q->where(fn ($w) => $w->where('nama', 'like', '%'.$request->q.'%')->orWhere('nip', 'like', '%'.$request->q.'%')->orWhere('email', 'like', '%'.$request->q.'%')))
+            ->when($request->filled('role'), fn ($q) => $q->whereHas('roles', fn ($r) => $r->where('name', $request->role)))
+            ->latest()->paginate(15);
+
+        return view('admin.guru.index', ['gurus' => $gurus, 'roleOptions' => \App\Models\Role::orderBy('name')->pluck('name')->mapWithKeys(fn ($n) => [$n => str_replace('_', ' ', $n)])]);
     }
 
     public function create()

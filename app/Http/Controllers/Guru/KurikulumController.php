@@ -35,6 +35,7 @@ class KurikulumController extends Controller
     private function cariBentrok(array $data, int $guruId, ?int $abaikanId = null): ?string
     {
         $bentrok = JadwalPelajaran::where('hari', $data['hari'])
+            ->when(TahunAjaran::where('is_active', true)->value('id'), fn ($q, $ta) => $q->where('tahun_ajaran_id', $ta))
             ->when($abaikanId, fn ($q) => $q->where('id', '!=', $abaikanId))
             ->where(fn ($q) => $q->where('kelas_id', $data['kelas_id'])->orWhere('guru_id', $guruId))
             ->where('jam_mulai', '<', $data['jam_selesai'])
@@ -172,6 +173,44 @@ class KurikulumController extends Controller
         });
 
         return redirect()->route('guru.portal')->with('success', 'Penetapan Wali Kelas & Guru Wali berhasil disimpan.');
+    }
+
+    public function salinJadwal()
+    {
+        $aktifId = TahunAjaran::where('is_active', true)->value('id');
+        abort_unless($aktifId, 422, 'Belum ada tahun ajaran aktif.');
+
+        if (JadwalPelajaran::where('tahun_ajaran_id', $aktifId)->exists()) {
+            return back()->with('error', 'Tahun ajaran aktif sudah memiliki jadwal, penyalinan dibatalkan agar tidak dobel.');
+        }
+
+        $sumberId = JadwalPelajaran::where('tahun_ajaran_id', '!=', $aktifId)->orderByDesc('tahun_ajaran_id')->value('tahun_ajaran_id');
+        if (! $sumberId) {
+            return back()->with('error', 'Tidak ada jadwal dari tahun ajaran sebelumnya untuk disalin.');
+        }
+
+        $penetapan = KelasMataPelajaran::all()->keyBy(fn ($km) => $km->kelas_id.'-'.$km->mata_pelajaran_id);
+        $disalin = 0;
+        $dilewati = 0;
+
+        DB::transaction(function () use ($sumberId, $aktifId, $penetapan, &$disalin, &$dilewati) {
+            foreach (JadwalPelajaran::where('tahun_ajaran_id', $sumberId)->get() as $j) {
+                $guruId = $penetapan[$j->kelas_id.'-'.$j->mata_pelajaran_id]->guru_id ?? null;
+                if (! $guruId) {
+                    $dilewati++;
+                    continue;
+                }
+
+                JadwalPelajaran::create([
+                    'kelas_id' => $j->kelas_id, 'mata_pelajaran_id' => $j->mata_pelajaran_id, 'guru_id' => $guruId,
+                    'hari' => $j->hari, 'jam_mulai' => $j->jam_mulai, 'jam_selesai' => $j->jam_selesai,
+                    'ruang' => $j->ruang, 'tahun_ajaran_id' => $aktifId,
+                ]);
+                $disalin++;
+            }
+        });
+
+        return redirect()->route('guru.portal')->with('success', "{$disalin} jadwal disalin dari tahun ajaran sebelumnya".($dilewati ? ", {$dilewati} dilewati karena mapel belum ditetapkan ke kelasnya." : '.'));
     }
 
     public function destroyJadwal(JadwalPelajaran $jadwalPelajaran)

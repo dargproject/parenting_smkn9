@@ -41,7 +41,7 @@ Route::middleware('role:kepsek')->prefix('kepsek')->name('kepsek.')->group(funct
 });
 
 Route::get('/guru/portal', [PortalController::class, 'index'])
-    ->middleware('role:waka_kurikulum,waka_kesiswaan,guru_bk,wali_kelas,guru_wali,guru_mapel')
+    ->middleware('role:waka_kurikulum,waka_kesiswaan,guru_bk,wali_kelas,guru_wali,guru_mapel,tatib')
     ->name('guru.portal');
 
 Route::get('/guru/api/siswa-by-jadwal/{jadwalId}', [PortalController::class, 'getSiswaByJadwal'])
@@ -49,8 +49,12 @@ Route::get('/guru/api/siswa-by-jadwal/{jadwalId}', [PortalController::class, 'ge
     ->name('guru.api.siswa_by_jadwal');
 
 Route::post('/guru/pelanggaran', [PortalController::class, 'storePelanggaran'])
-    ->middleware('role:waka_kesiswaan,guru_mapel')
+    ->middleware('role:waka_kesiswaan,guru_mapel,tatib')
     ->name('guru.pelanggaran.store');
+
+Route::post('/guru/kesiswaan/petugas-tatib', [\App\Http\Controllers\Guru\KesiswaanController::class, 'updatePetugasTatib'])
+    ->middleware('role:waka_kesiswaan')
+    ->name('guru.kesiswaan.petugas-tatib.update');
 
 Route::post('/guru/panggilan-ortu', [PortalController::class, 'storePanggilanOrtu'])
     ->middleware('role:waka_kesiswaan')
@@ -59,6 +63,7 @@ Route::post('/guru/panggilan-ortu', [PortalController::class, 'storePanggilanOrt
 Route::middleware('role:waka_kurikulum')->prefix('guru/kurikulum')->name('guru.kurikulum.')->group(function () {
     Route::post('/jadwal', [KurikulumController::class, 'storeJadwal'])->name('jadwal.store');
     Route::put('/jadwal/{jadwalPelajaran}', [KurikulumController::class, 'updateJadwal'])->name('jadwal.update');
+    Route::post('/jadwal/salin', [KurikulumController::class, 'salinJadwal'])->name('jadwal.salin');
     Route::post('/kelas-mapel', [KurikulumController::class, 'storeKelasMapel'])->name('kelas-mapel.store');
     Route::put('/kelas-mapel/{kelasMataPelajaran}', [KurikulumController::class, 'updateKelasMapel'])->name('kelas-mapel.update');
     Route::delete('/kelas-mapel/{kelasMataPelajaran}', [KurikulumController::class, 'destroyKelasMapel'])->name('kelas-mapel.destroy');
@@ -75,9 +80,12 @@ Route::middleware('role:guru_mapel')->prefix('guru/penilaian')->name('guru.penil
     Route::post('/nilai-pkl-ukk', [PenilaianController::class, 'storeNilaiPklUkk'])->name('nilai-pkl-ukk.store');
 });
 
+Route::middleware('role:guru_bk')->post('/guru/bk/asesmen', [\App\Http\Controllers\Guru\BkController::class, 'storeAsesmen'])->name('guru.bk.asesmen.store');
+
 Route::middleware('role:wali_kelas')->post('/guru/wali-kelas/catatan', [PenilaianController::class, 'storeCatatanWaliKelas'])->name('guru.wali-kelas.catatan.store');
 
 Route::middleware('role:guru_wali')->prefix('guru/wali')->name('guru.wali.')->group(function () {
+    Route::post('/catatan-akademik', [PenilaianController::class, 'storeCatatanAkademik'])->name('catatan-akademik.store');
     Route::post('/rapor/rilis', [PenilaianController::class, 'rilisRapor'])->name('rapor.rilis');
     Route::post('/rapor/batalkan', [PenilaianController::class, 'batalkanRilis'])->name('rapor.batalkan');
 });

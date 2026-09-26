@@ -18,6 +18,7 @@ class RoleSeeder extends Seeder
             'wali_kelas',
             'guru_wali',
             'guru_mapel',
+            'tatib',
         ] as $name) {
             Role::firstOrCreate(['name' => $name]);
         }

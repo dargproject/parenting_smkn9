@@ -52,6 +52,13 @@ class TahunAjaranController extends Controller
             return back()->with('error', 'Tahun ajaran aktif tidak dapat dihapus.');
         }
 
+        $dipakai = collect(['nilai_lms', 'nilai_sas', 'nilai_pkl_ukks', 'catatan_kompetensis', 'catatan_wali_kelas', 'catatan_akademik_siswas', 'asesmen_bks', 'rapor_finals', 'tujuan_pembelajarans', 'presensis', 'jadwal_pelajarans'])
+            ->filter(fn ($tabel) => DB::table($tabel)->where('tahun_ajaran_id', $tahunAjaran->id)->exists());
+
+        if ($dipakai->isNotEmpty()) {
+            return back()->with('error', 'Tahun ajaran ini sudah memiliki data (nilai, jadwal, rapor, atau presensi) sehingga tidak dapat dihapus. Menghapusnya akan ikut menghapus seluruh data tersebut.');
+        }
+
         $tahunAjaran->delete();
 
         return back()->with('success', 'Tahun ajaran berhasil dihapus.');

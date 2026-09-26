@@ -22,9 +22,10 @@
     <!-- ========================================== -->
     @include('kesiswaan.absensi')
     @include('kesiswaan.ortu')
+    @include('kesiswaan.petugas-tatib')
 @endif
 
-@if($guru->roles->contains('name', 'waka_kesiswaan') || $guru->roles->contains('name', 'guru_mapel'))
+@if($guru->roles->contains('name', 'waka_kesiswaan') || $guru->roles->contains('name', 'guru_mapel') || $guru->roles->contains('name', 'tatib'))
     <!-- ========================================== -->
     <!-- TATIB (KESISWAAN & GURU MAPEL) VIEWS -->
     <!-- ========================================== -->
@@ -37,15 +38,16 @@
     <!-- ========================================== -->
     <!-- BK (BIMBINGAN KONSELING) VIEWS -->
     <!-- ========================================== -->
-    <div id="pane-bk-asesmen" class="pane-content hidden-pane fade-transition">
+    <div id="pane-bk-asesmen" class="pane-content hidden-pane fade-transition" x-data="{ modal: false, f: { siswa_id: '', tingkat_stres: 5, minat_karir: '', catatan: '' },
+            baru() { this.f = { siswa_id: '', tingkat_stres: 5, minat_karir: '', catatan: '' }; this.modal = true; },
+            ubah(d) { this.f = { siswa_id: d.siswa, tingkat_stres: d.stres || 5, minat_karir: d.minat || '', catatan: d.catatan || '' }; this.modal = true; } }">
         <div class="flex justify-between items-center mb-4">
             <div>
                 <h4 class="font-bold m-0 text-slate-100">Asesmen Psikologis & Minat Bakat</h4>
                 <p class="text-slate-400 small m-0">Evaluasi berkala tingkat stress akademik dan
                     pemetaan karir siswa.</p>
             </div>
-            <button class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-lg transition-colors" data-bs-toggle="modal"
-                data-bs-target="#addAsesmenModal">
+            <button type="button" @click="baru()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-lg transition-colors">
                 <i class="fa-solid fa-plus mr-1"></i> Asesmen Baru
             </button>
         </div>
@@ -60,25 +62,67 @@
                             <th>Minat Lanjutan</th>
                             <th>Catatan BK</th>
                             <th>Kerahasiaan</th>
+                            <th class="text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="bk-asesmen-tbody">
                         @foreach($siswas as $siswa)
                             @php
+                                $asesmen = $asesmenBkMap[$siswa->id] ?? null;
                                 $badgeClass = 'bg-success';
-                                if ($siswa->counseling_stress >= 8) $badgeClass = 'bg-danger';
-                                elseif ($siswa->counseling_stress >= 5) $badgeClass = 'bg-warning text-slate-100';
+                                if (($asesmen->tingkat_stres ?? 0) >= 8) $badgeClass = 'bg-danger';
+                                elseif (($asesmen->tingkat_stres ?? 0) >= 5) $badgeClass = 'bg-warning text-slate-100';
                             @endphp
                             <tr>
                                 <td class="font-bold">{{ $siswa->nama }} <span class="block text-slate-400 small" style="font-size: 10px;">{{ $siswa->kelas->nama_kelas ?? '-' }}</span></td>
-                                <td class="text-center"><span class="badge {{ $badgeClass }} badge-pill-custom">Stress Level: {{ $siswa->counseling_stress }}/10</span></td>
-                                <td><span class="badge bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 badge-pill-custom">{{ $siswa->counseling_career ?? 'Belum ditentukan' }}</span></td>
-                                <td class="small text-slate-400 italic">"{{ $siswa->counseling_note ?? '-' }}"</td>
+                                <td class="text-center"><span class="badge {{ $badgeClass }} badge-pill-custom">Stress Level: {{ $asesmen->tingkat_stres ?? '-' }}/10</span></td>
+                                <td><span class="badge bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 badge-pill-custom">{{ $asesmen->minat_karir ?? 'Belum ditentukan' }}</span></td>
+                                <td class="small text-slate-400 italic">"{{ $asesmen->catatan ?? '-' }}"</td>
                                 <td><span class="confidential-badge"><i class="fa-solid fa-lock"></i> RAHASIA</span></td>
+                                <td class="text-center">
+                                    <button type="button" @click="ubah({{ Illuminate\Support\Js::from(['siswa' => $siswa->id, 'stres' => $asesmen->tingkat_stres ?? null, 'minat' => $asesmen->minat_karir ?? '', 'catatan' => $asesmen->catatan ?? '']) }})" class="btn btn-outline-primary btn-xs py-0.5 px-2" style="font-size: 11px;" title="Ubah asesmen"><i class="fa-solid fa-pen"></i></button>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
+            </div>
+        </div>
+
+        <div x-show="modal" style="display: none; z-index: 10000;" class="fixed inset-0 flex items-center justify-center p-4 bg-black/50" @keydown.escape.window="modal = false">
+            <div class="solid-panel w-full max-w-md rounded-2xl border border-slate-700/60 bg-slate-800/80 text-slate-100 shadow-xl p-5 max-h-[90vh] overflow-y-auto" @click.outside="modal = false">
+                <div class="flex items-center justify-between mb-3">
+                    <h5 class="font-bold text-slate-100 m-0">Asesmen BK</h5>
+                    <button type="button" @click="modal = false" class="text-slate-400 hover:text-slate-100"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <form method="POST" action="{{ route('guru.bk.asesmen.store') }}" class="space-y-3">
+                    @csrf
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-400">Siswa</label>
+                        @include('kesiswaan.partials.siswa-search', ['name' => 'siswa_id', 'siswas' => $siswas, 'bind' => 'f.siswa_id'])
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-400">Tingkat Stres: <span class="font-bold text-slate-100" x-text="f.tingkat_stres"></span>/10</label>
+                        <input type="range" name="tingkat_stres" min="1" max="10" x-model="f.tingkat_stres" class="w-full">
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-400">Minat Lanjutan</label>
+                        <select name="minat_karir" x-model="f.minat_karir" class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+                            <option value="">Belum ditentukan</option>
+                            <option>Bekerja di Industri</option>
+                            <option>Melanjutkan Kuliah</option>
+                            <option>Wirausaha Mandiri</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-400">Catatan BK</label>
+                        <textarea name="catatan" rows="3" x-model="f.catatan" class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100"></textarea>
+                    </div>
+                    <div class="flex justify-end gap-2">
+                        <button type="button" @click="modal = false" class="rounded-lg border border-slate-600 px-4 py-2 text-sm font-semibold text-slate-300">Batal</button>
+                        <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500">Simpan Asesmen</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -364,7 +408,11 @@
         </div>
     </div>
 
-    <div id="pane-wali-catatan" class="pane-content hidden-pane fade-transition">
+    @php
+        $kelasWaliList = $kelasList->where('wali_kelas_id', $guru->id)->sortBy('nama_kelas', SORT_NATURAL)->values();
+        $jumlahSiswaWali = $siswaWali->groupBy('kelas_id')->map->count();
+    @endphp
+    <div id="pane-wali-catatan" class="pane-content hidden-pane fade-transition" x-data="kelasXData('wk-catatan:{{ $guru->id }}', @js($kelasWaliList->pluck('id')))">
         <div class="mb-3">
             <h4 class="font-bold m-0 text-slate-100">Catatan Wali Kelas</h4>
             <p class="text-slate-400 small m-0">Catatan perkembangan karakter dan rekap ketidakhadiran siswa di kelas perwalian Anda, untuk dicantumkan pada e-Rapor.</p>
@@ -373,6 +421,7 @@
         @if($siswaWali->isEmpty())
             <p class="text-slate-400 text-sm">Anda belum ditetapkan sebagai wali kelas untuk kelas manapun. Hubungi Waka Kurikulum.</p>
         @else
+            <div class="mb-3">@include('guru.partials.pilih-kelas', ['daftarKelas' => $kelasWaliList, 'jumlahSiswa' => $jumlahSiswaWali, 'cari' => true])</div>
             <form method="POST" action="{{ route('guru.wali-kelas.catatan.store') }}" class="rounded-2xl border border-slate-700/60 bg-slate-800/80 text-slate-100 overflow-hidden">
                 @csrf
                 <div class="overflow-x-auto">
@@ -389,7 +438,7 @@
                         <tbody class="divide-y divide-slate-700/60">
                             @foreach($siswaWali as $siswa)
                                 @php $cw = $catatanWaliKelasWali[$siswa->id] ?? null; @endphp
-                                <tr>
+                                <tr x-show="kelas == {{ $siswa->kelas_id }} && (!cari || {{ \Illuminate\Support\Js::from(mb_strtolower($siswa->nama)) }}.includes(cari.toLowerCase()))">
                                     <td class="px-3 py-2 align-top font-semibold text-slate-100">{{ $siswa->nama }}<span class="block text-slate-400 font-normal" style="font-size: 10px;">{{ $siswa->kelas->nama_kelas ?? '' }} &middot; NIS {{ $siswa->nis }}</span></td>
                                     <td class="px-3 py-2">
                                         <textarea name="catatan[{{ $siswa->id }}][catatan_karakter]" rows="2" placeholder="Sikap, kedisiplinan, dan perkembangan siswa..." class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500">{{ $cw->catatan_karakter ?? '' }}</textarea>
@@ -626,12 +675,12 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <textarea id="gw-remark-{{ $siswa->nis }}" rows="1" class="form-control form-control-sm text-slate-400" style="font-size: 12px; min-width: 150px;" readonly placeholder="Klik 'Ubah Catatan'...">{{ $siswa->catatan_akademik }}</textarea>
+                                    <textarea id="gw-remark-{{ $siswa->nis }}" rows="1" class="form-control form-control-sm text-slate-400" style="font-size: 12px; min-width: 150px;" readonly placeholder="Klik 'Ubah Catatan'...">{{ $catatanAkademikMap[$siswa->id]->catatan ?? '' }}</textarea>
                                 </td>
                                 <td class="text-center">
                                     <div class="flex gap-1 justify-center">
-                                        <button onclick="openGuruWaliRemarkModal({{ $siswa->nis }}, '{{ $siswa->nama }}')" class="btn btn-brand-primary btn-xs py-1 px-2 rounded-2" title="Kelola Catatan"><i class="fa-solid fa-edit"></i></button>
-                                        <button onclick="openEscalationReferralModal({{ $siswa->nis }}, '{{ $siswa->nama }}')" class="btn btn-warning btn-xs py-1 px-2 rounded-2" title="Eskalasi Rujukan"><i class="fa-solid fa-triangle-exclamation"></i></button>
+                                        <button onclick="openGuruWaliRemarkModal({{ $siswa->nis }}, {{ \Illuminate\Support\Js::from($siswa->nama) }})" class="btn btn-brand-primary btn-xs py-1 px-2 rounded-2" title="Kelola Catatan"><i class="fa-solid fa-edit"></i></button>
+                                        <button onclick="openEscalationReferralModal({{ $siswa->nis }}, {{ \Illuminate\Support\Js::from($siswa->nama) }})" class="btn btn-warning btn-xs py-1 px-2 rounded-2" title="Eskalasi Rujukan"><i class="fa-solid fa-triangle-exclamation"></i></button>
                                     </div>
                                 </td>
                             </tr>
@@ -697,10 +746,10 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="text-slate-400 small italic text-truncate d-inline-block" style="max-width: 180px;">{{ $siswa->catatan_akademik ?? 'Belum ada catatan.' }}</span>
+                                    <span class="text-slate-400 small italic text-truncate d-inline-block" style="max-width: 180px;">{{ $catatanAkademikMap[$siswa->id]->catatan ?? 'Belum ada catatan.' }}</span>
                                 </td>
                                 <td class="text-center">
-                                    <button onclick="downloadReport('{{ $siswa->nama }}')" class="btn btn-outline-primary btn-xs py-1 px-2 text-xs" {{ $remedialCount === 0 ? '' : 'disabled' }}><i class="fa-solid fa-file-pdf"></i> Unduh e-Rapor</button>
+                                    <button onclick="downloadReport({{ \Illuminate\Support\Js::from($siswa->nama) }})" class="btn btn-outline-primary btn-xs py-1 px-2 text-xs" {{ $remedialCount === 0 ? '' : 'disabled' }}><i class="fa-solid fa-file-pdf"></i> Unduh e-Rapor</button>
                                 </td>
                             </tr>
                         @endforeach

@@ -11,9 +11,15 @@ use Illuminate\Support\Facades\Hash;
 
 class SiswaController extends Controller
 {
-    public function index()
+    public function index(\Illuminate\Http\Request $request)
     {
-        return view('admin.siswa.index', ['siswas' => Siswa::with('kelas')->latest()->paginate(15)]);
+        $siswas = Siswa::with('kelas')
+            ->when($request->filled('q'), fn ($q) => $q->where(fn ($w) => $w->where('nama', 'like', '%'.$request->q.'%')->orWhere('nis', 'like', '%'.$request->q.'%')->orWhere('nisn', 'like', '%'.$request->q.'%')->orWhere('nipd', 'like', '%'.$request->q.'%')))
+            ->when($request->filled('kelas_id'), fn ($q) => $q->where('kelas_id', $request->kelas_id))
+            ->when($request->filled('status'), fn ($q) => $q->where('status_aktif', $request->status === 'aktif'))
+            ->latest()->paginate(15);
+
+        return view('admin.siswa.index', ['siswas' => $siswas, 'kelasOptions' => \App\Models\Kelas::orderBy('tingkat')->orderBy('nama_kelas')->pluck('nama_kelas', 'id')]);
     }
 
     public function create()

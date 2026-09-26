@@ -1,4 +1,8 @@
-<div id="pane-guru-wali-rilis" class="pane-content hidden-pane fade-transition space-y-4">
+@php
+    $kelasRilisList = $kelasBinaan->sortBy('nama_kelas', SORT_NATURAL)->values();
+    $jumlahSiswaRilis = $siswaBinaan->groupBy('kelas_id')->map->count();
+@endphp
+<div id="pane-guru-wali-rilis" class="pane-content hidden-pane fade-transition space-y-4" x-data="kelasXData('gw-rilis:{{ $guru->id }}', @js($kelasRilisList->pluck('id')), function () { this.$el.querySelectorAll('.rilis-checkbox').forEach(c => c.checked = false); })">
     <div>
         <h4 class="font-bold text-slate-100 mb-1 text-xl">Finalisasi &amp; Rilis Nilai</h4>
         <p class="text-slate-400 text-sm">Kunci nilai semester dan terbitkan ringkasan nilai ke dashboard orang tua. Hanya siswa dengan nilai SAS lengkap di seluruh mata pelajaran yang bisa dirilis.</p>
@@ -7,13 +11,14 @@
     @if($siswaBinaan->isEmpty())
         <p class="text-slate-400 text-sm">Anda belum menjadi guru wali (akademik) untuk kelas manapun.</p>
     @else
+        @include('guru.partials.pilih-kelas', ['daftarKelas' => $kelasRilisList, 'jumlahSiswa' => $jumlahSiswaRilis, 'cari' => true])
         <form method="POST" action="{{ route('guru.wali.rapor.rilis') }}">
             @csrf
             <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 overflow-x-auto">
                 <table class="w-full min-w-[640px] text-left text-sm">
                     <thead class="bg-slate-900 border-b border-slate-700/60 text-xs text-slate-400">
                         <tr>
-                            <th class="px-3 py-3"><input type="checkbox" onclick="document.querySelectorAll('.rilis-checkbox').forEach(c => c.checked = this.checked)"></th>
+                            <th class="px-3 py-3"><input type="checkbox" onclick="const on = this.checked; document.querySelectorAll('.rilis-checkbox').forEach(c => { if (c.offsetParent !== null && !c.disabled) c.checked = on; })"></th>
                             <th class="px-3 py-3">Nama Siswa</th>
                             <th class="px-3 py-3">Kelas</th>
                             <th class="px-3 py-3 text-center">Kelengkapan Nilai</th>
@@ -28,7 +33,7 @@
                                 $rapor = $raporFinalBinaan[$siswa->id] ?? null;
                                 $sudahFinal = $rapor && $rapor->status === 'final';
                             @endphp
-                            <tr>
+                            <tr x-show="kelas == {{ $siswa->kelas_id }} && (!cari || {{ \Illuminate\Support\Js::from(mb_strtolower($siswa->nama)) }}.includes(cari.toLowerCase()))">
                                 <td class="px-3 py-3">
                                     <input type="checkbox" class="rilis-checkbox" name="siswa_ids[]" value="{{ $siswa->id }}" {{ !$lengkap || $sudahFinal ? 'disabled' : '' }}>
                                 </td>

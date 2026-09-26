@@ -32,21 +32,8 @@
                 <label for="alamat_sekolah" class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Alamat Sekolah</label>
                 <textarea id="alamat_sekolah" name="alamat_sekolah" rows="3" class="w-full rounded-lg border border-slate-300 bg-transparent px-4 py-2.5 text-sm text-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:text-slate-100">{{ old('alamat_sekolah', $settings['alamat_sekolah'] ?? '') }}</textarea>
             </div>
-            <div>
-                <label for="tahun_ajaran_aktif_id" class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Tahun Ajaran Aktif</label>
-                <select id="tahun_ajaran_aktif_id" name="tahun_ajaran_aktif_id" class="w-full rounded-lg border border-slate-300 bg-transparent px-4 py-2.5 text-sm text-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
-                    <option value="">Pilih tahun ajaran</option>
-                    @foreach($tahunAjarans as $tahunAjaran)
-                        <option value="{{ $tahunAjaran->id }}" @selected(old('tahun_ajaran_aktif_id', $settings['tahun_ajaran_aktif_id'] ?? '') == $tahunAjaran->id)>{{ $tahunAjaran->nama }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label for="semester_aktif" class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Semester Aktif</label>
-                <select id="semester_aktif" name="semester_aktif" class="w-full rounded-lg border border-slate-300 bg-transparent px-4 py-2.5 text-sm text-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100">
-                    <option value="ganjil" @selected(old('semester_aktif', $settings['semester_aktif'] ?? '') === 'ganjil')>Ganjil</option>
-                    <option value="genap" @selected(old('semester_aktif', $settings['semester_aktif'] ?? '') === 'genap')>Genap</option>
-                </select>
+            <div class="md:col-span-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                Tahun ajaran dan semester aktif diatur di menu <a href="{{ route('admin.tahun-ajaran.index') }}" class="font-semibold text-blue-600 dark:text-blue-400 underline">Tahun Ajaran</a> (tombol Aktifkan), agar tidak ada dua sumber yang berbeda.
             </div>
             <div class="md:col-span-2">
                 <label for="logo_sekolah" class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Logo Sekolah</label>

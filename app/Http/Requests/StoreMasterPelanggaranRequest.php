@@ -20,10 +20,15 @@ class StoreMasterPelanggaranRequest extends FormRequest
      *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
+    public function messages(): array
+    {
+        return ['nama_pelanggaran.unique' => 'Pelanggaran dengan nama yang sama sudah ada pada pasal ini.'];
+    }
+
     public function rules(): array
     {
         return [
-            'nama_pelanggaran' => 'required|string|max:255',
+            'nama_pelanggaran' => ['required', 'string', 'max:255', \Illuminate\Validation\Rule::unique('master_pelanggarans', 'nama_pelanggaran')->where('pasal_id', $this->input('pasal_id'))->ignore($this->route('masterPelanggaran'))],
             'pasal_id' => 'required|exists:pasals,id',
             'jenis_id' => 'required|exists:jenis_pelanggarans,id',
             'is_active' => 'sometimes|boolean',

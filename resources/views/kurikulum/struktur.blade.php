@@ -182,8 +182,19 @@
 
     <!-- List of active schedules -->
     <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5 md:p-6 text-slate-100 mb-4">
-        <h6 class="font-bold text-slate-100 mb-3"><i
-                class="fa-solid fa-list-ul mr-1 text-info"></i> Daftar Sebaran Jadwal Aktif</h6>
+        @php
+            $taAktifId = \App\Models\TahunAjaran::where('is_active', true)->value('id');
+            $bisaSalin = $taAktifId && $jadwalPelajarans->isEmpty() && \App\Models\JadwalPelajaran::where('tahun_ajaran_id', '!=', $taAktifId)->exists();
+        @endphp
+        <div class="flex items-center justify-between gap-3 mb-3">
+            <h6 class="font-bold text-slate-100 m-0"><i class="fa-solid fa-list-ul mr-1 text-info"></i> Daftar Sebaran Jadwal Aktif</h6>
+            @if($bisaSalin)
+                <form method="POST" action="{{ route('guru.kurikulum.jadwal.salin') }}" onsubmit="return confirm('Salin seluruh jadwal dari tahun ajaran sebelumnya ke tahun ajaran aktif?')">
+                    @csrf
+                    <button type="submit" class="rounded-lg border border-blue-500 px-3 py-1.5 text-xs font-semibold text-blue-500 hover:bg-blue-500/10"><i class="fa-regular fa-copy mr-1"></i> Salin dari Tahun Ajaran Sebelumnya</button>
+                </form>
+            @endif
+        </div>
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm text-slate-400 table-sm" style="font-size: 13px;">
                 <thead class="bg-slate-900 border-b border-slate-700/60 text-xs">

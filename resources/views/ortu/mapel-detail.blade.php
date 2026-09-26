@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="space-y-6">
-        <a href="{{ route('ortu.dashboard') }}" class="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400"><i
+        <a href="{{ route('ortu.dashboard', ['ta' => $tahunAjaranTerpilih?->id]) }}" class="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400"><i
                 class="fa-solid fa-arrow-left mr-1"></i> Kembali ke Ringkasan</a>
 
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">

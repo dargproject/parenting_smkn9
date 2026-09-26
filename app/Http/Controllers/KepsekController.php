@@ -58,6 +58,10 @@ class KepsekController extends Controller
             'deskripsi' => 'required|string',
         ]);
 
+        if (Pengumuman::where($data)->exists()) {
+            return back()->withInput()->with('error', 'Pengumuman dengan judul, kategori, dan isi yang sama sudah pernah disiarkan.');
+        }
+
         Pengumuman::create($data + ['pembuat_id' => Auth::id()]);
 
         return redirect()->route('kepsek.dashboard')->with('success', 'Pengumuman berhasil disiarkan.');

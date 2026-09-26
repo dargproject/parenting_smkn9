@@ -40,11 +40,18 @@ class PenilaianController extends Controller
 
     public function storeTujuanPembelajaran(Request $request)
     {
+        $tpUnik = fn (string $kolom) => \Illuminate\Validation\Rule::unique('tujuan_pembelajarans', $kolom)
+            ->where('mata_pelajaran_id', $request->input('mata_pelajaran_id'))
+            ->where('tahun_ajaran_id', $this->tahunAjaranAktifId());
+
         $data = $request->validate([
             'mata_pelajaran_id' => 'required|exists:mata_pelajarans,id',
-            'kode' => 'nullable|string|max:20',
-            'deskripsi' => 'required|string|max:500',
+            'kode' => ['nullable', 'string', 'max:20', $tpUnik('kode')],
+            'deskripsi' => ['required', 'string', 'max:500', $tpUnik('deskripsi')],
             'urutan' => 'nullable|integer|min:0',
+        ], [
+            'kode.unique' => 'Kode TP tersebut sudah dipakai pada mapel ini.',
+            'deskripsi.unique' => 'Tujuan pembelajaran dengan deskripsi yang sama sudah ada pada mapel ini.',
         ]);
 
         $this->pastikanMapelMilikGuru($data['mata_pelajaran_id']);
@@ -77,6 +84,12 @@ class PenilaianController extends Controller
         $this->pastikanMapelMilikGuru($data['mata_pelajaran_id']);
         $tahunAjaranId = $this->tahunAjaranAktifId();
 
+        $tpValid = TujuanPembelajaran::where('mata_pelajaran_id', $data['mata_pelajaran_id'])->where('tahun_ajaran_id', $tahunAjaranId)->pluck('id');
+        $tpKiriman = collect($data['nilai'])->flatMap(fn ($perTp) => array_keys($perTp))->unique();
+        if ($tpKiriman->diff($tpValid)->isNotEmpty()) {
+            return back()->with('error', 'Sebagian Tujuan Pembelajaran bukan milik semester/tahun ajaran aktif. Muat ulang halaman lalu isi kembali.');
+        }
+
         DB::transaction(function () use ($data, $tahunAjaranId) {
             foreach ($data['nilai'] as $siswaId => $perTp) {
                 foreach ($perTp as $tujuanPembelajaranId => $nilai) {
@@ -91,7 +104,7 @@ class PenilaianController extends Controller
                 }
             }
 
-            $tpIds = TujuanPembelajaran::where('mata_pelajaran_id', $data['mata_pelajaran_id'])->pluck('id');
+            $tpIds = TujuanPembelajaran::where('mata_pelajaran_id', $data['mata_pelajaran_id'])->where('tahun_ajaran_id', $tahunAjaranId)->pluck('id');
             foreach (array_keys($data['nilai']) as $siswaId) {
                 $rata = NilaiLm::where('siswa_id', $siswaId)->whereIn('tujuan_pembelajaran_id', $tpIds)->avg('nilai');
                 if ($rata === null) {
@@ -234,6 +247,34 @@ class PenilaianController extends Controller
         });
 
         return redirect()->route('guru.portal')->with('success', 'Catatan wali kelas berhasil disimpan.');
+    }
+
+    public function storeCatatanAkademik(Request $request)
+    {
+        $guru = Auth::user();
+        $siswaBinaanIds = Kelas::where('guru_wali_id', $guru->id)->with('siswas:id,kelas_id')->get()->flatMap->siswas->pluck('id');
+
+        $data = $request->validate([
+            'catatan' => 'required|array',
+            'catatan.*' => 'nullable|string|max:2000',
+        ]);
+
+        $tahunAjaranId = $this->tahunAjaranAktifId();
+
+        DB::transaction(function () use ($data, $siswaBinaanIds, $tahunAjaranId, $guru) {
+            foreach ($data['catatan'] as $siswaId => $catatan) {
+                if (! $siswaBinaanIds->contains((int) $siswaId)) {
+                    continue;
+                }
+
+                \App\Models\CatatanAkademikSiswa::updateOrCreate(
+                    ['siswa_id' => $siswaId, 'tahun_ajaran_id' => $tahunAjaranId],
+                    ['catatan' => $catatan, 'guru_id' => $guru->id]
+                );
+            }
+        });
+
+        return redirect()->route('guru.portal')->with('success', 'Catatan akademik berhasil disimpan.');
     }
 
     public function rilisRapor(Request $request, PenilaianService $penilaian)

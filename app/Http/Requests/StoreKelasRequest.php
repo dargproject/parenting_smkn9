@@ -22,6 +22,6 @@ class StoreKelasRequest extends FormRequest
      */
     public function rules(): array
     {
-        return ['nama_kelas' => 'required|string|max:100', 'tingkat' => 'required|in:10,11,12', 'jurusan' => 'required|string|max:100', 'wali_kelas_id' => 'nullable|exists:gurus,id'];
+        return ['nama_kelas' => ['required', 'string', 'max:100', \Illuminate\Validation\Rule::unique('kelas', 'nama_kelas')->ignore($this->route('kelas'))], 'tingkat' => 'required|in:X,XI,XII', 'jurusan' => 'required|string|max:100', 'wali_kelas_id' => 'nullable|exists:gurus,id'];
     }
 }

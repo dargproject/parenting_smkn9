@@ -20,23 +20,21 @@ class DashboardController extends Controller
     {
         $orangTua = Auth::guard('orangtua')->user();
         $siswa = $orangTua->siswa;
-        $tahunAjaranAktif = TahunAjaran::where('is_active', true)->first();
+        [$riwayat, $tahunAjaranAktif] = $this->pilihTahunAjaran($siswa);
 
         $raporFinal = $tahunAjaranAktif
             ? RaporFinal::where(['siswa_id' => $siswa->id, 'tahun_ajaran_id' => $tahunAjaranAktif->id])->first()
             : null;
 
         if (! $raporFinal || $raporFinal->status !== 'final') {
-            return view('ortu.dashboard', ['siswa' => $siswa, 'dirilis' => false, 'ringkasan' => collect()]);
+            return view('ortu.dashboard', ['siswa' => $siswa, 'dirilis' => false, 'ringkasan' => collect(), 'riwayat' => $riwayat, 'tahunAjaranTerpilih' => $tahunAjaranAktif]);
         }
 
-        $mapelList = \App\Models\KelasMataPelajaran::where('kelas_id', $siswa->kelas_id)
-            ->with('mataPelajaran')
-            ->get()
-            ->pluck('mataPelajaran')
-            ->filter()
-            ->unique('id')
-            ->values();
+        // Mapel diambil dari nilai yang tersimpan pada semester tsb, bukan kelas siswa saat ini (siswa bisa sudah naik kelas).
+        $mapelIds = NilaiSas::where('siswa_id', $siswa->id)->where('tahun_ajaran_id', $tahunAjaranAktif->id)->pluck('mata_pelajaran_id')
+            ->merge(NilaiLm::where('siswa_id', $siswa->id)->where('tahun_ajaran_id', $tahunAjaranAktif->id)->with('tujuanPembelajaran')->get()->pluck('tujuanPembelajaran.mata_pelajaran_id'))
+            ->filter()->unique();
+        $mapelList = MataPelajaran::whereIn('id', $mapelIds)->orderBy('nama_mapel')->get();
 
         $nilaiLmSiswa = NilaiLm::where('siswa_id', $siswa->id)->where('tahun_ajaran_id', $tahunAjaranAktif->id)->with('tujuanPembelajaran')->get();
         $nilaiSasSiswa = NilaiSas::where('siswa_id', $siswa->id)->where('tahun_ajaran_id', $tahunAjaranAktif->id)->get();
@@ -58,6 +56,8 @@ class DashboardController extends Controller
             'siswa' => $siswa,
             'dirilis' => true,
             'ringkasan' => $ringkasan,
+            'riwayat' => $riwayat,
+            'tahunAjaranTerpilih' => $tahunAjaranAktif,
             'perluPerhatian' => $ringkasan->filter(fn ($r) => $r['status'] === 'remedial'),
         ]);
     }
@@ -66,7 +66,7 @@ class DashboardController extends Controller
     {
         $orangTua = Auth::guard('orangtua')->user();
         $siswa = $orangTua->siswa;
-        $tahunAjaranAktif = TahunAjaran::where('is_active', true)->first();
+        [, $tahunAjaranAktif] = $this->pilihTahunAjaran($siswa);
 
         $raporFinal = $tahunAjaranAktif
             ? RaporFinal::where(['siswa_id' => $siswa->id, 'tahun_ajaran_id' => $tahunAjaranAktif->id])->first()
@@ -100,6 +100,18 @@ class DashboardController extends Controller
             'tpRemedial' => $penilaian->tpRemedial($nilaiLm),
             'catatanKompetensi' => $catatanKompetensi,
             'catatanWaliKelas' => $catatanWaliKelas,
+            'tahunAjaranTerpilih' => $tahunAjaranAktif,
         ]);
+    }
+
+    /** Mengembalikan [daftar semester yang rapornya sudah dirilis, semester yang dipilih (default: aktif)]. */
+    private function pilihTahunAjaran($siswa): array
+    {
+        $riwayat = TahunAjaran::whereIn('id', RaporFinal::where('siswa_id', $siswa->id)->where('status', 'final')->pluck('tahun_ajaran_id'))
+            ->orderByDesc('id')->get();
+
+        $dipilih = $riwayat->firstWhere('id', (int) request('ta')) ?? TahunAjaran::where('is_active', true)->first();
+
+        return [$riwayat, $dipilih];
     }
 }

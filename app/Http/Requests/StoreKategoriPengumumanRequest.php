@@ -24,6 +24,6 @@ class StoreKategoriPengumumanRequest extends FormRequest
     {
         $id = $this->route('kategoriPengumuman')?->id;
 
-        return ['nama' => 'required|string|max:255', 'slug' => 'required|string|max:255|unique:kategori_pengumumans,slug,'.$id];
+        return ['nama' => ['required', 'string', 'max:255', \Illuminate\Validation\Rule::unique('kategori_pengumumans', 'nama')->ignore($id)], 'slug' => 'required|string|max:255|unique:kategori_pengumumans,slug,'.$id];
     }
 }

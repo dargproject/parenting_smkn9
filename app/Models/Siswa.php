@@ -20,13 +20,6 @@ class Siswa extends Authenticatable
         'tanggal_lahir',
         'no_hp_ortu',
         'status_aktif',
-        'catatan_wali',
-        'catatan_akademik',
-        'counseling_stress',
-        'counseling_career',
-        'counseling_note',
-        'total_alpa',
-        'total_violation_points',
     ];
 
     protected $hidden = [
@@ -36,6 +29,16 @@ class Siswa extends Authenticatable
     public function kelas()
     {
         return $this->belongsTo(Kelas::class);
+    }
+
+    public function catatanAkademiks()
+    {
+        return $this->hasMany(CatatanAkademikSiswa::class);
+    }
+
+    public function asesmenBks()
+    {
+        return $this->hasMany(AsesmenBk::class);
     }
 
     public function pelanggarans()

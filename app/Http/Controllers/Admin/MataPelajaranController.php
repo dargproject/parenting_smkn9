@@ -8,9 +8,15 @@ use App\Models\MataPelajaran;
 
 class MataPelajaranController extends Controller
 {
-    public function index()
+    public function index(\Illuminate\Http\Request $request)
     {
-        return view('admin.mata-pelajaran.index', ['mapels' => MataPelajaran::latest()->paginate(15)]);
+        $mapels = MataPelajaran::query()
+            ->when($request->filled('q'), fn ($q) => $q->where(fn ($w) => $w->where('nama_mapel', 'like', '%'.$request->q.'%')->orWhere('kode_mapel', 'like', '%'.$request->q.'%')))
+            ->when($request->filled('kategori'), fn ($q) => $q->where('kategori', $request->kategori))
+            ->when($request->filled('kelompok'), fn ($q) => $q->where('kelompok', $request->kelompok))
+            ->latest()->paginate(15);
+
+        return view('admin.mata-pelajaran.index', ['mapels' => $mapels]);
     }
 
     public function create()

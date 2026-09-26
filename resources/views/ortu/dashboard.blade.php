@@ -9,6 +9,20 @@
                     class="font-semibold">{{ $siswa->nama }}</span> &middot; {{ $siswa->kelas->nama_kelas ?? '-' }}</p>
         </div>
 
+        @if($riwayat->isNotEmpty())
+            <form method="GET" class="flex items-center gap-2 text-sm">
+                <label class="text-slate-500 dark:text-slate-400">Semester:</label>
+                <select name="ta" onchange="this.form.submit()" class="rounded-lg border border-slate-300 bg-transparent px-3 py-1.5 text-sm text-slate-800 dark:border-slate-600 dark:text-white">
+                    @if(!$riwayat->contains('id', $tahunAjaranTerpilih?->id))
+                        <option value="{{ $tahunAjaranTerpilih?->id }}" selected>{{ $tahunAjaranTerpilih?->nama ?? 'Semester aktif' }} (berjalan)</option>
+                    @endif
+                    @foreach($riwayat as $ta)
+                        <option value="{{ $ta->id }}" @selected($tahunAjaranTerpilih?->id === $ta->id)>{{ $ta->nama }}</option>
+                    @endforeach
+                </select>
+            </form>
+        @endif
+
         @if(!$dirilis)
             <div
                 class="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center dark:border-amber-500/20 dark:bg-amber-500/10">
@@ -32,7 +46,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 @forelse($ringkasan as $r)
-                    <a href="{{ route('ortu.mapel.show', $r['mapel']) }}"
+                    <a href="{{ route('ortu.mapel.show', ['mataPelajaran' => $r['mapel'], 'ta' => $tahunAjaranTerpilih?->id]) }}"
                         class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:border-blue-400 transition-colors dark:border-slate-700 dark:bg-slate-800">
                         <p class="font-semibold text-slate-900 dark:text-white">{{ $r['mapel']->nama_mapel }}</p>
                         <div class="mt-2 flex items-center">

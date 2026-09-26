@@ -18,8 +18,6 @@ class UpdateSettingRequest extends FormRequest
             'npsn' => ['nullable', 'string', 'max:50'],
             'alamat_sekolah' => ['nullable', 'string', 'max:2000'],
             'logo_sekolah' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
-            'tahun_ajaran_aktif_id' => ['nullable', 'exists:tahun_ajarans,id'],
-            'semester_aktif' => ['required', 'in:ganjil,genap'],
             'nama_kepsek' => ['nullable', 'string', 'max:255'],
             'nip_kepsek' => ['nullable', 'string', 'max:50'],
             'bobot_lm' => ['required', 'numeric', 'min:0', 'max:100'],

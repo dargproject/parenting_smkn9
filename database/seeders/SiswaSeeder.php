@@ -3,7 +3,11 @@
 namespace Database\Seeders;
 
 use App\Models\Kelas;
+use App\Models\AsesmenBk;
+use App\Models\CatatanAkademikSiswa;
 use App\Models\Siswa;
+use App\Models\TahunAjaran;
+use Illuminate\Support\Arr;
 use Faker\Factory as Faker;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -27,7 +31,7 @@ class SiswaSeeder extends Seeder
 
             if ($kelas->nama_kelas === 'XI TKJ 1') {
                 // Data spesifik untuk XI TKJ 1 agar sesuai dengan mockup
-                Siswa::create([
+                $this->buatSiswa([
                     'nis' => (string) $nisCounter++,
                     'nama' => 'Andi Susanto',
                     'kelas_id' => $kelas->id,
@@ -41,7 +45,7 @@ class SiswaSeeder extends Seeder
                     'total_violation_points' => 10,
                 ]);
 
-                Siswa::create([
+                $this->buatSiswa([
                     'nis' => (string) $nisCounter++,
                     'nama' => 'Bunga Citra',
                     'kelas_id' => $kelas->id,
@@ -55,7 +59,7 @@ class SiswaSeeder extends Seeder
                     'total_violation_points' => 0,
                 ]);
 
-                Siswa::create([
+                $this->buatSiswa([
                     'nis' => (string) $nisCounter++,
                     'nama' => 'Caca Marica',
                     'kelas_id' => $kelas->id,
@@ -69,7 +73,7 @@ class SiswaSeeder extends Seeder
                     'total_violation_points' => 0,
                 ]);
 
-                Siswa::create([
+                $this->buatSiswa([
                     'nis' => (string) $nisCounter++,
                     'nama' => 'Dodi Hermawan',
                     'kelas_id' => $kelas->id,
@@ -83,7 +87,7 @@ class SiswaSeeder extends Seeder
                     'total_violation_points' => 35,
                 ]);
 
-                Siswa::create([
+                $this->buatSiswa([
                     'nis' => (string) $nisCounter++,
                     'nama' => 'Eko Saputro',
                     'kelas_id' => $kelas->id,
@@ -99,7 +103,7 @@ class SiswaSeeder extends Seeder
             } else {
                 // Generate 5 random students for other classes
                 for ($i = 0; $i < 5; $i++) {
-                    Siswa::create([
+                    $this->buatSiswa([
                         'nis' => (string) $nisCounter++,
                         'nama' => $faker->name,
                         'kelas_id' => $kelas->id,
@@ -120,7 +124,7 @@ class SiswaSeeder extends Seeder
         $xiRpl2 = Kelas::where('nama_kelas', 'XI RPL 2')->first();
         if ($xiRpl2) {
             foreach ($this->siswaXiRpl2() as $data) {
-                Siswa::create($data + [
+                $this->buatSiswa($data + [
                     'nis' => (string) $nisCounter++,
                     'kelas_id' => $xiRpl2->id,
                     'password' => Hash::make('password'),
@@ -183,5 +187,33 @@ class SiswaSeeder extends Seeder
                 'total_violation_points' => 10,
             ],
         ];
+    }
+
+    /** Data catatan/BK dipisah ke tabel sendiri; tabel siswas hanya berisi identitas. */
+    private function buatSiswa(array $data): Siswa
+    {
+        $ekstra = Arr::only($data, ['catatan_akademik', 'counseling_stress', 'counseling_career', 'counseling_note']);
+        $data = Arr::except($data, ['catatan_wali', 'catatan_akademik', 'counseling_stress', 'counseling_career', 'counseling_note', 'total_alpa', 'total_violation_points']);
+
+        $siswa = Siswa::create($data);
+        $tahunAjaranId = TahunAjaran::where('is_active', true)->value('id');
+
+        if ($tahunAjaranId) {
+            if (! empty($ekstra['catatan_akademik'])) {
+                CatatanAkademikSiswa::create(['siswa_id' => $siswa->id, 'tahun_ajaran_id' => $tahunAjaranId, 'catatan' => $ekstra['catatan_akademik']]);
+            }
+
+            if (isset($ekstra['counseling_stress'])) {
+                AsesmenBk::create([
+                    'siswa_id' => $siswa->id,
+                    'tahun_ajaran_id' => $tahunAjaranId,
+                    'tingkat_stres' => $ekstra['counseling_stress'],
+                    'minat_karir' => $ekstra['counseling_career'] ?? null,
+                    'catatan' => $ekstra['counseling_note'] ?? null,
+                ]);
+            }
+        }
+
+        return $siswa;
     }
 }

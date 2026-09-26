@@ -18,16 +18,18 @@ class ImportController extends Controller
     public function students(Request $request)
     {
         $request->validate(['file' => 'required|file|mimes:xlsx,xls,csv|max:10240']);
-        Excel::import(new SiswasImport, $request->file('file'));
+        $import = new SiswasImport;
+        Excel::import($import, $request->file('file'));
 
-        return back()->with('success', 'Data siswa berhasil diimport.');
+        return back()->with('success', "Import siswa selesai: {$import->berhasil} data ditambahkan, {$import->dilewati} dilewati (NIS/NISN/NIPD sudah ada atau kelas tidak valid).");
     }
 
     public function teachers(Request $request)
     {
         $request->validate(['file' => 'required|file|mimes:xlsx,xls,csv|max:10240']);
-        Excel::import(new GurusImport, $request->file('file'));
+        $import = new GurusImport;
+        Excel::import($import, $request->file('file'));
 
-        return back()->with('success', 'Data guru berhasil diimport.');
+        return back()->with('success', "Import guru selesai: {$import->berhasil} data ditambahkan, {$import->dilewati} dilewati (NIP/email sudah ada).");
     }
 }

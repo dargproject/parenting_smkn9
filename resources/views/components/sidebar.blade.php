@@ -58,6 +58,7 @@
 
             @include('components.sidebar-tatib')
             @php $tatibRendered = true; @endphp
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-kesiswaan-petugas', this)"><i class="fa-solid fa-user-shield w-6 text-center mr-2"></i> <span>Petugas Tatib</span></a>
 
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-kesiswaan-ortu', this)"><i class="fa-solid fa-handshake w-6 text-center mr-2"></i> <span>Panggilan Ortu</span></a>
         @endif
@@ -84,6 +85,14 @@
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-guru-wali-rapor', this)"><i class="fa-solid fa-file-pdf w-6 text-center mr-2"></i> <span>Cetak e-Rapor</span></a> --}}
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-guru-wali-nilai-matrix', this)"><i class="fa-solid fa-table-cells w-6 text-center mr-2"></i> <span>Rekap Nilai Rombel</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-guru-wali-rilis', this)"><i class="fa-solid fa-lock w-6 text-center mr-2"></i> <span>Finalisasi & Rilis Nilai</span></a>
+        @endif
+
+        @if(in_array('tatib', $roles))
+            <div class="px-3 py-2 text-slate-400 small font-bold uppercase tracking-wider mt-2">Petugas Tatib</div>
+            @unless($tatibRendered)
+                @include('components.sidebar-tatib')
+                @php $tatibRendered = true; @endphp
+            @endunless
         @endif
 
         @if(in_array('guru_mapel', $roles))

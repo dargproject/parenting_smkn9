@@ -14,6 +14,7 @@ use App\Models\PanggilanOrtu;
 use App\Models\Pasal;
 use App\Models\Pelanggaran;
 use App\Models\Pengumuman;
+use App\Models\TahunAjaran;
 use App\Models\Presensi;
 use App\Models\Siswa;
 use Carbon\Carbon;
@@ -60,6 +61,7 @@ class MasterDataSeeder extends Seeder
             'jam_mulai' => '08:30',
             'jam_selesai' => '09:15',
             'ruang' => 'Lab RPS 1',
+            'tahun_ajaran_id' => TahunAjaran::where('is_active', true)->value('id'),
         ]);
 
         $jadwalPemrograman = JadwalPelajaran::create([
@@ -70,6 +72,7 @@ class MasterDataSeeder extends Seeder
             'jam_mulai' => '07:00',
             'jam_selesai' => '07:45',
             'ruang' => 'Lab RPS 1',
+            'tahun_ajaran_id' => TahunAjaran::where('is_active', true)->value('id'),
         ]);
 
         // 4. Presensi

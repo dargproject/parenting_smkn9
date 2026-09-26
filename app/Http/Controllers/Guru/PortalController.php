@@ -36,16 +36,24 @@ class PortalController extends Controller
         }
 
         $guru = Guru::with('roles')->find($guruId);
+        if ($guru) {
+            // Perubahan role oleh admin/kesiswaan langsung berlaku tanpa harus login ulang.
+            Session::put('roles', $guru->roles->pluck('name')->all());
+        }
         if (! $guru) {
             return redirect()->route('login');
         }
 
         // Ambil data master untuk ditampilkan di portal
         $siswas = Siswa::with('kelas')->get();
+        $catatanAkademikMap = \App\Models\CatatanAkademikSiswa::where('tahun_ajaran_id', TahunAjaran::where('is_active', true)->value('id'))->get()->keyBy('siswa_id');
+        $asesmenBkMap = \App\Models\AsesmenBk::where('tahun_ajaran_id', TahunAjaran::where('is_active', true)->value('id'))->get()->keyBy('siswa_id');
         $kasusBks = KasusBk::with(['siswa', 'konselor'])->get();
         $pelanggarans = Pelanggaran::with(['siswa', 'pelapor'])->orderBy('tanggal', 'desc')->get();
         $panggilanOrtus = PanggilanOrtu::with(['siswa', 'pemanggil'])->orderBy('tanggal', 'desc')->get();
-        $jadwalPelajarans = JadwalPelajaran::with(['kelas', 'mataPelajaran', 'guru'])->get();
+        $jadwalPelajarans = JadwalPelajaran::with(['kelas', 'mataPelajaran', 'guru'])
+            ->when(TahunAjaran::where('is_active', true)->value('id'), fn ($q, $ta) => $q->where('tahun_ajaran_id', $ta))
+            ->get();
         $mataPelajarans = MataPelajaran::all();
         $kelasList = Kelas::all();
 
@@ -173,7 +181,7 @@ class PortalController extends Controller
 
         return view('guru.portal', compact(
             'guru', 'siswas', 'kasusBks', 'pelanggarans', 'panggilanOrtus',
-            'jadwalPelajarans', 'mataPelajarans', 'kelasList', 'nilaiAkhirMap', 'kelasMapelBinaan', 'kelasMapelSemua',
+            'jadwalPelajarans', 'mataPelajarans', 'kelasList', 'nilaiAkhirMap', 'kelasMapelBinaan', 'kelasMapelSemua', 'catatanAkademikMap', 'asesmenBkMap',
             'masterPelanggarans', 'masterPelanggaranAktif', 'rekapPoin', 'absensiBermasalah',
             'kelasBinaan', 'siswaBinaan', 'rerataBinaan', 'peringkatBinaan',
             'tahunAjaranAktif', 'mapelBinaan', 'tujuanPembelajarans',
@@ -203,6 +211,10 @@ class PortalController extends Controller
             'keterangan' => 'required|string',
         ]);
 
+        if (Pelanggaran::where('siswa_id', $data['siswa_id'])->where('master_pelanggaran_id', $data['master_pelanggaran_id'])->whereDate('tanggal', $data['tanggal'])->exists()) {
+            return back()->withInput()->with('error', 'Pelanggaran yang sama untuk siswa ini pada tanggal tersebut sudah tercatat.');
+        }
+
         $master = MasterPelanggaran::with('jenisPelanggaran')->findOrFail($data['master_pelanggaran_id']);
 
         Pelanggaran::create([
@@ -228,6 +240,10 @@ class PortalController extends Controller
             'ruang' => 'nullable|string|max:255',
             'alasan' => 'required|string',
         ]);
+
+        if (PanggilanOrtu::where('siswa_id', $data['siswa_id'])->whereDate('tanggal', $data['tanggal'])->where('waktu', $data['waktu'])->exists()) {
+            return back()->withInput()->with('error', 'Panggilan orang tua untuk siswa ini pada tanggal dan jam tersebut sudah dijadwalkan.');
+        }
 
         PanggilanOrtu::create($data + [
             'status' => 'Menunggu Konfirmasi',

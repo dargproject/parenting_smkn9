@@ -13,7 +13,7 @@ class GuruSeeder extends Seeder
 {
     public function run(): void
     {
-        foreach (['admin', 'kepsek', 'waka_kurikulum', 'waka_kesiswaan', 'guru_bk', 'wali_kelas', 'guru_wali', 'guru_mapel'] as $roleName) {
+        foreach (['admin', 'kepsek', 'waka_kurikulum', 'waka_kesiswaan', 'guru_bk', 'wali_kelas', 'guru_wali', 'guru_mapel', 'tatib'] as $roleName) {
             Role::firstOrCreate(['name' => $roleName]);
         }
 

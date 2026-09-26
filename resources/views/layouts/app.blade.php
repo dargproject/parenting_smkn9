@@ -671,6 +671,28 @@
             }
         });
 
+        // State pemilih kelas: kelas terakhir dipilih diingat per pane, hanya dipakai bila masih valid.
+        function kelasXData(kunci, ids, saatGanti) {
+            return {
+                kelas: String(ids[0] ?? ''),
+                cari: '',
+                init() {
+                    try { const s = localStorage.getItem(kunci); if (s && ids.map(String).includes(s)) this.kelas = s; } catch (e) {}
+                    this.$watch('kelas', v => { try { localStorage.setItem(kunci, v); } catch (e) {} if (saatGanti) saatGanti.call(this, v); });
+                },
+            };
+        }
+
+        // Cegah kirim ganda: tombol dinonaktifkan sesaat setelah form dikirim.
+        document.addEventListener('submit', (e) => {
+            const form = e.target;
+            if (e.defaultPrevented || (form.method || '').toLowerCase() === 'get') return;
+            if (form.dataset.terkirim) { e.preventDefault(); return; }
+            form.dataset.terkirim = '1';
+            setTimeout(() => form.querySelectorAll('button:not([type=button]), input[type=submit]').forEach(b => { b.disabled = true; }), 0);
+        });
+        window.addEventListener('pageshow', () => document.querySelectorAll('form[data-terkirim]').forEach(f => { delete f.dataset.terkirim; f.querySelectorAll('button, input[type=submit]').forEach(b => { b.disabled = false; }); }));
+
         function approveLegger() { triggerToast('Legger berhasil divalidasi dan dikunci!'); }
         function broadcastAnnouncementK() { triggerToast('Pengumuman Kurikulum berhasil disiarkan!'); }
         function addJpRecord() { triggerToast('Alokasi Jam Pelajaran berhasil ditambahkan!'); }
