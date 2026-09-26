@@ -41,7 +41,7 @@
                         class="position-absolute top-0 start-100 translate-middle p-1.5 bg-danger border border-light rounded-circle" id="notif-badge"></span>
                 </button>
                 <div x-show="open" x-transition style="display: none; width: 300px; font-size: 13px;"
-                    class="absolute right-0 mt-2 z-50 rounded-xl border border-slate-700/60 bg-slate-800/80 text-slate-100 shadow-lg p-2" id="notif-dropdown">
+                    class="solid-panel absolute right-0 mt-2 z-50 rounded-xl border border-slate-700/60 bg-slate-800/80 text-slate-100 shadow-lg p-2" id="notif-dropdown">
                     <div class="px-2 py-1 font-bold text-slate-100">Notifikasi Terbaru</div>
                     @forelse($notifikasi as $n)
                         <div class="px-2 py-2 border-t border-slate-700/60">
@@ -66,7 +66,7 @@
                 </button>
 
                 <div x-show="menu" x-transition style="display: none; width: 210px; font-size: 13px;"
-                    class="absolute right-0 mt-2 z-50 rounded-xl border border-slate-700/60 bg-slate-800/80 text-slate-100 shadow-lg p-1">
+                    class="solid-panel absolute right-0 mt-2 z-50 rounded-xl border border-slate-700/60 bg-slate-800/80 text-slate-100 shadow-lg p-1">
                     <button type="button" @click="modal = true; menu = false" class="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-left text-slate-100 hover:bg-slate-700/30">
                         <i class="fa-regular fa-id-badge w-4 text-center"></i> Profil Akun
                     </button>
@@ -80,7 +80,7 @@
 
                 <!-- Modal Profil Akun -->
                 <div x-show="modal" style="display: none;" class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/50" @keydown.escape.window="modal = false">
-                    <div class="w-full max-w-md rounded-2xl border border-slate-700/60 bg-slate-800/80 text-slate-100 shadow-xl p-5 max-h-[90vh] overflow-y-auto" @click.outside="modal = false">
+                    <div class="solid-panel w-full max-w-md rounded-2xl border border-slate-700/60 bg-slate-800/80 text-slate-100 shadow-xl p-5 max-h-[90vh] overflow-y-auto" @click.outside="modal = false">
                         <div class="flex items-center justify-between mb-3">
                             <h5 class="font-bold text-slate-100 m-0">Profil Akun</h5>
                             <button type="button" @click="modal = false" class="text-slate-400 hover:text-slate-100"><i class="fa-solid fa-xmark"></i></button>

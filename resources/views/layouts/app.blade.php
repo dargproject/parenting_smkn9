@@ -309,6 +309,10 @@
             #sidebar-wrapper.sidebar-collapsed { display: none !important; }
         }
 
+        /* Panel melayang (dropdown/modal) harus solid, bukan transparan seperti kartu. */
+        .solid-panel { background-color: #ffffff !important; }
+        body.dark .solid-panel { background-color: #1e293b !important; }
+
         /* Sidebar & Header Overrides */
         #sidebar-wrapper, .app-header {
             background-color: var(--bg-card) !important;
