@@ -34,6 +34,7 @@ class MataPelajaranController extends Controller
     public function update(StoreMataPelajaranRequest $request, MataPelajaran $mataPelajaran)
     {
         $mataPelajaran->update($request->validated());
+        JadwalPelajaran::where('mata_pelajaran_id', $mataPelajaran->id)->update(['guru_id' => $mataPelajaran->guru_id]);
 
         return redirect()->route('admin.mata-pelajaran.index')->with('success', 'Mata pelajaran berhasil diperbarui.');
     }

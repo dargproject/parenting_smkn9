@@ -365,46 +365,52 @@
     </div>
 
     <div id="pane-wali-catatan" class="pane-content hidden-pane fade-transition">
-        <div class="flex justify-between items-center mb-4">
-            <div>
-                <h4 class="font-bold m-0 text-slate-100">Input Catatan Perkembangan Raport</h4>
-                <p class="text-slate-400 small m-0">Catatan wali kelas untuk dicantumkan pada lembar
-                    e-Rapor akhir.</p>
-            </div>
-            <button onclick="saveWaliNotes()"
-                class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-lg transition-colors">
-                <i class="fa-solid fa-floppy-disk mr-1"></i> Simpan Semua Catatan
-            </button>
+        <div class="mb-3">
+            <h4 class="font-bold m-0 text-slate-100">Catatan Wali Kelas</h4>
+            <p class="text-slate-400 small m-0">Catatan perkembangan karakter dan rekap ketidakhadiran siswa di kelas perwalian Anda, untuk dicantumkan pada e-Rapor.</p>
         </div>
 
-        <div class="card border-0 rounded-xl shadow-sm p-4 bg-slate-800/80">
-            <div class="overflow-x-auto">
-                <table class="table align-middle table-hover text-slate-100">
-                    <thead class="bg-slate-900 border-b border-slate-700/60 text-xs">
-                        <tr>
-                            <th>Nama Siswa</th>
-                            <th>Catatan Wali Kelas</th>
-                            <th class="text-center" style="width: 150px;">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="wali-catatan-tbody">
-                        @foreach($siswas as $siswa)
+        @if($siswaWali->isEmpty())
+            <p class="text-slate-400 text-sm">Anda belum ditetapkan sebagai wali kelas untuk kelas manapun. Hubungi Waka Kurikulum.</p>
+        @else
+            <form method="POST" action="{{ route('guru.wali-kelas.catatan.store') }}" class="rounded-2xl border border-slate-700/60 bg-slate-800/80 text-slate-100 overflow-hidden">
+                @csrf
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[720px] text-left text-sm">
+                        <thead class="bg-slate-900 border-b border-slate-700/60 text-xs text-slate-400">
                             <tr>
-                                <td class="font-bold text-start">{{ $siswa->nama }} <span class="block text-slate-400 small" style="font-size: 10px;">NIS: {{ $siswa->nis }}</span></td>
-                                <td>
-                                    <textarea id="walinote-{{ $siswa->nis }}" rows="2" class="form-control form-control-sm text-slate-100" placeholder="Masukkan catatan pembinaan sikap dan kedisiplinan siswa...">{{ $siswa->catatan_wali }}</textarea>
-                                </td>
-                                <td class="text-center">
-                                    <button onclick="openEscalationReferralModal({{ $siswa->nis }}, '{{ $siswa->nama }}')" class="btn btn-warning btn-xs py-1 px-2 rounded-2" style="font-size: 11px;" title="Rujuk Kasus"><i class="fa-solid fa-share-from-square"></i> Rujuk BK</button>
-                                </td>
+                                <th class="px-3 py-2">Siswa</th>
+                                <th class="px-3 py-2">Catatan Karakter / Perkembangan</th>
+                                <th class="px-2 py-2 text-center">Sakit</th>
+                                <th class="px-2 py-2 text-center">Izin</th>
+                                <th class="px-2 py-2 text-center">Alpa</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                        </thead>
+                        <tbody class="divide-y divide-slate-700/60">
+                            @foreach($siswaWali as $siswa)
+                                @php $cw = $catatanWaliKelasWali[$siswa->id] ?? null; @endphp
+                                <tr>
+                                    <td class="px-3 py-2 align-top font-semibold text-slate-100">{{ $siswa->nama }}<span class="block text-slate-400 font-normal" style="font-size: 10px;">{{ $siswa->kelas->nama_kelas ?? '' }} &middot; NIS {{ $siswa->nis }}</span></td>
+                                    <td class="px-3 py-2">
+                                        <textarea name="catatan[{{ $siswa->id }}][catatan_karakter]" rows="2" placeholder="Sikap, kedisiplinan, dan perkembangan siswa..." class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500">{{ $cw->catatan_karakter ?? '' }}</textarea>
+                                    </td>
+                                    @foreach(['sakit', 'izin', 'tanpa_keterangan'] as $kolom)
+                                        <td class="px-2 py-2 align-top text-center">
+                                            <input type="number" min="0" max="365" name="catatan[{{ $siswa->id }}][{{ $kolom }}]" value="{{ $cw->$kolom ?? 0 }}" class="w-16 rounded-lg border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-slate-100 text-center">
+                                        </td>
+                                    @endforeach
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div class="flex items-center justify-between gap-3 border-t border-slate-700/60 bg-slate-900 px-3 py-2">
+                    <span class="text-xs text-slate-400">{{ $siswaWali->count() }} siswa</span>
+                    <button type="submit" class="rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-blue-500"><i class="fa-solid fa-floppy-disk mr-1"></i> Simpan Semua Catatan</button>
+                </div>
+            </form>
+        @endif
     </div>
-
     <div id="pane-wali-chat" class="pane-content hidden-pane fade-transition">
         <h4 class="font-bold text-slate-100 mb-2">Pusat Komunikasi Orang Tua</h4>
         <p class="text-slate-400 small mb-4">Konsultasi langsung dengan wali murid kelas XI TKJ 1.
@@ -705,7 +711,6 @@
     </div>
 
     @include('guru.penilaian.wali-matrix')
-    @include('guru.penilaian.wali-catatan')
     @include('guru.penilaian.wali-rilis')
 @endif
 

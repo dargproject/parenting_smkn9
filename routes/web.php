@@ -72,8 +72,9 @@ Route::middleware('role:guru_mapel')->prefix('guru/penilaian')->name('guru.penil
     Route::post('/nilai-pkl-ukk', [PenilaianController::class, 'storeNilaiPklUkk'])->name('nilai-pkl-ukk.store');
 });
 
+Route::middleware('role:wali_kelas')->post('/guru/wali-kelas/catatan', [PenilaianController::class, 'storeCatatanWaliKelas'])->name('guru.wali-kelas.catatan.store');
+
 Route::middleware('role:guru_wali')->prefix('guru/wali')->name('guru.wali.')->group(function () {
-    Route::post('/catatan-wali-kelas', [PenilaianController::class, 'storeCatatanWaliKelas'])->name('catatan.store');
     Route::post('/rapor/rilis', [PenilaianController::class, 'rilisRapor'])->name('rapor.rilis');
     Route::post('/rapor/batalkan', [PenilaianController::class, 'batalkanRilis'])->name('rapor.batalkan');
 });

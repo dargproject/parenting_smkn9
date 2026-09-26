@@ -10,10 +10,13 @@
         <p class="text-slate-400 text-sm">Anda belum ditugaskan mengampu mata pelajaran apapun.</p>
     @else
         @php
-            $jadwalBinaan = $jadwalPelajarans->where('guru_id', $guru->id)->unique(fn ($j) => $j->mata_pelajaran_id.'-'.$j->kelas_id);
+            $jadwalBinaan = $jadwalPelajarans->filter(fn ($j) => $j->mataPelajaran?->guru_id === $guru->id)->unique(fn ($j) => $j->mata_pelajaran_id.'-'.$j->kelas_id);
         @endphp
 
-        <div x-data="{ sel: (() => { try { return localStorage.getItem('gmSel') } catch (e) { return null } })() || null, pilih(k) { this.sel = k; try { k ? localStorage.setItem('gmSel', k) : localStorage.removeItem('gmSel') } catch (e) {} } }" class="space-y-6">
+        @php
+            $kunciValid = $jadwalBinaan->filter(fn ($j) => $j->mataPelajaran && $j->kelas)->map(fn ($j) => $j->mata_pelajaran_id.'-'.$j->kelas_id)->values();
+        @endphp
+        <div x-data="{ kunci: 'gmSel:{{ $guru->id }}', valid: @js($kunciValid), sel: null, init() { try { const s = localStorage.getItem(this.kunci); this.sel = this.valid.includes(s) ? s : null } catch (e) {} }, pilih(k) { this.sel = k; try { k ? localStorage.setItem(this.kunci, k) : localStorage.removeItem(this.kunci) } catch (e) {} } }" class="space-y-6">
 
         <div x-show="!sel" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             @foreach($jadwalBinaan as $j)
@@ -44,7 +47,7 @@
 
                 {{-- Kelola Tujuan Pembelajaran --}}
                 <div class="rounded-xl border border-slate-700/60 bg-slate-900 p-4">
-                    <h6 class="font-bold text-slate-100 mb-2 text-sm">Tujuan Pembelajaran (TP) Semester Ini</h6>
+                    <h6 class="font-bold text-slate-100 mb-2 text-sm"><span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-xs text-white mr-1">1</span> Tujuan Pembelajaran (TP) Semester Ini</h6>
                     @if($tpMapel->isNotEmpty())
                         <div class="flex flex-col gap-1 mb-3">
                             @foreach($tpMapel as $tp)
@@ -58,12 +61,12 @@
                             @endforeach
                         </div>
                     @else
-                        <p class="text-slate-400 text-sm mb-3">Belum ada TP untuk mapel ini.</p>
+                        <p class="text-slate-400 text-sm mb-3">Belum ada TP. Tambahkan minimal satu TP di bawah, lalu kolom nilai siswa akan muncul di langkah 2.</p>
                     @endif
                     <form method="POST" action="{{ route('guru.penilaian.tp.store') }}" class="flex flex-col sm:flex-row gap-2">
                         @csrf
                         <input type="hidden" name="mata_pelajaran_id" value="{{ $mapel->id }}">
-                        <input type="text" name="kode" placeholder="Kode (Nilai 1 / N1 )" class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 sm:w-40">
+                        <input type="text" name="kode" placeholder="Kode, mis. TP 1" class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 sm:w-40">
                         <input type="text" name="deskripsi" required placeholder="Deskripsi TP, mis. Konfigurasi Router Mikrotik" class="flex-1 rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
                         <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500 whitespace-nowrap">+ Tambah TP</button>
                     </form>
@@ -74,7 +77,7 @@
                 <form method="POST" action="{{ route('guru.penilaian.nilai-lm.store') }}">
                     @csrf
                     <input type="hidden" name="mata_pelajaran_id" value="{{ $mapel->id }}">
-                    <h6 class="font-bold text-slate-100 mb-2 text-sm">Nilai Sumatif Lingkup Materi</h6>
+                    <h6 class="font-bold text-slate-100 mb-2 text-sm"><span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-xs text-white mr-1">2</span> Nilai Sumatif Lingkup Materi</h6>
                     <div class="overflow-x-auto rounded-xl border border-slate-700/60">
                         <table class="w-full min-w-[560px] text-left text-sm">
                             <thead class="bg-slate-900 border-b border-slate-700/60 text-xs text-slate-400">
@@ -110,6 +113,11 @@
                         <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500">Simpan Nilai LM</button>
                     </div>
                 </form>
+                @else
+                <div class="rounded-xl border border-dashed border-slate-600 p-4 text-sm text-slate-400">
+                    <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-600 text-xs text-white mr-1">2</span>
+                    Input nilai sumatif ({{ $siswaKelas->count() }} siswa) akan tersedia setelah Anda menambahkan TP pada langkah 1.
+                </div>
                 @endif
 
                 {{-- Catatan Capaian Kompetensi --}}
