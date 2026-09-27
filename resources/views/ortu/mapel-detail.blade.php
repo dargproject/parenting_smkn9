@@ -24,14 +24,15 @@
                     @foreach($tpRemedial as $tp)
                         <li class="leading-relaxed">
                             <span class="font-medium text-slate-800 dark:text-slate-100">{{ $tp->tujuanPembelajaran->deskripsi ?? '-' }}</span>
-                            <span class="ml-1 font-semibold text-rose-600 dark:text-rose-400">(nilai {{ $tp->nilai }})</span>
+                            {{-- <span class="ml-1 font-semibold text-rose-600 dark:text-rose-400">(nilai {{ $tp->nilai }})</span> --}}
+                            <span class="ml-1 font-semibold text-rose-600 dark:text-rose-400">({{ $tp->tujuanPembelajaran->kode ?? '' }})</span>
                         </li>
                     @endforeach
                 </ul>
             </div>
         @endif
 
-        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        {{-- <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
             <h3 class="font-bold text-slate-900 dark:text-white mb-3">Rincian Nilai Sumatif Lingkup Materi</h3>
             <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
                 <table class="w-full min-w-[480px] text-left text-sm">
@@ -62,7 +63,7 @@
                     </tbody>
                 </table>
             </div>
-        </div>
+        </div> --}}
 
         <!-- @if($pklUkk->isNotEmpty())
                 <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">

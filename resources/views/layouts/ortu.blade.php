@@ -15,8 +15,10 @@
     x-data="{ darkMode: false }"
     x-init="darkMode = JSON.parse(localStorage.getItem('darkModeOrtu')) || false; $watch('darkMode', value => localStorage.setItem('darkModeOrtu', JSON.stringify(value)))"
     :class="{ 'dark': darkMode }"
-    class="min-h-screen bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100"
 >
+    @include('partials.app-loader')
+
+    <div class="min-h-screen bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100">
     <header class="border-b border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
         <div class="mx-auto flex max-w-4xl items-center justify-between px-4 py-4">
             <div class="flex items-center gap-2">
@@ -51,5 +53,6 @@
     @include('partials.notify')
 
     <footer class="py-6 text-center text-xs text-slate-400 dark:text-slate-500">&copy; {{ date('Y') }} SMKN 9 Malang. All rights reserved.</footer>
+    </div>
 </body>
 </html>

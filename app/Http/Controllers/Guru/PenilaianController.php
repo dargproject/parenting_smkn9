@@ -55,10 +55,15 @@ class PenilaianController extends Controller
         ]);
 
         $this->pastikanMapelMilikGuru($data['mata_pelajaran_id']);
+        $tahunAjaranId = $this->tahunAjaranAktifId();
+
+        $urutanBerikutnya = 1 + (int) TujuanPembelajaran::where('mata_pelajaran_id', $data['mata_pelajaran_id'])
+            ->where('tahun_ajaran_id', $tahunAjaranId)
+            ->max('urutan');
 
         TujuanPembelajaran::create($data + [
-            'tahun_ajaran_id' => $this->tahunAjaranAktifId(),
-            'urutan' => $data['urutan'] ?? 0,
+            'tahun_ajaran_id' => $tahunAjaranId,
+            'urutan' => $data['urutan'] ?? $urutanBerikutnya,
         ]);
 
         return redirect()->route('guru.portal')->with('success', 'Kolom N berhasil ditambahkan.');

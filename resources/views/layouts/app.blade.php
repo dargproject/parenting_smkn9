@@ -439,17 +439,15 @@
     </style>
   </head>
   <body
-    x-data="{ page: 'dashboard', 'loaded': true, 'darkMode': false, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false }"
+    x-data="{ page: 'dashboard', 'darkMode': false, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false }"
     x-init="
          let stored = localStorage.getItem('darkMode');
          darkMode = stored ? JSON.parse(stored) : false;
          $watch('darkMode', value => localStorage.setItem('darkMode', JSON.stringify(value)))"
     :class="{'dark': darkMode === true}"
   >
-    <!-- ===== Preloader Start ===== -->
-    @include('partials.preloader')
+    @include('partials.app-loader')
     @include('partials.notify')
-    <!-- ===== Preloader End ===== -->
 
     <!-- ===== Page Wrapper Start ===== -->
     <div class="flex h-screen overflow-hidden relative">

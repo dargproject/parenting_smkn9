@@ -56,6 +56,7 @@
          $watch('darkMode', value => localStorage.setItem('darkMode', JSON.stringify(value)))"
     :class="{'dark': darkMode === true}"
 >
+    @include('partials.app-loader')
 
     @yield('content')
 
