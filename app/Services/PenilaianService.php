@@ -141,6 +141,35 @@ class PenilaianService
         return 'tuntas';
     }
 
+    /**
+     * Sumber tunggal rekap kehadiran HARIAN dari data presensi mentah (per mapel).
+     * Satu hari diberi SATU status: Hadir/Sakit/Izin/Alpa Penuh bila semua jadwal hari itu
+     * berstatus sama, atau "sebagian" (campuran) bila hasilnya beda-beda dalam satu hari.
+     */
+    public function rekapHarian(Collection $presensiSiswa): array
+    {
+        $perHari = $presensiSiswa->groupBy('tanggal');
+        $jumlah = ['penuh' => 0, 'sakit' => 0, 'izin' => 0, 'sebagian' => 0, 'alpa' => 0];
+
+        foreach ($perHari as $records) {
+            $status = $records->pluck('status')->unique();
+            if ($status->count() > 1) {
+                $jumlah['sebagian']++;
+
+                continue;
+            }
+
+            match ($status->first()) {
+                'H' => $jumlah['penuh']++,
+                'S' => $jumlah['sakit']++,
+                'I' => $jumlah['izin']++,
+                'A' => $jumlah['alpa']++,
+            };
+        }
+
+        return $jumlah + ['total_hari' => $perHari->count()];
+    }
+
     public function tpRemedial(Collection $nilaiLms): Collection
     {
         return $nilaiLms->filter(fn ($nl) => $nl->nilai < $this->kktpThreshold())->values();

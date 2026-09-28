@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\TahunAjaranController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Guru\KurikulumController;
 use App\Http\Controllers\Guru\PenilaianController;
+use App\Http\Controllers\Guru\PesanWaliKelasController;
 use App\Http\Controllers\Guru\PortalController;
 use App\Http\Controllers\KepsekController;
 use App\Http\Controllers\OrangTua\DashboardController as OrangTuaDashboardController;
@@ -73,6 +74,7 @@ Route::middleware('role:waka_kurikulum')->prefix('guru/kurikulum')->name('guru.k
 
 Route::middleware('role:guru_mapel')->prefix('guru/penilaian')->name('guru.penilaian.')->group(function () {
     Route::post('/tujuan-pembelajaran', [PenilaianController::class, 'storeTujuanPembelajaran'])->name('tp.store');
+    Route::put('/tujuan-pembelajaran/{tujuanPembelajaran}', [PenilaianController::class, 'updateTujuanPembelajaran'])->name('tp.update');
     Route::delete('/tujuan-pembelajaran/{tujuanPembelajaran}', [PenilaianController::class, 'destroyTujuanPembelajaran'])->name('tp.destroy');
     Route::post('/nilai-lm', [PenilaianController::class, 'storeNilaiLm'])->name('nilai-lm.store');
     Route::post('/nilai-sas', [PenilaianController::class, 'storeNilaiSas'])->name('nilai-sas.store');
@@ -80,9 +82,13 @@ Route::middleware('role:guru_mapel')->prefix('guru/penilaian')->name('guru.penil
     Route::post('/nilai-pkl-ukk', [PenilaianController::class, 'storeNilaiPklUkk'])->name('nilai-pkl-ukk.store');
 });
 
+Route::middleware('role:guru_mapel')->post('/guru/jurnal', [\App\Http\Controllers\Guru\JurnalController::class, 'store'])->name('guru.jurnal.store');
+
 Route::middleware('role:guru_bk')->post('/guru/bk/asesmen', [\App\Http\Controllers\Guru\BkController::class, 'storeAsesmen'])->name('guru.bk.asesmen.store');
 
 Route::middleware('role:wali_kelas')->post('/guru/wali-kelas/catatan', [PenilaianController::class, 'storeCatatanWaliKelas'])->name('guru.wali-kelas.catatan.store');
+
+Route::middleware('role:wali_kelas')->post('/guru/wali-kelas/pesan', [PesanWaliKelasController::class, 'store'])->name('guru.wali-kelas.pesan.store');
 
 Route::middleware('role:guru_wali')->prefix('guru/wali')->name('guru.wali.')->group(function () {
     Route::post('/catatan-akademik', [PenilaianController::class, 'storeCatatanAkademik'])->name('catatan-akademik.store');
@@ -111,6 +117,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::post('guru/{guru}/reset-password', [GuruController::class, 'resetPassword'])->name('guru.reset-password');
     Route::resource('siswa', SiswaController::class)->except(['show']);
     Route::post('siswa/{siswa}/reset-password', [SiswaController::class, 'resetPassword'])->name('siswa.reset-password');
+    Route::post('siswa/{siswa}/akun-ortu', [SiswaController::class, 'buatAkunOrtu'])->name('siswa.akun-ortu.store');
+    Route::delete('siswa/{siswa}/akun-ortu', [SiswaController::class, 'hapusAkunOrtu'])->name('siswa.akun-ortu.destroy');
     Route::resource('kelas', KelasController::class)->except(['show'])->parameters(['kelas' => 'kelas']);
     Route::resource('mata-pelajaran', MataPelajaranController::class)->except(['show'])->parameters(['mata-pelajaran' => 'mataPelajaran']);
     Route::get('rombel', [RombelController::class, 'index'])->name('rombel.index');

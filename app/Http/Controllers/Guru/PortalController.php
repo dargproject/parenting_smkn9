@@ -7,6 +7,7 @@ use App\Models\CatatanKompetensi;
 use App\Models\CatatanWaliKelas;
 use App\Models\Guru;
 use App\Models\JadwalPelajaran;
+use App\Models\JurnalMengajar;
 use App\Models\KasusBk;
 use App\Models\Kelas;
 use App\Models\KelasMataPelajaran;
@@ -28,6 +29,8 @@ use Illuminate\Support\Facades\Session;
 
 class PortalController extends Controller
 {
+    private const NAMA_HARI = [0 => 'Minggu', 1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu'];
+
     public function index(PenilaianService $penilaian)
     {
         $guruId = Session::get('guru_id');
@@ -168,16 +171,66 @@ class PortalController extends Controller
             return ['kelas' => $kelas, 'mapel' => $mapelProgres, 'rows' => $rows];
         });
 
-        $siswaWali = $siswas->whereIn('kelas_id', $kelasList->where('wali_kelas_id', $guru->id)->pluck('id'))->values();
+        $kelasWaliList = $kelasList->where('wali_kelas_id', $guru->id)->sortBy('nama_kelas', SORT_NATURAL)->values();
+        $siswaWali = $siswas->whereIn('kelas_id', $kelasWaliList->pluck('id'))->values();
         $catatanWaliKelasWali = $tahunAjaranAktif
             ? \App\Models\CatatanWaliKelas::whereIn('siswa_id', $siswaWali->pluck('id'))->where('tahun_ajaran_id', $tahunAjaranAktifId)->get()->keyBy('siswa_id')
             : collect();
+        $pesanWaliKelasWali = \App\Models\PesanWaliKelas::whereIn('siswa_id', $siswaWali->pluck('id'))->latest()->get()->groupBy('siswa_id');
         $raporFinalBinaan = $tahunAjaranAktif
             ? RaporFinal::whereIn('siswa_id', $siswaBinaan->pluck('id'))->where('tahun_ajaran_id', $tahunAjaranAktifId)->get()->keyBy('siswa_id')
             : collect();
         $siswaBinaanLengkap = $tahunAjaranAktif
             ? $siswaBinaan->mapWithKeys(fn ($s) => [$s->id => $penilaian->siswaLengkap($s, $tahunAjaranAktifId)])
             : collect();
+
+        // Data untuk Wali Kelas: rekap kehadiran (Dashboard Kelas & Rekap Presensi Mapel), dari presensi asli.
+        $jadwalKelasWali = $jadwalPelajarans->whereIn('kelas_id', $kelasWaliList->pluck('id'))->values();
+        $presensiWali = \App\Models\Presensi::whereIn('jadwal_pelajaran_id', $jadwalKelasWali->pluck('id'))->get();
+        $rekapPresensiWali = $siswaWali->mapWithKeys(function ($s) use ($presensiWali) {
+            $milik = $presensiWali->where('siswa_id', $s->id);
+            $jumlah = ['H' => 0, 'S' => 0, 'I' => 0, 'A' => 0];
+            foreach ($milik as $p) {
+                $jumlah[$p->status]++;
+            }
+            $total = array_sum($jumlah);
+
+            return [$s->id => ['jumlah' => $jumlah, 'total' => $total, 'persen' => $total > 0 ? round($jumlah['H'] / $total * 100, 1) : null]];
+        });
+        // Rekap harian: satu status per hari (bukan per mapel), agar siswa yang alpa di satu jadwal
+        // tapi hadir di jadwal lain hari itu tidak "tertutupi" atau salah terbaca sebagai alpa penuh.
+        $rekapHarianWali = $siswaWali->mapWithKeys(fn ($s) => [$s->id => $penilaian->rekapHarian($presensiWali->where('siswa_id', $s->id))]);
+
+        // Peringatan alpa mingguan: siswa dengan hari Alpa Penuh >= ambang, dalam minggu kalender berjalan (Senin-Sabtu).
+        $ambangAlpaMingguan = (int) setting('alpa_mingguan_threshold', 3);
+        $awalMingguIni = now()->startOfWeek(\Carbon\Carbon::MONDAY)->toDateString();
+        $akhirMingguIni = now()->startOfWeek(\Carbon\Carbon::MONDAY)->addDays(5)->toDateString();
+        $siswaPeringatanMingguan = $siswaWali->map(function ($s) use ($presensiWali, $penilaian, $awalMingguIni, $akhirMingguIni) {
+            $milikMingguIni = $presensiWali->where('siswa_id', $s->id)->whereBetween('tanggal', [$awalMingguIni, $akhirMingguIni]);
+
+            return (object) ['siswa' => $s, 'alpa' => $penilaian->rekapHarian($milikMingguIni)['alpa']];
+        })->filter(fn ($r) => $r->alpa >= $ambangAlpaMingguan)->sortByDesc('alpa')->values();
+
+        $tanggalPresensiTerbaruWali = $presensiWali->max('tanggal');
+        $tanggalPresensiDipilih = request()->query('presensi_tanggal') ?: ($tanggalPresensiTerbaruWali ?: now()->toDateString());
+        $namaHariPresensiDipilih = self::NAMA_HARI[\Carbon\Carbon::parse($tanggalPresensiDipilih)->dayOfWeek];
+        $jadwalHariPresensiDipilih = $jadwalKelasWali->where('hari', $namaHariPresensiDipilih)->values();
+        $presensiHariDipilihWali = $presensiWali->where('tanggal', $tanggalPresensiDipilih);
+
+        // Data untuk menu Jurnal & Presensi (guru mapel): jadwal hari ini + kalender riwayat pengisian sebulan.
+        $namaHariIni = self::NAMA_HARI[now()->dayOfWeek];
+        $jadwalGuruMapel = $jadwalPelajarans->where('guru_id', $guru->id)->values();
+        $jadwalHariIni = $jadwalGuruMapel->where('hari', $namaHariIni)->values();
+        $jurnalHariIniIds = JurnalMengajar::where('guru_id', $guru->id)->whereDate('tanggal', now())->pluck('jadwal_pelajaran_id');
+
+        $bulanJurnal = request()->query('jurnal_bulan')
+            ? \Carbon\Carbon::createFromFormat('Y-m', request()->query('jurnal_bulan'))->startOfMonth()
+            : now()->startOfMonth();
+        $kalenderJurnal = $this->buildKalenderJurnal($jadwalGuruMapel, $guru->id, $bulanJurnal);
+        $namaBulanTerpilih = $bulanJurnal->locale('id')->translatedFormat('F Y');
+        $bulanSebelumnya = $bulanJurnal->copy()->subMonth()->format('Y-m');
+        $bulanBerikutnya = $bulanJurnal->copy()->addMonth()->format('Y-m');
+        $offsetAwalKalender = $bulanJurnal->copy()->startOfMonth()->dayOfWeekIso - 1;
 
         return view('guru.portal', compact(
             'guru', 'siswas', 'kasusBks', 'pelanggarans', 'panggilanOrtus',
@@ -186,20 +239,89 @@ class PortalController extends Controller
             'kelasBinaan', 'siswaBinaan', 'rerataBinaan', 'peringkatBinaan',
             'tahunAjaranAktif', 'mapelBinaan', 'tujuanPembelajarans',
             'nilaiLmBinaan', 'nilaiSasBinaan', 'catatanKompetensiBinaan', 'nilaiPklUkkBinaan',
-            'matrixPerKelas', 'raporFinalBinaan', 'siswaWali', 'catatanWaliKelasWali', 'siswaBinaanLengkap'
+            'matrixPerKelas', 'raporFinalBinaan', 'siswaWali', 'catatanWaliKelasWali', 'pesanWaliKelasWali', 'siswaBinaanLengkap',
+            'kelasWaliList', 'rekapPresensiWali', 'rekapHarianWali', 'tanggalPresensiTerbaruWali', 'tanggalPresensiDipilih', 'jadwalHariPresensiDipilih', 'presensiHariDipilihWali',
+            'siswaPeringatanMingguan', 'ambangAlpaMingguan',
+            'jadwalGuruMapel', 'jadwalHariIni', 'jurnalHariIniIds', 'namaHariIni',
+            'kalenderJurnal', 'namaBulanTerpilih', 'bulanSebelumnya', 'bulanBerikutnya', 'offsetAwalKalender'
         ));
     }
 
-    public function getSiswaByJadwal($jadwalId)
+    /**
+     * Kalender sebulan: untuk tiap tanggal yang punya jadwal mengajar guru ini, cek jurnal mana yang
+     * sudah/belum diisi. Tanggal tanpa jadwal (mis. hari Minggu) diberi ada_jadwal=false.
+     */
+    private function buildKalenderJurnal($jadwalGuru, int $guruId, \Carbon\Carbon $bulan): array
+    {
+        $awal = $bulan->copy()->startOfMonth();
+        $akhir = $bulan->copy()->endOfMonth();
+
+        $jurnalSebulan = JurnalMengajar::where('guru_id', $guruId)
+            ->whereBetween('tanggal', [$awal->toDateString(), $akhir->toDateString()])
+            ->get()
+            ->groupBy(fn ($j) => \Carbon\Carbon::parse($j->tanggal)->toDateString());
+
+        $kalender = [];
+        for ($tgl = $awal->copy(); $tgl->lte($akhir); $tgl->addDay()) {
+            $namaHari = self::NAMA_HARI[$tgl->dayOfWeek];
+            $jadwalHariItu = $jadwalGuru->where('hari', $namaHari)->values();
+            $tanggalStr = $tgl->toDateString();
+
+            if ($jadwalHariItu->isEmpty()) {
+                $kalender[$tanggalStr] = ['ada_jadwal' => false];
+
+                continue;
+            }
+
+            $jurnalHariItu = $jurnalSebulan->get($tanggalStr, collect());
+            $terisiIds = $jurnalHariItu->pluck('jadwal_pelajaran_id');
+
+            $detail = $jadwalHariItu->map(function ($j) use ($jurnalHariItu) {
+                $terisi = $jurnalHariItu->firstWhere('jadwal_pelajaran_id', $j->id);
+
+                return [
+                    'id' => $j->id,
+                    'label' => ($j->kelas->nama_kelas ?? '-').' — '.($j->mataPelajaran->nama_mapel ?? '-').' ('.substr($j->jam_mulai, 0, 5).'-'.substr($j->jam_selesai, 0, 5).')',
+                    'terisi' => (bool) $terisi,
+                    'materi' => $terisi?->materi,
+                ];
+            })->values();
+
+            $kalender[$tanggalStr] = [
+                'ada_jadwal' => true,
+                'lewat' => $tgl->lte(today()),
+                'total' => $jadwalHariItu->count(),
+                'terisi' => $terisiIds->unique()->count(),
+                'detail' => $detail->all(),
+                'kurang' => $detail->reject('terisi')->pluck('label')->values()->all(),
+            ];
+        }
+
+        return $kalender;
+    }
+
+    public function getSiswaByJadwal(Request $request, $jadwalId)
     {
         $jadwal = JadwalPelajaran::find($jadwalId);
         if (! $jadwal) {
-            return response()->json([]);
+            return response()->json(['siswa' => []]);
         }
 
-        $siswas = Siswa::where('kelas_id', $jadwal->kelas_id)->get();
+        abort_unless($jadwal->guru_id === Auth::id(), 403);
 
-        return response()->json($siswas);
+        $siswas = Siswa::where('kelas_id', $jadwal->kelas_id)->orderBy('nama')->get(['id', 'nama', 'nis']);
+
+        $tanggal = $request->query('tanggal');
+        $materi = null;
+        $presensi = [];
+
+        if ($tanggal) {
+            $materi = \App\Models\JurnalMengajar::where('jadwal_pelajaran_id', $jadwal->id)->where('tanggal', $tanggal)->value('materi');
+            $presensi = \App\Models\Presensi::where('jadwal_pelajaran_id', $jadwal->id)->where('tanggal', $tanggal)
+                ->get()->keyBy('siswa_id')->map(fn ($p) => ['status' => $p->status, 'keterangan' => $p->keterangan]);
+        }
+
+        return response()->json(['siswa' => $siswas, 'materi' => $materi, 'presensi' => $presensi]);
     }
 
     public function storePelanggaran(Request $request)

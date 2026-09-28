@@ -9,6 +9,20 @@
                     class="font-semibold">{{ $siswa->nama }}</span> &middot; {{ $siswa->kelas->nama_kelas ?? '-' }}</p>
         </div>
 
+        @if($pesanWaliKelas->isNotEmpty())
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+                <p class="font-semibold text-slate-900 dark:text-white mb-3"><i class="fa-solid fa-envelope text-blue-500 mr-2"></i>Pesan dari Wali Kelas</p>
+                <div class="flex flex-col gap-3 max-h-72 overflow-y-auto">
+                    @foreach($pesanWaliKelas as $pesan)
+                        <div class="rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-900/60">
+                            <p class="text-sm text-slate-800 dark:text-slate-100 m-0">{{ $pesan->pesan }}</p>
+                            <p class="text-xs text-slate-400 dark:text-slate-500 mt-1.5 m-0">{{ $pesan->guru->nama ?? 'Wali Kelas' }} &middot; {{ $pesan->created_at->translatedFormat('d M Y, H:i') }}</p>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         @if($riwayat->isNotEmpty())
             <form method="GET" class="flex items-center gap-2 text-sm">
                 <label class="text-slate-500 dark:text-slate-400">Semester:</label>

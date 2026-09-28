@@ -34,20 +34,28 @@ class KurikulumController extends Controller
 
     private function cariBentrok(array $data, int $guruId, ?int $abaikanId = null): ?string
     {
+        // Bentrok kelas: hanya jika mapel yang SAMA dijadwalkan lagi pada jam yang tumpang tindih
+        // (kelas boleh punya mapel berbeda di jam berbeda pada hari yang sama).
+        // Bentrok guru: tetap diblokir untuk jam tumpang tindih di kelas manapun & mapel apapun,
+        // karena satu guru tidak mungkin mengajar 2 kelas sekaligus.
         $bentrok = JadwalPelajaran::where('hari', $data['hari'])
             ->when(TahunAjaran::where('is_active', true)->value('id'), fn ($q, $ta) => $q->where('tahun_ajaran_id', $ta))
             ->when($abaikanId, fn ($q) => $q->where('id', '!=', $abaikanId))
-            ->where(fn ($q) => $q->where('kelas_id', $data['kelas_id'])->orWhere('guru_id', $guruId))
             ->where('jam_mulai', '<', $data['jam_selesai'])
             ->where('jam_selesai', '>', $data['jam_mulai'])
-            ->with(['kelas', 'guru'])
+            ->where(fn ($q) => $q->where('guru_id', $guruId)
+                ->orWhere(fn ($q2) => $q2->where('kelas_id', $data['kelas_id'])->where('mata_pelajaran_id', $data['mata_pelajaran_id']))
+            )
+            ->with(['kelas', 'guru', 'mataPelajaran'])
             ->first();
 
         if (! $bentrok) {
             return null;
         }
 
-        $pihak = $bentrok->kelas_id == $data['kelas_id'] ? "Kelas {$bentrok->kelas->nama_kelas}" : "Guru {$bentrok->guru->nama}";
+        $pihak = $bentrok->kelas_id == $data['kelas_id'] && $bentrok->mata_pelajaran_id == $data['mata_pelajaran_id']
+            ? "Kelas {$bentrok->kelas->nama_kelas} (mapel {$bentrok->mataPelajaran->nama_mapel})"
+            : "Guru {$bentrok->guru->nama}";
 
         return "Jadwal bentrok: {$pihak} sudah punya jadwal lain pada {$data['hari']} jam {$bentrok->jam_mulai}-{$bentrok->jam_selesai}.";
     }

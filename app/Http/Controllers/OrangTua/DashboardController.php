@@ -9,6 +9,7 @@ use App\Models\MataPelajaran;
 use App\Models\NilaiLm;
 use App\Models\NilaiPklUkk;
 use App\Models\NilaiSas;
+use App\Models\PesanWaliKelas;
 use App\Models\RaporFinal;
 use App\Models\TahunAjaran;
 use App\Services\PenilaianService;
@@ -22,12 +23,15 @@ class DashboardController extends Controller
         $siswa = $orangTua->siswa;
         [$riwayat, $tahunAjaranAktif] = $this->pilihTahunAjaran($siswa);
 
+        $pesanWaliKelas = PesanWaliKelas::where('siswa_id', $siswa->id)->with('guru')->latest()->get();
+        PesanWaliKelas::where('siswa_id', $siswa->id)->whereNull('dibaca_at')->update(['dibaca_at' => now()]);
+
         $raporFinal = $tahunAjaranAktif
             ? RaporFinal::where(['siswa_id' => $siswa->id, 'tahun_ajaran_id' => $tahunAjaranAktif->id])->first()
             : null;
 
         if (! $raporFinal || $raporFinal->status !== 'final') {
-            return view('ortu.dashboard', ['siswa' => $siswa, 'dirilis' => false, 'ringkasan' => collect(), 'riwayat' => $riwayat, 'tahunAjaranTerpilih' => $tahunAjaranAktif]);
+            return view('ortu.dashboard', ['siswa' => $siswa, 'dirilis' => false, 'ringkasan' => collect(), 'riwayat' => $riwayat, 'tahunAjaranTerpilih' => $tahunAjaranAktif, 'pesanWaliKelas' => $pesanWaliKelas]);
         }
 
         // Mapel diambil dari nilai yang tersimpan pada semester tsb, bukan kelas siswa saat ini (siswa bisa sudah naik kelas).
@@ -59,6 +63,7 @@ class DashboardController extends Controller
             'riwayat' => $riwayat,
             'tahunAjaranTerpilih' => $tahunAjaranAktif,
             'perluPerhatian' => $ringkasan->filter(fn ($r) => $r['status'] === 'remedial'),
+            'pesanWaliKelas' => $pesanWaliKelas,
         ]);
     }
 

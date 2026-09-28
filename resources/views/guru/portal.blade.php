@@ -295,127 +295,213 @@
     <!-- ========================================== -->
     <!-- WALI KELAS VIEWS -->
     <!-- ========================================== -->
+    @php $jumlahSiswaWali = $siswaWali->groupBy('kelas_id')->map->count(); @endphp
+    @php
+        $totalPresensiWali = $rekapPresensiWali->sum('total');
+        $totalHadirWali = $rekapPresensiWali->sum(fn ($r) => $r['jumlah']['H']);
+        $rerataKehadiranWali = $totalPresensiWali > 0 ? round($totalHadirWali / $totalPresensiWali * 100, 1) : null;
+        $jumlahHariIniWali = ['H' => 0, 'S' => 0, 'I' => 0, 'A' => 0];
+        foreach ($presensiHariDipilihWali as $p) {
+            $jumlahHariIniWali[$p->status]++;
+        }
+        $perluPerhatianWali = $siswaWali
+            ->map(fn ($s) => (object) ['siswa' => $s, 'alpa' => $rekapPresensiWali[$s->id]['jumlah']['A'] ?? 0])
+            ->filter(fn ($r) => $r->alpa >= 2)
+            ->sortByDesc('alpa')
+            ->take(5)
+            ->values();
+    @endphp
     <div id="pane-wali-dashboard" class="pane-content hidden-pane fade-transition">
+        @if($siswaPeringatanMingguan->isNotEmpty())
+            <div class="rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 mb-4">
+                <p class="font-bold text-rose-400 flex items-center gap-2 mb-2">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Peringatan Alpa Mingguan (&ge; {{ $ambangAlpaMingguan }}x minggu ini)</span>
+                </p>
+                <ul class="space-y-1">
+                    @foreach($siswaPeringatanMingguan as $r)
+                        <li class="flex items-center justify-between text-sm">
+                            <span class="text-slate-100 font-semibold">{{ $r->siswa->nama }}</span>
+                            <span class="text-rose-400 font-bold">{{ $r->alpa }}x Alpa Penuh minggu ini</span>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <div class="card bg-dark text-white border-0 rounded-xl p-4 shadow-sm mb-4">
             <div class="flex items-center">
                 <div class="col-md-8">
-                    <h5 class="m-0 text-slate-400 small uppercase tracking-wider">Perkembangan Kelas
-                        Wali</h5>
-                    <h3 class="font-bold m-0 mt-1">XI TKJ 1 (Teknik Komputer & Jaringan)</h3>
-                    <p class="m-0 text-slate-400 mt-1 small">Wali Kelas: <span
-                            id="wali-dashboard-name">Ibu Siti Rahmawati</span> | Total: 36 Siswa</p>
+                    <h5 class="m-0 text-slate-400 small uppercase tracking-wider">Perkembangan Kelas Wali</h5>
+                    <h3 class="font-bold m-0 mt-1">{{ $kelasWaliList->pluck('nama_kelas')->implode(', ') ?: 'Belum ada kelas' }}</h3>
+                    <p class="m-0 text-slate-400 mt-1 small">Wali Kelas: <span>{{ $guru->nama }}</span> | Total: {{ $siswaWali->count() }} Siswa</p>
                 </div>
                 <div class="col-span-1 md:text-right mt-3 md:mt-0">
-                    <span class="text-slate-400 small block">Rerata Kehadiran Harian</span>
-                    <h2 class="font-bold text-success m-0">97.6%</h2>
+                    <span class="text-slate-400 small block">Rerata Kehadiran Keseluruhan</span>
+                    <h2 class="font-bold text-success m-0">{{ $rerataKehadiranWali !== null ? $rerataKehadiranWali.'%' : '-' }}</h2>
                 </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-100">
-            <div class="col-md-6">
-                <div class="card border-0 rounded-xl shadow-sm p-4 bg-slate-800/80 h-full">
-                    <h6 class="font-bold text-slate-100 mb-3"><i
-                            class="fa-solid fa-calendar-check text-success mr-1"></i> Rangkuman
-                        Presensi Rombel (Hari Ini)</h6>
-                    <div class="flex flex-col gap-2" id="wali-attendance-summary">
-                        <!-- Injected Attendance summary stats -->
+        @if($kelasWaliList->isEmpty())
+            <p class="text-slate-400 text-sm">Anda belum ditetapkan sebagai wali kelas untuk kelas manapun. Hubungi Waka Kurikulum.</p>
+        @else
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-100">
+                <div class="col-md-6">
+                    <div class="card border-0 rounded-xl shadow-sm p-4 bg-slate-800/80 h-full">
+                        <h6 class="font-bold text-slate-100 mb-3"><i class="fa-solid fa-calendar-check text-success mr-1"></i> Rangkuman Presensi Rombel
+                            @if($tanggalPresensiTerbaruWali)
+                                <span class="block text-slate-400 font-normal text-xs mt-0.5">Data terbaru: {{ \Carbon\Carbon::parse($tanggalPresensiTerbaruWali)->locale('id')->translatedFormat('l, d F Y') }}</span>
+                            @endif
+                        </h6>
+                        @if(!$tanggalPresensiTerbaruWali)
+                            <p class="text-slate-400 text-sm m-0">Belum ada presensi tercatat untuk kelas ini.</p>
+                        @else
+                            <div class="flex flex-col gap-2">
+                                @foreach([['H', 'Hadir', 'emerald'], ['S', 'Sakit', 'cyan'], ['I', 'Izin', 'amber'], ['A', 'Alpa', 'rose']] as [$kode, $label, $warna])
+                                    <div class="flex items-center justify-between rounded-lg bg-slate-900/50 px-3 py-2">
+                                        <span class="text-sm text-slate-300">{{ $label }}</span>
+                                        <span class="text-sm font-bold @if($warna === 'emerald') text-emerald-400 @elseif($warna === 'cyan') text-cyan-400 @elseif($warna === 'amber') text-amber-400 @else text-rose-400 @endif">{{ $jumlahHariIniWali[$kode] }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-0 rounded-xl shadow-sm p-4 bg-slate-800/80 h-full border-t border-slate-700/60 border-rose-500 border-4">
+                        <h6 class="font-bold text-danger mb-3"><i class="fa-solid fa-circle-exclamation mr-1"></i> Perlu Perhatian Khusus (Alpa &ge; 2)</h6>
+                        <ul class="list-group list-group-flush">
+                            @forelse($perluPerhatianWali as $r)
+                                <li class="list-group-item flex justify-between items-center px-0 py-2">
+                                    <span class="font-bold small" style="font-size: 13px;">{{ $r->siswa->nama }}</span>
+                                    <span class="badge bg-rose-500/10 text-rose-400 border border-rose-500/20 font-semibold" style="font-size: 10px;">{{ $r->alpa }}x Alpa</span>
+                                </li>
+                            @empty
+                                <p class="text-slate-400 text-sm m-0">Tidak ada siswa dengan alpa berulang saat ini.</p>
+                            @endforelse
+                        </ul>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div
-                    class="card border-0 rounded-xl shadow-sm p-4 bg-slate-800/80 h-full border-t border-slate-700/60 border-rose-500 border-4">
-                    <h6 class="font-bold text-danger mb-3"><i
-                            class="fa-solid fa-circle-exclamation mr-1"></i> Perlu Perhatian Khusus
-                        (Rujuk ke BK)</h6>
-                    <ul class="list-group list-group-flush" id="wali-warning-list">
-                        <!-- Warning list of students -->
-                    </ul>
+        @endif
+    </div>
+
+    <div id="pane-wali-presensi" class="pane-content hidden-pane fade-transition" x-data="kelasXData('wk-presensi:{{ $guru->id }}', @js($kelasWaliList->pluck('id')))">
+        <div class="mb-3">
+            <h4 class="font-bold m-0 text-slate-100">Rekapitulasi Presensi Rombel</h4>
+            <p class="text-slate-400 small m-0">Rekap kehadiran siswa dari presensi yang dicatat guru mapel pada Jurnal Mengajar.</p>
+        </div>
+
+        @if($kelasWaliList->isEmpty())
+            <p class="text-slate-400 text-sm">Anda belum ditetapkan sebagai wali kelas untuk kelas manapun. Hubungi Waka Kurikulum.</p>
+        @else
+            <div class="mb-3">@include('guru.partials.pilih-kelas', ['daftarKelas' => $kelasWaliList, 'jumlahSiswa' => $jumlahSiswaWali])</div>
+
+            <!-- Ringkasan Kehadiran per Siswa -->
+            <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5 md:p-6 text-slate-100 mb-4">
+                <h6 class="font-bold text-slate-100 mb-1"><i class="fa-solid fa-chart-simple mr-1 text-primary"></i> Ringkasan Kehadiran per Siswa</h6>
+                <p class="text-slate-400 text-xs mb-3">"Per Mata Pelajaran" menjumlahkan tiap jadwal secara terpisah. "Per Hari" memberi satu status untuk satu hari: <b>Hadir/Sakit/Izin/Alpa Penuh</b> bila semua jadwal hari itu berstatus sama, atau <b>Campuran</b> bila hasilnya beda-beda (mis. hadir di satu mapel, alpa di mapel lain).</p>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-400 table-bordered text-center" style="font-size: 13px;">
+                        <thead class="bg-slate-900 border-b border-slate-700/60 text-xs align-middle text-slate-100">
+                            <tr>
+                                <th class="text-start" rowspan="2" style="min-width: 170px;">Nama Siswa</th>
+                                <th colspan="5">Per Mata Pelajaran</th>
+                                <th colspan="5">Per Hari</th>
+                            </tr>
+                            <tr>
+                                <th>Hadir</th>
+                                <th>Sakit</th>
+                                <th>Izin</th>
+                                <th>Alpa</th>
+                                <th>Persentase</th>
+                                <th>Hadir Penuh</th>
+                                <th>Sakit Penuh</th>
+                                <th>Izin Penuh</th>
+                                <th>Campuran</th>
+                                <th>Alpa Penuh</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($siswaWali as $siswa)
+                                @php
+                                    $r = $rekapPresensiWali[$siswa->id] ?? ['jumlah' => ['H' => 0, 'S' => 0, 'I' => 0, 'A' => 0], 'total' => 0, 'persen' => null];
+                                    $h = $rekapHarianWali[$siswa->id] ?? ['penuh' => 0, 'sakit' => 0, 'izin' => 0, 'sebagian' => 0, 'alpa' => 0, 'total_hari' => 0];
+                                @endphp
+                                <tr x-show="kelas == {{ $siswa->kelas_id }}">
+                                    <td class="text-start font-bold text-slate-100">{{ $siswa->nama }}</td>
+                                    <td class="text-emerald-400 font-semibold">{{ $r['jumlah']['H'] }}</td>
+                                    <td class="text-cyan-400 font-semibold">{{ $r['jumlah']['S'] }}</td>
+                                    <td class="text-amber-400 font-semibold">{{ $r['jumlah']['I'] }}</td>
+                                    <td class="text-rose-400 font-semibold">{{ $r['jumlah']['A'] }}</td>
+                                    <td class="font-bold text-slate-100">{{ $r['persen'] !== null ? $r['persen'].'%' : '-' }}</td>
+                                    <td class="text-emerald-400 font-semibold border-l border-slate-700/60">{{ $h['penuh'] }}</td>
+                                    <td class="text-cyan-400 font-semibold">{{ $h['sakit'] }}</td>
+                                    <td class="text-amber-400 font-semibold">{{ $h['izin'] }}</td>
+                                    <td class="text-orange-400 font-semibold">{{ $h['sebagian'] }}</td>
+                                    <td class="text-rose-400 font-semibold">{{ $h['alpa'] }}</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="11" class="py-3 text-slate-400">Belum ada siswa di kelas ini.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
-        </div>
+
+            <!-- Detail Harian -->
+            <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5 md:p-6 text-slate-100">
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3">
+                    <h6 class="font-bold text-slate-100 m-0"><i class="fa-solid fa-table-cells mr-1 text-primary"></i> Detail Kehadiran Harian</h6>
+                    <form method="GET" class="flex items-center gap-2">
+                        <label class="text-sm text-slate-400">Tanggal:</label>
+                        <input type="date" name="presensi_tanggal" value="{{ $tanggalPresensiDipilih }}" max="{{ now()->toDateString() }}" onchange="this.form.submit()" class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-1.5 text-sm text-slate-100">
+                    </form>
+                </div>
+
+                @if($jadwalHariPresensiDipilih->isEmpty())
+                    <p class="text-slate-400 text-sm m-0">Tidak ada jadwal pelajaran pada hari itu untuk kelas Anda.</p>
+                @else
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-400 table-bordered text-center" style="font-size: 13px;">
+                            <thead class="bg-slate-900 border-b border-slate-700/60 text-xs align-middle text-slate-100">
+                                <tr>
+                                    <th class="text-start" style="min-width: 170px;">Nama Siswa</th>
+                                    @foreach($jadwalHariPresensiDipilih as $jadwal)
+                                        <th>{{ $jadwal->mataPelajaran->nama_mapel ?? '-' }}<br><span class="text-slate-400" style="font-size: 10px;">{{ substr($jadwal->jam_mulai, 0, 5) }} - {{ substr($jadwal->jam_selesai, 0, 5) }}</span></th>
+                                    @endforeach
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($siswaWali as $siswa)
+                                    <tr x-show="kelas == {{ $siswa->kelas_id }}">
+                                        <td class="text-start font-bold text-slate-100">{{ $siswa->nama }}</td>
+                                        @foreach($jadwalHariPresensiDipilih as $jadwal)
+                                            @php $status = $presensiHariDipilihWali->first(fn ($p) => $p->siswa_id === $siswa->id && $p->jadwal_pelajaran_id === $jadwal->id); @endphp
+                                            <td>
+                                                @if(!$status)
+                                                    <span class="text-slate-500">-</span>
+                                                @else
+                                                    @php $warna = ['H' => 'text-emerald-400', 'S' => 'text-cyan-400', 'I' => 'text-amber-400', 'A' => 'text-rose-400'][$status->status]; @endphp
+                                                    <span class="font-bold {{ $warna }}">{{ $status->status }}</span>
+                                                @endif
+                                            </td>
+                                        @endforeach
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </div>
+        @endif
     </div>
 
-    <div id="pane-wali-presensi" class="pane-content hidden-pane fade-transition">
-        <div class="flex justify-between items-center mb-3">
-            <div>
-                <h4 class="font-bold m-0 text-slate-100">Rekapitulasi & Verifikasi Presensi Rombel
-                </h4>
-                <p class="text-slate-400 small m-0">Konsolidasi otomatis presensi mata pelajaran
-                    hari ini (25 Agustus 2026).</p>
-            </div>
-            <button onclick="triggerToast('Menyinkronkan data presensi KBM...')"
-                class="btn btn-outline-secondary btn-sm rounded-lg">
-                <i class="fa-solid fa-arrows-rotate"></i> Sinkron Mapel
-            </button>
-        </div>
-
-        <!-- Wali Exception/Verification Cards Panel -->
-        <div
-            class="card border-0 rounded-xl shadow-sm p-3 bg-slate-800/80 mb-4 text-slate-100 border-t border-slate-700/60 border-amber-500 border-4">
-            <h6 class="font-bold text-slate-100 mb-2"><i
-                    class="fa-solid fa-user-shield text-warning mr-1"></i> Verifikasi Ketidakhadiran
-                Siswa (Exceptions Review)</h6>
-            <p class="text-slate-400 small mb-3">Tinjau ketidakcocokan atau ketidakhadiran pada jam
-                pelajaran tertentu.</p>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm text-slate-400 table-sm" style="font-size: 13px;">
-                    <thead class="bg-slate-900 border-b border-slate-700/60 text-xs">
-                        <tr>
-                            <th>Nama Siswa</th>
-                            <th>Mapel / Jam</th>
-                            <th>Pengampu</th>
-                            <th>Alasan Asli</th>
-                            <th>Status Verifikasi</th>
-                            <th class="text-center">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="wali-exceptions-tbody">
-                        <!-- Dynamic exceptions entries -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Consolidated Aggregation Grid -->
-        <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5 md:p-6 text-slate-100">
-            <h6 class="font-bold text-slate-100 mb-3"><i
-                    class="fa-solid fa-table-cells mr-1 text-primary"></i> Matriks Kehadiran Harian
-                Rombel (XI TKJ 1)</h6>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm text-slate-400 table-bordered text-center"
-                    style="font-size: 13px;">
-                    <thead class="bg-slate-900 border-b border-slate-700/60 text-xs align-middle text-slate-100">
-                        <tr>
-                            <th class="text-start" style="min-width: 170px;">Nama Siswa</th>
-                            <th>Matematika<br><span class="text-slate-400"
-                                    style="font-size: 10px;">07:00 - 08:30</span></th>
-                            <th>B. Indonesia<br><span class="text-slate-400"
-                                    style="font-size: 10px;">08:30 - 10:00</span></th>
-                            <th>Jaringan (Prod)<br><span class="text-slate-400"
-                                    style="font-size: 10px;">10:15 - 12:15</span></th>
-                            <th>Pemrograman<br><span class="text-slate-400"
-                                    style="font-size: 10px;">13:00 - 15:00</span></th>
-                            <th>Persentase</th>
-                        </tr>
-                    </thead>
-                    <tbody id="wali-aggregated-presensi-tbody">
-                        <!-- Dynamically consolidated from raw database -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    @php
-        $kelasWaliList = $kelasList->where('wali_kelas_id', $guru->id)->sortBy('nama_kelas', SORT_NATURAL)->values();
-        $jumlahSiswaWali = $siswaWali->groupBy('kelas_id')->map->count();
-    @endphp
     <div id="pane-wali-catatan" class="pane-content hidden-pane fade-transition" x-data="kelasXData('wk-catatan:{{ $guru->id }}', @js($kelasWaliList->pluck('id')))">
         <div class="mb-3">
             <h4 class="font-bold m-0 text-slate-100">Catatan Wali Kelas</h4>
-            <p class="text-slate-400 small m-0">Catatan perkembangan karakter dan rekap ketidakhadiran siswa di kelas perwalian Anda, untuk dicantumkan pada e-Rapor.</p>
+            <p class="text-slate-400 small m-0">Catatan perkembangan karakter siswa di kelas perwalian Anda, untuk dicantumkan pada e-Rapor. Rekap Sakit/Izin/Alpa dihitung otomatis dari presensi (lihat menu Rekap Presensi Mapel untuk rinciannya).</p>
         </div>
 
         @if($siswaWali->isEmpty())
@@ -437,17 +523,18 @@
                         </thead>
                         <tbody class="divide-y divide-slate-700/60">
                             @foreach($siswaWali as $siswa)
-                                @php $cw = $catatanWaliKelasWali[$siswa->id] ?? null; @endphp
+                                @php
+                                    $cw = $catatanWaliKelasWali[$siswa->id] ?? null;
+                                    $h = $rekapHarianWali[$siswa->id] ?? ['sakit' => 0, 'izin' => 0, 'alpa' => 0];
+                                @endphp
                                 <tr x-show="kelas == {{ $siswa->kelas_id }} && (!cari || {{ \Illuminate\Support\Js::from(mb_strtolower($siswa->nama)) }}.includes(cari.toLowerCase()))">
                                     <td class="px-3 py-2 align-top font-semibold text-slate-100">{{ $siswa->nama }}<span class="block text-slate-400 font-normal" style="font-size: 10px;">{{ $siswa->kelas->nama_kelas ?? '' }} &middot; NIS {{ $siswa->nis }}</span></td>
                                     <td class="px-3 py-2">
                                         <textarea name="catatan[{{ $siswa->id }}][catatan_karakter]" rows="2" placeholder="Sikap, kedisiplinan, dan perkembangan siswa..." class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500">{{ $cw->catatan_karakter ?? '' }}</textarea>
                                     </td>
-                                    @foreach(['sakit', 'izin', 'tanpa_keterangan'] as $kolom)
-                                        <td class="px-2 py-2 align-top text-center">
-                                            <input type="number" min="0" max="365" name="catatan[{{ $siswa->id }}][{{ $kolom }}]" value="{{ $cw->$kolom ?? 0 }}" class="w-16 rounded-lg border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-slate-100 text-center">
-                                        </td>
-                                    @endforeach
+                                    <td class="px-2 py-2 align-top text-center text-cyan-400 font-semibold" title="Dihitung otomatis dari presensi, tidak bisa diketik manual">{{ $h['sakit'] }}</td>
+                                    <td class="px-2 py-2 align-top text-center text-amber-400 font-semibold" title="Dihitung otomatis dari presensi, tidak bisa diketik manual">{{ $h['izin'] }}</td>
+                                    <td class="px-2 py-2 align-top text-center text-rose-400 font-semibold" title="Dihitung otomatis dari presensi, tidak bisa diketik manual">{{ $h['alpa'] }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -460,63 +547,98 @@
             </form>
         @endif
     </div>
-    <div id="pane-wali-chat" class="pane-content hidden-pane fade-transition">
-        <h4 class="font-bold text-slate-100 mb-2">Pusat Komunikasi Orang Tua</h4>
-        <p class="text-slate-400 small mb-4">Konsultasi langsung dengan wali murid kelas XI TKJ 1.
-        </p>
+    <div id="pane-wali-chat" class="pane-content hidden-pane fade-transition" x-data="{...kelasXData('wk-pesan:{{ $guru->id }}', @js($kelasWaliList->pluck('id'))), pilih: null}">
+        <div class="mb-3">
+            <h4 class="font-bold m-0 text-slate-100">Komunikasi Orang Tua</h4>
+            <p class="text-slate-400 small m-0">Kirim catatan/pesan ke orang tua siswa kelas perwalian Anda. Pesan tersimpan dan tampil di portal orang tua siswa terkait. Untuk percakapan langsung, gunakan tombol WhatsApp/Telepon.</p>
+        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-            <div class="col-span-1">
-                <div class="card border-0 rounded-xl shadow-sm bg-slate-800/80 p-3">
-                    <div class="mb-3">
-                        <label class="form-label small font-semibold">Pilih Chat Orang Tua:</label>
-                        <select id="chat-parent-selector"
-                            class="form-select form-select-sm font-semibold text-slate-100"
-                            onchange="switchTeacherChatConversation()">
-                            <option value="ortu_andi_wali" selected>Bpk. Budi (Ortu Andi Susanto)
-                            </option>
-                            <option value="ortu_dodi_wali">Ibu Ningsih (Ortu Dodi Hermawan)</option>
-                            <option value="ortu_eko_wali">Bpk. Joko (Ortu Eko Saputro)</option>
-                        </select>
-                    </div>
-                    <div class="list-group list-group-flush" id="chat-users-list">
-                        <!-- Chat user status selection -->
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-8">
-                <div class="card border-0 rounded-xl shadow-sm p-4 bg-slate-800/80 flex flex-col text-slate-100"
-                    style="height: 420px;">
-                    <div class="flex items-center gap-2 border-b border-slate-700/60 pb-3 mb-3">
-                        <div class="avatar-circle font-bold bg-primary text-white"
-                            style="width: 38px; height: 38px;">B</div>
-                        <div>
-                            <h6 class="font-bold text-slate-100 m-0" id="chat-header-name">Bpk. Budi
-                                Susanto</h6>
-                            <span class="text-success small" style="font-size: 11px;"><i
-                                    class="fa-solid fa-circle text-success"
-                                    style="font-size: 8px;"></i> Online (Orang Tua Andi)</span>
+        @if($siswaWali->isEmpty())
+            <p class="text-slate-400 text-sm">Anda belum ditetapkan sebagai wali kelas untuk kelas manapun. Hubungi Waka Kurikulum.</p>
+        @else
+            <div class="mb-3">@include('guru.partials.pilih-kelas', ['daftarKelas' => $kelasWaliList, 'cari' => true])</div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                <div class="col-span-1">
+                    <div class="rounded-xl border border-slate-700/60 bg-slate-800/80 overflow-hidden">
+                        <div class="max-h-[480px] overflow-y-auto divide-y divide-slate-700/60">
+                            @foreach($siswaWali as $siswa)
+                                @php $jumlahPesan = ($pesanWaliKelasWali[$siswa->id] ?? collect())->count(); @endphp
+                                <button type="button" data-siswa="{{ $siswa->id }}" @click="pilih = {{ $siswa->id }}"
+                                    x-show="kelas == {{ $siswa->kelas_id }} && (!cari || {{ \Illuminate\Support\Js::from(mb_strtolower($siswa->nama)) }}.includes(cari.toLowerCase()))"
+                                    :class="pilih === {{ $siswa->id }} ? 'bg-blue-600/20' : 'hover:bg-slate-700/40'"
+                                    class="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left transition">
+                                    <div class="min-w-0">
+                                        <span class="block truncate text-sm font-semibold text-slate-100">{{ $siswa->nama }}</span>
+                                        <span class="block text-slate-400" style="font-size: 11px;">NIS {{ $siswa->nis }} &middot; {{ $siswa->no_hp_ortu ? 'HP terdaftar' : 'Belum ada No. HP ortu' }}</span>
+                                    </div>
+                                    @if($jumlahPesan > 0)
+                                        <span class="flex-shrink-0 rounded-full bg-slate-700 px-2 py-0.5 text-slate-300" style="font-size: 10px;">{{ $jumlahPesan }}</span>
+                                    @endif
+                                </button>
+                            @endforeach
                         </div>
                     </div>
+                </div>
 
-                    <!-- Message display -->
-                    <div class="chat-container flex flex-col flex-grow-1"
-                        id="chat-messages-container">
-                        <!-- Chat bubbles dynamically injected -->
-                    </div>
+                <div class="md:col-span-2">
+                    @foreach($siswaWali as $siswa)
+                        @php
+                            $riwayatPesan = $pesanWaliKelasWali[$siswa->id] ?? collect();
+                            $nomorWa = $siswa->no_hp_ortu ? preg_replace('/^0/', '62', preg_replace('/\D/', '', $siswa->no_hp_ortu)) : null;
+                        @endphp
+                        <div x-show="pilih === {{ $siswa->id }}" x-cloak data-siswa-panel="{{ $siswa->id }}" class="rounded-xl border border-slate-700/60 bg-slate-800/80 p-4 text-slate-100">
+                            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700/60 pb-3 mb-3">
+                                <div>
+                                    <h6 class="font-bold text-slate-100 m-0">{{ $siswa->nama }}</h6>
+                                    <span class="text-slate-400" style="font-size: 11px;">{{ $siswa->kelas->nama_kelas ?? '' }} &middot; Orang tua/wali dari {{ $siswa->nama }}</span>
+                                </div>
+                                <div class="flex gap-2">
+                                    @if($nomorWa)
+                                        <a href="https://wa.me/{{ $nomorWa }}" target="_blank" rel="noopener" class="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500"><i class="fa-brands fa-whatsapp mr-1"></i> WhatsApp</a>
+                                        {{-- <a href="tel:{{ $siswa->no_hp_ortu }}" class="rounded-lg bg-slate-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-600"><i class="fa-solid fa-phone mr-1"></i> Telepon</a> --}}
+                                    @else
+                                        <span class="text-amber-400 text-xs italic">No. HP orang tua belum diisi di data siswa.</span>
+                                    @endif
+                                </div>
+                            </div>
 
-                    <div class="flex gap-2 mt-3">
-                        <input type="text" id="chat-input-text"
-                            onkeypress="handleChatKeyPress(event)"
-                            class="form-control form-control-sm rounded-pill px-3"
-                            placeholder="Ketik pesan konsultasi...">
-                        <button onclick="sendMessage()"
-                            class="btn btn-brand-primary btn-sm rounded-circle px-3"><i
-                                class="fa-solid fa-paper-plane"></i></button>
+                            <form method="POST" action="{{ route('guru.wali-kelas.pesan.store') }}" class="mb-4">
+                                @csrf
+                                <input type="hidden" name="siswa_id" value="{{ $siswa->id }}">
+                                <textarea name="pesan" rows="3" required maxlength="2000" placeholder="Tulis pesan/catatan untuk orang tua {{ $siswa->nama }}..." class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500"></textarea>
+                                <div class="flex justify-end mt-2">
+                                    <button type="submit" class="rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-blue-500"><i class="fa-solid fa-paper-plane mr-1"></i> Kirim ke Orang Tua</button>
+                                </div>
+                            </form>
+
+                            <h6 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Riwayat Pesan Terkirim</h6>
+                            <div class="flex flex-col gap-2 max-h-64 overflow-y-auto">
+                                @forelse($riwayatPesan as $pesan)
+                                    <div class="rounded-lg bg-slate-900/60 px-3 py-2">
+                                        <p class="text-sm text-slate-100 m-0">{{ $pesan->pesan }}</p>
+                                        <div class="flex items-center justify-between mt-1">
+                                            <span class="text-slate-500" style="font-size: 10px;">{{ $pesan->created_at->translatedFormat('d M Y, H:i') }}</span>
+                                            @if($pesan->dibaca_at)
+                                                <span class="text-emerald-400" style="font-size: 10px;"><i class="fa-solid fa-check-double mr-1"></i>Dibaca {{ $pesan->dibaca_at->translatedFormat('d M, H:i') }}</span>
+                                            @else
+                                                <span class="text-slate-500" style="font-size: 10px;"><i class="fa-solid fa-check mr-1"></i>Belum dibaca</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @empty
+                                    <p class="text-slate-400 text-sm italic m-0">Belum ada pesan terkirim ke orang tua siswa ini.</p>
+                                @endforelse
+                            </div>
+                        </div>
+                    @endforeach
+
+                    <div x-show="!pilih" class="rounded-xl border border-dashed border-slate-700/60 p-8 text-center text-slate-400 text-sm">
+                        <i class="fa-solid fa-hand-point-left mr-1"></i> Pilih siswa di daftar untuk mengirim pesan atau melihat riwayat.
                     </div>
                 </div>
             </div>
-        </div>
+        @endif
     </div>
 @endif
 
@@ -540,7 +662,7 @@
                         @endif
                     </h3>
                     <p class="m-0 text-slate-400 mt-1 small">Guru Wali: <span
-                            id="gw-dashboard-name">{{ $guru->nama }}</span> | {{ $siswaBinaan->count() }} Siswa | Target KKM: 75
+                            id="gw-dashboard-name">{{ $guru->nama }}</span> | {{ $siswaBinaan->count() }} Siswa | Target KKTP: {{ setting('kktp_threshold', 75) }}
                     </p>
                 </div>
                 <div class="flex-shrink-0 sm:text-right">
@@ -572,189 +694,34 @@
                 <div
                     class="card border-0 rounded-xl shadow-sm p-4 bg-slate-800/80 h-full border-t border-slate-700/60 border-amber-500 border-4">
                     <h6 class="font-bold text-warning mb-3"><i
-                            class="fa-solid fa-graduation-cap mr-1"></i> Siswa Dibawah KKM (Perlu
+                            class="fa-solid fa-graduation-cap mr-1"></i> Siswa Dibawah KKTP (Perlu
                         Remedial)</h6>
+                    @php
+                        $kktpDashboard = setting('kktp_threshold', 75);
+                        $remedialPerSiswa = $siswaBinaan->map(function ($siswa) use ($nilaiAkhirMap, $mataPelajarans, $kktpDashboard) {
+                            $mapelKurang = $nilaiAkhirMap
+                                ->filter(fn ($r) => $r->siswa_id === $siswa->id && $r->nilai_akhir !== null && $r->nilai_akhir < $kktpDashboard)
+                                ->map(fn ($r) => $mataPelajarans->firstWhere('id', $r->mata_pelajaran_id)?->nama_mapel)
+                                ->filter()
+                                ->values();
+
+                            return ['siswa' => $siswa, 'mapel' => $mapelKurang];
+                        })->filter(fn ($row) => $row['mapel']->isNotEmpty())->values();
+                    @endphp
                     <ul class="list-group list-group-flush" id="gw-remedial-list">
-                        @foreach($siswaBinaan as $siswa)
-                            @php
-                                // Simulasi nilai untuk menentukan remedial
-                                $math = rand(60, 95);
-                                $indo = rand(60, 95);
-                                $jaringan = rand(60, 95);
-                                $pemrograman = rand(60, 95);
-                                $remedialSubjects = [];
-                                if ($math < 75) $remedialSubjects[] = 'MTK';
-                                if ($indo < 75) $remedialSubjects[] = 'B.Indo';
-                                if ($jaringan < 75) $remedialSubjects[] = 'Jaringan';
-                                if ($pemrograman < 75) $remedialSubjects[] = 'Prog';
-                            @endphp
-                            @if(count($remedialSubjects) > 0)
-                                <li class="list-group-item flex justify-between items-center px-0 py-2">
-                                    <div>
-                                        <span class="font-bold block small" style="font-size: 13px;">{{ $siswa->nama }}</span>
-                                        <span class="text-slate-400" style="font-size: 10px;">Gagal KKM: {{ implode(', ', $remedialSubjects) }}</span>
-                                    </div>
-                                    <span class="badge bg-rose-500/10 text-rose-400 border border-rose-500/20 font-semibold" style="font-size: 10px;">Remedial</span>
-                                </li>
-                            @endif
-                        @endforeach
+                        @forelse($remedialPerSiswa as $row)
+                            <li class="list-group-item flex justify-between items-center px-0 py-2">
+                                <div>
+                                    <span class="font-bold block small" style="font-size: 13px;">{{ $row['siswa']->nama }}</span>
+                                    <span class="text-slate-400" style="font-size: 10px;">Gagal KKTP: {{ $row['mapel']->implode(', ') }}</span>
+                                </div>
+                                <span class="badge bg-rose-500/10 text-rose-400 border border-rose-500/20 font-semibold" style="font-size: 10px;">Remedial</span>
+                            </li>
+                        @empty
+                            <p class="text-slate-400 small m-0">Tidak ada siswa yang di bawah KKTP saat ini.</p>
+                        @endforelse
                     </ul>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="pane-guru-wali-legger" class="pane-content hidden-pane fade-transition">
-        <div class="flex justify-between items-center mb-3">
-            <div>
-                <h4 class="font-bold m-0 text-slate-100">Legger Nilai & Evaluasi Rombel</h4>
-                <p class="text-slate-400 small m-0">Tinjau, perbarui, dan validasi sebaran nilai
-                    mata pelajaran untuk e-Rapor.</p>
-            </div>
-            <div class="flex gap-2">
-                <select id="gw-filter-class"
-                    class="form-select form-select-sm w-auto text-slate-100"
-                    onchange="filterAcademicGridGW()">
-                    <option value="all">Semua Kelas</option>
-                    @foreach($kelasBinaan as $k)
-                        <option value="{{ $k->id }}">{{ $k->nama_kelas }}</option>
-                    @endforeach
-                </select>
-                <select id="gw-filter-subject"
-                    class="form-select form-select-sm w-auto text-slate-100"
-                    onchange="filterAcademicGridGW()">
-                    <option value="Jaringan">Administrasi Jaringan</option>
-                    <option value="Pemrograman">Pemrograman Web</option>
-                    <option value="Math">Matematika</option>
-                    <option value="Indo">B. Indonesia</option>
-                </select>
-                <button onclick="saveGuruWaliRemarks()"
-                    class="btn btn-brand-primary btn-sm rounded-lg">
-                    <i class="fa-solid fa-floppy-disk mr-1"></i> Simpan Catatan
-                </button>
-            </div>
-        </div>
-
-        <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5 md:p-6 text-slate-100">
-            <h6 class="font-bold text-slate-100 mb-3" id="gw-grid-heading"><i
-                    class="fa-solid fa-table-cells mr-1 text-primary"></i> Daftar Nilai Rombel:
-                {{ $kelasBinaan->pluck('nama_kelas')->implode(', ') ?: '-' }} | Mapel Binaan</h6>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm text-slate-400 table-sm text-center"
-                    style="font-size: 13px;">
-                    <thead class="bg-slate-900 border-b border-slate-700/60 text-xs align-middle text-slate-100">
-                        <tr>
-                            <th class="text-start" style="min-width: 150px;">Nama Siswa</th>
-                            <th>Tugas 1 (20%)</th>
-                            <th>Tugas 2 (20%)</th>
-                            <th>UTS (30%)</th>
-                            <th>UAS (30%)</th>
-                            <th>Rerata Akhir</th>
-                            <th>Ketuntasan</th>
-                            <th>Catatan Guru Wali</th>
-                            <th class="text-center" style="width: 100px;">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="guru-wali-legger-tbody">
-                        @foreach($siswaBinaan as $siswa)
-                            @php
-                                $score = rand(65, 95);
-                                $isTuntas = $score >= 75;
-                            @endphp
-                            <tr class="gw-legger-row" data-kelas-id="{{ $siswa->kelas_id }}">
-                                <td class="font-bold text-start">{{ $siswa->nama }} <span class="block text-slate-400 small" style="font-size: 10px;">NIS: {{ $siswa->nis }}</span></td>
-                                <td class="text-center font-monospace">{{ $score - 3 }}</td>
-                                <td class="text-center font-monospace">{{ $score - 1 }}</td>
-                                <td class="text-center font-monospace">{{ $score + 1 }}</td>
-                                <td class="text-center font-bold text-primary font-monospace">
-                                    <input type="number" id="gw-grade-{{ $siswa->nis }}" class="form-control form-control-sm text-center font-monospace" style="width: 70px; margin: 0 auto;" value="{{ $score }}">
-                                </td>
-                                <td>
-                                    <span class="badge {{ $isTuntas ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20' }} badge-pill-custom">
-                                        {{ $isTuntas ? 'Tuntas' : 'Remedial' }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <textarea id="gw-remark-{{ $siswa->nis }}" rows="1" class="form-control form-control-sm text-slate-400" style="font-size: 12px; min-width: 150px;" readonly placeholder="Klik 'Ubah Catatan'...">{{ $catatanAkademikMap[$siswa->id]->catatan ?? '' }}</textarea>
-                                </td>
-                                <td class="text-center">
-                                    <div class="flex gap-1 justify-center">
-                                        <button onclick="openGuruWaliRemarkModal({{ $siswa->nis }}, {{ \Illuminate\Support\Js::from($siswa->nama) }})" class="btn btn-brand-primary btn-xs py-1 px-2 rounded-2" title="Kelola Catatan"><i class="fa-solid fa-edit"></i></button>
-                                        <button onclick="openEscalationReferralModal({{ $siswa->nis }}, {{ \Illuminate\Support\Js::from($siswa->nama) }})" class="btn btn-warning btn-xs py-1 px-2 rounded-2" title="Eskalasi Rujukan"><i class="fa-solid fa-triangle-exclamation"></i></button>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div id="pane-guru-wali-rapor" class="pane-content hidden-pane fade-transition">
-        <div class="flex justify-between items-center mb-3">
-            <div>
-                <h4 class="font-bold m-0 text-slate-100">Cetak & Validasi Lembar e-Rapor</h4>
-                <p class="text-slate-400 small m-0">Pastikan seluruh nilai mapel tuntas sebelum
-                    e-Rapor diterbitkan.</p>
-            </div>
-            <button onclick="triggerToast('Menyinkronkan data rapor ke server pusdatin...')"
-                class="btn btn-outline-secondary btn-sm rounded-lg">
-                <i class="fa-solid fa-arrows-rotate"></i> Sinkron Pusat
-            </button>
-        </div>
-
-        <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5 md:p-6 text-slate-100">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm text-slate-400 text-slate-100">
-                    <thead class="bg-slate-900 border-b border-slate-700/60 text-xs">
-                        <tr>
-                            <th>Nama Siswa</th>
-                            <th>Rerata GPA</th>
-                            <th class="text-center">Mapel Remedial</th>
-                            <th class="text-center">Status Legger</th>
-                            <th class="text-center">Catatan Akademik</th>
-                            <th class="text-center" style="width: 180px;">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="guru-wali-rapor-tbody">
-                        @foreach($siswaBinaan as $siswa)
-                            @php
-                                // Simulasi nilai untuk menentukan remedial
-                                $math = rand(60, 95);
-                                $indo = rand(60, 95);
-                                $jaringan = rand(60, 95);
-                                $pemrograman = rand(60, 95);
-                                $remedialCount = 0;
-                                if ($math < 75) $remedialCount++;
-                                if ($indo < 75) $remedialCount++;
-                                if ($jaringan < 75) $remedialCount++;
-                                if ($pemrograman < 75) $remedialCount++;
-                                $average = number_format(($math + $indo + $jaringan + $pemrograman) / 4, 1);
-                            @endphp
-                            <tr>
-                                <td class="font-bold text-start">{{ $siswa->nama }} <span class="block text-slate-400 small" style="font-size: 10px;">NIS: {{ $siswa->nis }}</span></td>
-                                <td class="font-monospace font-bold">{{ $average }}</td>
-                                <td class="text-center">
-                                    <span class="badge {{ $remedialCount === 0 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20' }} badge-pill-custom">
-                                        {{ $remedialCount }} Mapel Belum Tuntas
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge {{ $remedialCount === 0 ? 'bg-success text-white' : 'bg-danger text-white' }} badge-pill-custom">
-                                        {{ $remedialCount === 0 ? 'Siap Terbit' : 'Ditangguhkan' }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="text-slate-400 small italic text-truncate d-inline-block" style="max-width: 180px;">{{ $catatanAkademikMap[$siswa->id]->catatan ?? 'Belum ada catatan.' }}</span>
-                                </td>
-                                <td class="text-center">
-                                    <button onclick="downloadReport({{ \Illuminate\Support\Js::from($siswa->nama) }})" class="btn btn-outline-primary btn-xs py-1 px-2 text-xs" {{ $remedialCount === 0 ? '' : 'disabled' }}><i class="fa-solid fa-file-pdf"></i> Unduh e-Rapor</button>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
             </div>
         </div>
     </div>
@@ -768,157 +735,8 @@
     <!-- GURU MATA PELAJARAN (GURU MAPEL) VIEWS -->
     <!-- ========================================== -->
     @include('guru.penilaian.mapel-input')
-
-    <div id="pane-guru-mapel-dashboard" class="pane-content hidden-pane fade-transition">
-
-        <!-- Jadwal Mengajar Guru Mapel -->
-        <div class="card border-0 rounded-xl shadow-sm p-4 bg-slate-800/80 mb-4 text-slate-100">
-            <h5 class="font-bold text-slate-100 mb-2"><i
-                    class="fa-regular fa-clock text-info mr-1"></i> Jadwal Mengajar Anda (Hari Ini -
-                Selasa)</h5>
-            <p class="text-slate-400 small mb-3">Silakan pilih jadwal untuk mengisi Jurnal Mengajar
-                dan Presensi.</p>
-            <div class="overflow-x-auto">
-                <table class="table table-hover table-striped align-middle table-sm"
-                    style="font-size: 13px;">
-                    <thead class="bg-slate-900 border-b border-slate-700/60 text-xs">
-                        <tr>
-                            <th>Jam Ke / Waktu</th>
-                            <th>Kelas Rombel</th>
-                            <th>Mata Pelajaran</th>
-                            <th>Ruang / Lab</th>
-                            <th class="text-center">Status Jurnal</th>
-                        </tr>
-                    </thead>
-                    <tbody id="guru-mapel-schedules-tbody">
-                        @foreach($jadwalPelajarans->where('guru_id', $guru->id) as $jadwal)
-                            @php
-                                // Simulasi status jurnal
-                                $isLogged = rand(0, 1) == 1;
-                                $statusText = $isLogged
-                                    ? '<span class="badge bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Jurnal Terisi</span>'
-                                    : '<span class="badge bg-amber-500/10 text-amber-400 border border-amber-500/20">Belum di-Jurnal</span>';
-                            @endphp
-                            <tr>
-                                <td class="font-bold">{{ $jadwal->jam_mulai }} - {{ $jadwal->jam_selesai }}</td>
-                                <td>{{ $jadwal->kelas->nama_kelas ?? '-' }}</td>
-                                <td>{{ $jadwal->mataPelajaran->nama_mapel ?? '-' }}</td>
-                                <td><span class="badge bg-secondary">{{ $jadwal->ruang }}</span></td>
-                                <td class="text-center">{!! $statusText !!}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Subject-Based Teaching Journal & Attendance Input (Teacher Role) -->
-        <div
-            class="card border-0 rounded-xl shadow-sm p-4 bg-slate-800/80 mb-4 text-slate-100 border-t border-slate-700/60 border-blue-500 border-4">
-            <h5 class="font-bold text-slate-100 mb-2"><i
-                    class="fa-solid fa-calendar-plus text-primary mr-1"></i> Formulir Jurnal
-                Mengajar & Presensi Mapel</h5>
-            <p class="text-slate-400 small mb-3">Isi rincian materi KBM dan absensi siswa sesuai
-                jadwal pelajaran Anda.</p>
-
-            <form onsubmit="event.preventDefault(); submitSubjectKBMJournal();"
-                class="row g-2 mb-3 bg-slate-800/50 p-3 rounded border">
-                <div class="col-md-6">
-                    <label class="form-label small font-semibold">Pilih Jadwal Mengajar</label>
-                    <select id="gw-attn-schedule-select"
-                        class="form-select form-select-sm text-slate-100"
-                        onchange="loadGWStudentListForAttendance()">
-                        <option value="">-- Pilih Rencana Jadwal Mengajar Anda --</option>
-                        @foreach($jadwalPelajarans->where('guru_id', $guru->id) as $jadwal)
-                            <option value="{{ $jadwal->id }}">{{ $jadwal->hari }} • {{ $jadwal->jam_mulai }} - {{ $jadwal->jam_selesai }} | Rombel: {{ $jadwal->kelas->nama_kelas ?? '-' }} ({{ $jadwal->mataPelajaran->nama_mapel ?? '-' }})</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label small font-semibold">Materi Pembelajaran / Kompetensi
-                        Dasar</label>
-                    <input type="text" id="gw-attn-material" class="form-control form-control-sm"
-                        placeholder="Contoh: Konfigurasi routing static, CRUD PHP..." required>
-                </div>
-                <div class="col-md-6 mt-2">
-                    <label class="form-label small font-semibold"><i class="fa-solid fa-camera"></i>
-                        Dokumentasi Foto Kelas (Mengajar)</label>
-                    <input type="file" id="gw-attn-photo-file"
-                        class="form-control form-control-sm text-slate-100"
-                        onchange="simulatePhotoUploadPreview()">
-                </div>
-                <div class="col-md-6 mt-2 flex items-end" id="photo-preview-container"
-                    style="display: none !important;">
-                    <span class="badge bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 py-2 w-full border text-center"
-                        style="font-size: 11px;">
-                        <i class="fa-solid fa-image mr-1"></i> Foto_Mengajar_SMK.jpg (Berhasil
-                        Diunggah)
-                    </span>
-                </div>
-            </form>
-
-            <div class="overflow-x-auto mt-3 hidden-pane" id="gw-attn-input-container">
-                <h6 class="font-bold small text-slate-100 mb-2"><i
-                        class="fa-solid fa-users mr-1 text-primary"></i> Daftar Presensi Rombel</h6>
-                <table class="w-full text-left text-sm text-slate-400 table-sm" style="font-size: 13px;">
-                    <thead class="bg-slate-900 border-b border-slate-700/60 text-xs">
-                        <tr>
-                            <th>Nama Siswa</th>
-                            <th class="text-center" style="width: 250px;">Kehadiran</th>
-                            <th>Keterangan / Alasan Khusus</th>
-                        </tr>
-                    </thead>
-                    <tbody id="gw-attn-input-tbody">
-                        <!-- Injected dynamically -->
-                    </tbody>
-                </table>
-                <div class="text-end mt-3">
-                    <button type="button" onclick="submitSubjectKBMJournal()"
-                        class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-lg transition-colors">
-                        <i class="fa-solid fa-floppy-disk mr-1"></i> Simpan Jurnal & Presensi
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- List of past teaching journals -->
-        <div class="card border-0 rounded-xl shadow-sm p-4 bg-slate-800/80 mb-4 text-slate-100">
-            <h6 class="font-bold text-slate-100 mb-3"><i class="fa-solid fa-book mr-1 text-info"></i>
-                Riwayat Jurnal Mengajar Anda</h6>
-            <div class="overflow-x-auto">
-                <table class="table table-hover table-striped align-middle table-sm"
-                    style="font-size: 13px;">
-                    <thead class="bg-slate-900 border-b border-slate-700/60 text-xs">
-                        <tr>
-                            <th>Tanggal</th>
-                            <th>Materi Pembelajaran</th>
-                            <th>Kelas</th>
-                            <th>Jam</th>
-                            <th>Foto Mengajar</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="guru-mapel-journals-tbody">
-                        @php
-                            $myJournals = \App\Models\JurnalMengajar::with(['jadwalPelajaran.kelas'])->where('guru_id', $guru->id)->get();
-                        @endphp
-                        @forelse($myJournals as $jurnal)
-                            <tr>
-                                <td class="font-monospace small">{{ \Carbon\Carbon::parse($jurnal->tanggal)->format('Y-m-d') }}</td>
-                                <td class="font-bold">{{ $jurnal->materi }}</td>
-                                <td>{{ $jurnal->jadwalPelajaran->kelas->nama_kelas ?? '-' }}</td>
-                                <td>{{ $jurnal->jadwalPelajaran->jam_mulai ?? '-' }}</td>
-                                <td><span class="badge bg-secondary-subtle text-slate-400 py-1 px-2.5"><i class="fa-solid fa-image"></i> {{ $jurnal->foto ?? 'Tidak ada foto' }}</span></td>
-                                <td><span class="badge bg-success badge-pill-custom">Terverifikasi</span></td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="6" class="text-center text-slate-400 small py-3">Belum ada riwayat pengisian jurnal mengajar.</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+    @include('guru.jurnal.form')
+    @include('guru.jurnal.riwayat')
 @endif
 
 @endsection

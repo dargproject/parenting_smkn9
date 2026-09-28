@@ -69,6 +69,28 @@ class PenilaianController extends Controller
         return redirect()->route('guru.portal')->with('success', 'Kolom N berhasil ditambahkan.');
     }
 
+    public function updateTujuanPembelajaran(Request $request, TujuanPembelajaran $tujuanPembelajaran)
+    {
+        $this->pastikanMapelMilikGuru($tujuanPembelajaran->mata_pelajaran_id);
+
+        $tpUnik = fn (string $kolom) => \Illuminate\Validation\Rule::unique('tujuan_pembelajarans', $kolom)
+            ->where('mata_pelajaran_id', $tujuanPembelajaran->mata_pelajaran_id)
+            ->where('tahun_ajaran_id', $tujuanPembelajaran->tahun_ajaran_id)
+            ->ignore($tujuanPembelajaran->id);
+
+        $data = $request->validate([
+            'kode' => ['nullable', 'string', 'max:20', $tpUnik('kode')],
+            'deskripsi' => ['required', 'string', 'max:500', $tpUnik('deskripsi')],
+        ], [
+            'kode.unique' => 'Kode N tersebut sudah dipakai pada mapel ini.',
+            'deskripsi.unique' => 'Nilai (N) dengan deskripsi yang sama sudah ada pada mapel ini.',
+        ]);
+
+        $tujuanPembelajaran->update($data);
+
+        return redirect()->route('guru.portal')->with('success', 'Kolom N berhasil diperbarui.');
+    }
+
     public function destroyTujuanPembelajaran(TujuanPembelajaran $tujuanPembelajaran)
     {
         $this->pastikanMapelMilikGuru($tujuanPembelajaran->mata_pelajaran_id);
@@ -219,34 +241,41 @@ class PenilaianController extends Controller
         return redirect()->route('guru.portal')->with('success', 'Nilai PKL/UKK berhasil disimpan.');
     }
 
-    public function storeCatatanWaliKelas(Request $request)
+    public function storeCatatanWaliKelas(Request $request, PenilaianService $penilaian)
     {
         $guru = Auth::user();
-        $siswaWaliIds = Kelas::where('wali_kelas_id', $guru->id)->with('siswas:id,kelas_id')->get()->flatMap->siswas->pluck('id');
+        $kelasWaliIds = Kelas::where('wali_kelas_id', $guru->id)->pluck('id');
+        $siswaWaliIds = Kelas::whereIn('id', $kelasWaliIds)->with('siswas:id,kelas_id')->get()->flatMap->siswas->pluck('id');
 
         $data = $request->validate([
             'catatan' => 'required|array',
             'catatan.*.catatan_karakter' => 'nullable|string|max:2000',
-            'catatan.*.sakit' => 'nullable|integer|min:0|max:365',
-            'catatan.*.izin' => 'nullable|integer|min:0|max:365',
-            'catatan.*.tanpa_keterangan' => 'nullable|integer|min:0|max:365',
         ]);
 
         $tahunAjaranId = $this->tahunAjaranAktifId();
 
-        DB::transaction(function () use ($data, $siswaWaliIds, $tahunAjaranId, $guru) {
+        // Sakit/Izin/Alpa tidak lagi diketik manual: dihitung otomatis dari presensi asli (hari
+        // Sakit/Izin/Alpa Penuh, lihat PenilaianService::rekapHarian) agar selalu sesuai dengan
+        // Rekap Presensi Mapel dan tidak perlu diinput dua kali oleh wali kelas.
+        $presensiSemester = \App\Models\Presensi::whereIn('jadwal_pelajaran_id', \App\Models\JadwalPelajaran::whereIn('kelas_id', $kelasWaliIds)->pluck('id'))
+            ->where('tahun_ajaran_id', $tahunAjaranId)
+            ->get();
+
+        DB::transaction(function () use ($data, $siswaWaliIds, $tahunAjaranId, $guru, $presensiSemester, $penilaian) {
             foreach ($data['catatan'] as $siswaId => $row) {
                 if (! $siswaWaliIds->contains((int) $siswaId)) {
                     continue;
                 }
 
+                $rekap = $penilaian->rekapHarian($presensiSemester->where('siswa_id', (int) $siswaId));
+
                 \App\Models\CatatanWaliKelas::updateOrCreate(
                     ['siswa_id' => $siswaId, 'tahun_ajaran_id' => $tahunAjaranId],
                     [
                         'catatan_karakter' => $row['catatan_karakter'] ?? null,
-                        'sakit' => $row['sakit'] ?? 0,
-                        'izin' => $row['izin'] ?? 0,
-                        'tanpa_keterangan' => $row['tanpa_keterangan'] ?? 0,
+                        'sakit' => $rekap['sakit'],
+                        'izin' => $rekap['izin'],
+                        'tanpa_keterangan' => $rekap['alpa'],
                         'guru_id' => $guru->id,
                     ]
                 );

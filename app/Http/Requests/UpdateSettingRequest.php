@@ -24,6 +24,7 @@ class UpdateSettingRequest extends FormRequest
             'bobot_sas' => ['required', 'numeric', 'min:0', 'max:100'],
             'kktp_threshold' => ['required', 'integer', 'min:0', 'max:100'],
             'kktp_margin' => ['required', 'integer', 'min:0', 'max:50'],
+            'alpa_mingguan_threshold' => ['required', 'integer', 'min:1', 'max:6'],
         ];
     }
 

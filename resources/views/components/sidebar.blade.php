@@ -81,8 +81,6 @@
         @if(in_array('guru_wali', $roles))
             <div class="px-3 py-2 text-slate-400 small font-bold uppercase tracking-wider mt-2">Guru Wali Akademik</div>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-guru-wali-dashboard', this)"><i class="fa-solid fa-chart-simple w-6 text-center mr-2"></i> <span>Dashboard Akademik</span></a>
-            {{-- <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-guru-wali-legger', this)"><i class="fa-solid fa-table-list w-6 text-center mr-2"></i> <span>Legger & Akademik</span></a>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-guru-wali-rapor', this)"><i class="fa-solid fa-file-pdf w-6 text-center mr-2"></i> <span>Cetak e-Rapor</span></a> --}}
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-guru-wali-nilai-matrix', this)"><i class="fa-solid fa-table-cells w-6 text-center mr-2"></i> <span>Rekap Nilai Rombel</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-guru-wali-rilis', this)"><i class="fa-solid fa-lock w-6 text-center mr-2"></i> <span>Finalisasi & Rilis Nilai</span></a>
         @endif
@@ -99,6 +97,7 @@
             <div class="px-3 py-2 text-slate-400 small font-bold uppercase tracking-wider mt-2">Guru Mapel</div>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-guru-mapel-penilaian', this)"><i class="fa-solid fa-square-poll-vertical w-6 text-center mr-2"></i> <span>Input Nilai Sumatif</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-guru-mapel-dashboard', this)"><i class="fa-solid fa-book-open w-6 text-center mr-2"></i> <span>Jurnal & Presensi</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-guru-mapel-riwayat', this)"><i class="fa-solid fa-calendar-days w-6 text-center mr-2"></i> <span>Riwayat Jurnal</span></a>
 
             @unless($tatibRendered)
                 @include('components.sidebar-tatib')

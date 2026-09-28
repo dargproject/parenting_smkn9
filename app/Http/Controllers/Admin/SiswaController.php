@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSiswaRequest;
 use App\Http\Requests\UpdateSiswaRequest;
 use App\Models\Kelas;
+use App\Models\OrangTua;
 use App\Models\Siswa;
 use Illuminate\Support\Facades\Hash;
 
@@ -13,7 +14,7 @@ class SiswaController extends Controller
 {
     public function index(\Illuminate\Http\Request $request)
     {
-        $siswas = Siswa::with('kelas')
+        $siswas = Siswa::with(['kelas', 'orangTua'])
             ->when($request->filled('q'), fn ($q) => $q->where(fn ($w) => $w->where('nama', 'like', '%'.$request->q.'%')->orWhere('nis', 'like', '%'.$request->q.'%')->orWhere('nisn', 'like', '%'.$request->q.'%')->orWhere('nipd', 'like', '%'.$request->q.'%')))
             ->when($request->filled('kelas_id'), fn ($q) => $q->where('kelas_id', $request->kelas_id))
             ->when($request->filled('status'), fn ($q) => $q->where('status_aktif', $request->status === 'aktif'))
@@ -60,5 +61,43 @@ class SiswaController extends Controller
         $siswa->update(['password' => Hash::make('password')]);
 
         return back()->with('success', 'Password direset ke password default.');
+    }
+
+    public function buatAkunOrtu(Siswa $siswa)
+    {
+        if (! $siswa->no_hp_ortu) {
+            return back()->with('error', 'Isi No. HP Orang Tua pada data siswa ini terlebih dahulu.');
+        }
+
+        if ($siswa->orangTua) {
+            return back()->with('error', 'Siswa ini sudah punya akun orang tua.');
+        }
+
+        $username = preg_replace('/\D/', '', $siswa->no_hp_ortu);
+
+        if (OrangTua::where('username', $username)->exists()) {
+            return back()->with('error', "Nomor HP {$siswa->no_hp_ortu} sudah dipakai sebagai username akun orang tua siswa lain. Gunakan nomor HP yang berbeda untuk siswa ini.");
+        }
+
+        OrangTua::create([
+            'siswa_id' => $siswa->id,
+            'nama' => 'Orang Tua/Wali '.$siswa->nama,
+            'username' => $username,
+            'password' => Hash::make('password'),
+            'is_active' => true,
+        ]);
+
+        return back()->with('success', "Akun orang tua berhasil dibuat. Username: {$username}, password default: password");
+    }
+
+    public function hapusAkunOrtu(Siswa $siswa)
+    {
+        if (! $siswa->orangTua) {
+            return back()->with('error', 'Siswa ini belum punya akun orang tua.');
+        }
+
+        $siswa->orangTua->delete();
+
+        return back()->with('success', 'Akun orang tua berhasil dihapus. Data nilai, presensi, dan pesan siswa ini tidak terpengaruh.');
     }
 }

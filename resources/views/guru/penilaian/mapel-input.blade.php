@@ -51,11 +51,25 @@
                     @if($tpMapel->isNotEmpty())
                         <div class="flex flex-col gap-1 mb-3">
                             @foreach($tpMapel as $tp)
-                                <div class="flex items-center justify-between text-sm text-slate-400">
-                                    <span><span class="font-semibold text-slate-100">{{ $tp->kode ?: 'N' }}</span> &mdash; {{ $tp->deskripsi }}</span>
-                                    <form method="POST" action="{{ route('guru.penilaian.tp.destroy', $tp) }}" onsubmit="return confirm('Hapus N ini? Nilai siswa yang terkait juga akan terhapus.')">
-                                        @csrf @method('DELETE')
-                                        <button class="text-rose-400 hover:text-rose-300 text-xs">Hapus</button>
+                                <div x-data="{ ubah: false }">
+                                    <div x-show="!ubah" class="flex items-center justify-between text-sm text-slate-400">
+                                        <span><span class="font-semibold text-slate-100">{{ $tp->kode ?: 'N' }}</span> &mdash; {{ $tp->deskripsi }}</span>
+                                        <span class="flex items-center gap-3 text-xs">
+                                            <button type="button" @click="ubah = true" class="text-blue-400 hover:text-blue-300">Edit</button>
+                                            <form method="POST" action="{{ route('guru.penilaian.tp.destroy', $tp) }}" onsubmit="return confirm('Hapus N ini? Nilai siswa yang terkait juga akan terhapus.')">
+                                                @csrf @method('DELETE')
+                                                <button class="text-rose-400 hover:text-rose-300">Hapus</button>
+                                            </form>
+                                        </span>
+                                    </div>
+                                    <form x-show="ubah" style="display: none;" method="POST" action="{{ route('guru.penilaian.tp.update', $tp) }}" class="flex flex-col sm:flex-row gap-2 py-1">
+                                        @csrf @method('PUT')
+                                        <input type="text" name="kode" value="{{ $tp->kode }}" placeholder="Kode, mis. N1" class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 sm:w-40">
+                                        <input type="text" name="deskripsi" value="{{ $tp->deskripsi }}" required class="flex-1 rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+                                        <div class="flex gap-2">
+                                            <button type="submit" class="rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-500 whitespace-nowrap">Simpan</button>
+                                            <button type="button" @click="ubah = false" class="rounded-lg border border-slate-600 px-3 py-2 text-xs text-slate-300 whitespace-nowrap">Batal</button>
+                                        </div>
                                     </form>
                                 </div>
                             @endforeach

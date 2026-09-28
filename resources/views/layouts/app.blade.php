@@ -555,12 +555,6 @@
         // Dummy functions for mockup interactivity
         function loadStudentHistoryBK() { triggerToast('Memuat riwayat BK siswa...'); }
         function saveWaliNotes() { triggerToast('Catatan wali kelas berhasil disimpan!'); }
-        function openEscalationReferralModal(nis, nama) { triggerToast(`Membuka form rujukan untuk ${nama} (${nis})`); }
-        function sendMessage() { triggerToast('Pesan berhasil dikirim!'); }
-        function saveGuruWaliRemarks() { triggerToast('Catatan akademik berhasil disimpan!'); }
-        function openGuruWaliRemarkModal(nis, nama) { triggerToast(`Membuka form catatan untuk ${nama} (${nis})`); }
-        function downloadReport(nama) { triggerToast(`Mengunduh e-Rapor untuk ${nama}...`); }
-        function submitSubjectKBMJournal() { triggerToast('Jurnal KBM berhasil disubmit!'); }
 
         // Additional dummy functions
         let currentLeggerPage = 1;
@@ -700,75 +694,6 @@
         function broadcastAnnouncementS() { triggerToast('Pengumuman Kesiswaan berhasil disiarkan!'); }
         function confirmSummonArrival(id) { triggerToast('Kehadiran Orang Tua berhasil dikonfirmasi!'); }
         function submitIndividualBKLog() { triggerToast('Catatan konseling berhasil disimpan!'); }
-        function switchTeacherChatConversation() { triggerToast('Beralih percakapan chat...'); }
-        function filterAcademicGridGW() {
-            const classId = document.getElementById('gw-filter-class').value;
-            const rows = document.querySelectorAll('.gw-legger-row');
-
-            rows.forEach(row => {
-                if (classId === 'all' || row.getAttribute('data-kelas-id') === classId) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-
-            triggerToast('Filter Legger Guru Wali diterapkan!');
-        }
-
-        async function loadGWStudentListForAttendance() {
-            const scheduleId = document.getElementById('gw-attn-schedule-select').value;
-            const container = document.getElementById('gw-attn-input-container');
-            const tbody = document.getElementById('gw-attn-input-tbody');
-
-            if (!scheduleId) {
-                container.classList.add('hidden-pane');
-                return;
-            }
-
-            triggerToast('Memuat daftar siswa untuk presensi...');
-
-            try {
-                const response = await fetch(`/guru/api/siswa-by-jadwal/${scheduleId}`);
-                const siswas = await response.json();
-
-                let html = '';
-                siswas.forEach(siswa => {
-                    html += `
-                        <tr class="border-b border-slate-700/60">
-                            <td class="font-bold py-2">${siswa.nama} <span class="block text-slate-400 text-xs">NIS: ${siswa.nis}</span></td>
-                            <td class="text-center py-2">
-                                <div class="flex justify-center gap-3">
-                                    <label class="flex items-center gap-1 cursor-pointer text-emerald-400 font-medium"><input type="radio" name="attn_${siswa.id}" value="Hadir" checked class="accent-emerald-500"> H</label>
-                                    <label class="flex items-center gap-1 cursor-pointer text-amber-400 font-medium"><input type="radio" name="attn_${siswa.id}" value="Izin" class="accent-amber-500"> I</label>
-                                    <label class="flex items-center gap-1 cursor-pointer text-cyan-400 font-medium"><input type="radio" name="attn_${siswa.id}" value="Sakit" class="accent-cyan-500"> S</label>
-                                    <label class="flex items-center gap-1 cursor-pointer text-rose-400 font-medium"><input type="radio" name="attn_${siswa.id}" value="Alpa" class="accent-rose-500"> A</label>
-                                </div>
-                            </td>
-                            <td class="py-2">
-                                <input type="text" class="form-control form-control-sm text-slate-100 bg-slate-900 border-slate-700/60" placeholder="Keterangan (opsional)">
-                            </td>
-                        </tr>
-                    `;
-                });
-
-                tbody.innerHTML = html;
-                container.classList.remove('hidden-pane');
-
-            } catch (error) {
-                console.error('Error fetching students:', error);
-                triggerToast('Gagal memuat data siswa.');
-            }
-        }
-
-        function simulatePhotoUploadPreview() {
-            const container = document.getElementById('photo-preview-container');
-            if (container) {
-                container.style.setProperty('display', 'flex', 'important');
-                triggerToast('Foto berhasil diunggah!');
-            }
-        }
-
         function showPane(paneId, element) {
             // Hide all panes
             document.querySelectorAll('.pane-content').forEach(pane => {

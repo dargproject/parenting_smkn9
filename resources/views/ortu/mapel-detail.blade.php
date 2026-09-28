@@ -50,7 +50,7 @@
                                     {{ $lm->tujuanPembelajaran->kode ?? '' }} {{ $lm->tujuanPembelajaran->deskripsi ?? '-' }}
                                 </td>
                                 <td
-                                    class="px-4 py-2.5 text-center font-semibold {{ $lm->nilai >= 75 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }}">
+                                    class="px-4 py-2.5 text-center font-semibold {{ $lm->nilai >= setting('kktp_threshold', 75) ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }}">
                                     {{ $lm->nilai }}
                                 </td>
                             </tr>

@@ -26,6 +26,7 @@ class PenilaianSeeder extends Seeder
         Setting::updateOrCreate(['key' => 'bobot_sas'], ['value' => 40]);
         Setting::updateOrCreate(['key' => 'kktp_threshold'], ['value' => 75]);
         Setting::updateOrCreate(['key' => 'kktp_margin'], ['value' => 10]);
+        Setting::updateOrCreate(['key' => 'alpa_mingguan_threshold'], ['value' => 3]);
 
         $ta = TahunAjaran::where('is_active', true)->first();
         $pakHendra = Guru::where('nama', 'like', '%IKA BUDI%')->first();

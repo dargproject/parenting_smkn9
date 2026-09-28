@@ -22,6 +22,7 @@
                 ['name' => 'bobot_sas', 'label' => 'Bobot SAS (%)', 'type' => 'number'],
                 ['name' => 'kktp_threshold', 'label' => 'Ambang KKTP', 'type' => 'number'],
                 ['name' => 'kktp_margin', 'label' => 'Toleransi "Cukup" di bawah KKTP (poin)', 'type' => 'number'],
+                ['name' => 'alpa_mingguan_threshold', 'label' => 'Ambang Peringatan Alpa Mingguan (hari)', 'type' => 'number'],
             ] as $field)
                 <div>
                     <label for="{{ $field['name'] }}" class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">{{ $field['label'] }}</label>
