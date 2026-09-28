@@ -436,6 +436,139 @@
         .theme-toast .toast-message {
             color: var(--text-primary) !important;
         }
+
+        /* Kalender Riwayat Jurnal Mengajar */
+        .cal-card {
+            background-color: var(--bg-card) !important;
+            border-color: var(--border-color) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .cal-nav-btn {
+            border-color: var(--border-color) !important;
+            color: var(--text-secondary) !important;
+            background-color: transparent !important;
+        }
+        .cal-nav-btn:hover {
+            border-color: #3b82f6 !important;
+            color: #3b82f6 !important;
+        }
+
+        .cal-day-header {
+            color: var(--text-secondary) !important;
+        }
+
+        /* Cell: Empty / Tanpa Jadwal */
+        .cal-cell-empty {
+            background-color: #f1f5f9 !important;
+            color: #334155 !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+        body.dark .cal-cell-empty,
+        html.dark .cal-cell-empty {
+            background-color: rgba(15, 23, 42, 0.7) !important;
+            color: #cbd5e1 !important;
+            border: 1px solid rgba(51, 65, 85, 0.6) !important;
+        }
+
+        /* Cell: Terisi / Lengkap */
+        .cal-cell-terisi {
+            background-color: #d1fae5 !important;
+            color: #065f46 !important;
+            border: 1px solid #86efac !important;
+        }
+        .cal-cell-terisi:hover {
+            background-color: #a7f3d0 !important;
+        }
+        body.dark .cal-cell-terisi,
+        html.dark .cal-cell-terisi {
+            background-color: rgba(16, 185, 129, 0.25) !important;
+            color: #a7f3d0 !important;
+            border: 1px solid rgba(16, 185, 129, 0.5) !important;
+        }
+        body.dark .cal-cell-terisi:hover,
+        html.dark .cal-cell-terisi:hover {
+            background-color: rgba(16, 185, 129, 0.35) !important;
+        }
+
+        /* Cell: Lewat / Ada yang belum diisi */
+        .cal-cell-lewat {
+            background-color: #ffe4e6 !important;
+            color: #9f1239 !important;
+            border: 1px solid #fda4af !important;
+        }
+        .cal-cell-lewat:hover {
+            background-color: #fecdd3 !important;
+        }
+        body.dark .cal-cell-lewat,
+        html.dark .cal-cell-lewat {
+            background-color: rgba(244, 63, 94, 0.25) !important;
+            color: #fecdd3 !important;
+            border: 1px solid rgba(244, 63, 94, 0.5) !important;
+        }
+        body.dark .cal-cell-lewat:hover,
+        html.dark .cal-cell-lewat:hover {
+            background-color: rgba(244, 63, 94, 0.35) !important;
+        }
+
+        /* Cell: Terjadwal belum jatuh tempo */
+        .cal-cell-terjadwal {
+            background-color: #dbeafe !important;
+            color: #1e40af !important;
+            border: 1px solid #93c5fd !important;
+        }
+        .cal-cell-terjadwal:hover {
+            background-color: #bfdbfe !important;
+        }
+        body.dark .cal-cell-terjadwal,
+        html.dark .cal-cell-terjadwal {
+            background-color: rgba(59, 130, 246, 0.25) !important;
+            color: #bfdbfe !important;
+            border: 1px solid rgba(59, 130, 246, 0.5) !important;
+        }
+        body.dark .cal-cell-terjadwal:hover,
+        html.dark .cal-cell-terjadwal:hover {
+            background-color: rgba(59, 130, 246, 0.35) !important;
+        }
+
+        /* Tooltip */
+        .cal-tooltip {
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+        }
+        body.dark .cal-tooltip,
+        html.dark .cal-tooltip {
+            background-color: #1e293b !important;
+            color: #f1f5f9 !important;
+            border: 1px solid #475569 !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4) !important;
+        }
+        .cal-tooltip-title {
+            color: #b45309 !important;
+        }
+        body.dark .cal-tooltip-title,
+        html.dark .cal-tooltip-title {
+            color: #fbbf24 !important;
+        }
+        .cal-tooltip-text {
+            color: #334155 !important;
+        }
+        body.dark .cal-tooltip-text,
+        html.dark .cal-tooltip-text {
+            color: #e2e8f0 !important;
+        }
+
+        /* Detail Container */
+        .cal-detail-container {
+            background-color: var(--bg-card-header) !important;
+            border: 1px solid var(--border-color) !important;
+        }
+        .cal-detail-item {
+            background-color: var(--bg-card) !important;
+            border: 1px solid var(--border-color) !important;
+        }
     </style>
   </head>
   <body
@@ -443,7 +576,11 @@
     x-init="
          let stored = localStorage.getItem('darkMode');
          darkMode = stored ? JSON.parse(stored) : false;
-         $watch('darkMode', value => localStorage.setItem('darkMode', JSON.stringify(value)))"
+         document.documentElement.classList.toggle('dark', darkMode);
+         $watch('darkMode', value => {
+             localStorage.setItem('darkMode', JSON.stringify(value));
+             document.documentElement.classList.toggle('dark', value);
+         })"
     :class="{'dark': darkMode === true}"
   >
     @include('partials.app-loader')

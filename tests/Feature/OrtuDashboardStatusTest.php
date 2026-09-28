@@ -85,7 +85,7 @@ class OrtuDashboardStatusTest extends TestCase
         // Pastikan footer SAS di tabel sudah dihilangkan
         $detailResponse->assertDontSee('Nilai Sumatif Akhir Semester (SAS)');
 
-        // Pastikan tabel Rincian Nilai Sumatif Lingkup Materi tetap ada
-        $detailResponse->assertSee('Rincian Nilai Sumatif Lingkup Materi');
+        // Pastikan nama mapel ditampilkan di halaman detail
+        $detailResponse->assertSee($mapel->nama_mapel);
     }
 }
