@@ -27,7 +27,9 @@ class SiswasImport implements ToModel, WithHeadingRow
             || ($nisn && Siswa::where('nisn', $nisn)->exists())
             || ($nipd && Siswa::where('nipd', $nipd)->exists());
 
-        if ($sudahAda || empty($row['kelas_id']) || ! Kelas::whereKey($row['kelas_id'])->exists()) {
+        $kelas = ! empty($row['kelas']) ? Kelas::where('nama_kelas', trim((string) $row['kelas']))->first() : null;
+
+        if ($sudahAda || ! $kelas) {
             $this->dilewati++;
 
             return null;
@@ -37,7 +39,7 @@ class SiswasImport implements ToModel, WithHeadingRow
 
         return new Siswa([
             'nis' => $row['nis'], 'nisn' => $nisn, 'nipd' => $nipd,
-            'nama' => $row['nama'] ?? '', 'kelas_id' => $row['kelas_id'],
+            'nama' => $row['nama'] ?? '', 'kelas_id' => $kelas->id,
             'password' => Hash::make('password'), 'jenis_kelamin' => $row['jenis_kelamin'] ?? null,
             'tanggal_lahir' => $row['tanggal_lahir'] ?? null, 'no_hp_ortu' => $row['no_hp_ortu'] ?? null,
         ]);

@@ -93,7 +93,7 @@ class DashboardController extends Controller
 
         $rataLm = $penilaian->rataLm($nilaiLm);
         $na = $penilaian->nilaiAkhir($rataLm, $sas?->nilai);
-        $capaian = $penilaian->deskripsiCapaian($nilaiLm->map(fn ($n) => ['nama' => $n->tujuanPembelajaran->deskripsi ?? '', 'nilai' => $n->nilai]));
+        $capaian = $penilaian->deskripsiCapaian($nilaiLm->map(fn ($n) => ['nama' => $n->tujuanPembelajaran->deskripsi ?? '', 'nilai' => $n->nilai_efektif]));
 
         return view('ortu.mapel-detail', [
             'capaian' => $capaian,

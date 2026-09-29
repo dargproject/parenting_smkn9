@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CatatanKompetensi;
 use App\Models\CatatanWaliKelas;
 use App\Models\Kelas;
+use App\Models\LogPerubahanNilai;
 use App\Models\MataPelajaran;
 use App\Models\NilaiLm;
 use App\Models\NilaiPklUkk;
@@ -100,12 +101,17 @@ class PenilaianController extends Controller
         return redirect()->route('guru.portal')->with('success', 'Kolom N berhasil dihapus.');
     }
 
-    public function storeNilaiLm(Request $request)
+    public function storeNilaiLm(Request $request, PenilaianService $penilaian)
     {
         $data = $request->validate([
             'mata_pelajaran_id' => 'required|exists:mata_pelajarans,id',
             'nilai' => 'required|array',
             'nilai.*.*' => 'nullable|integer|min:0|max:100',
+            'remedial' => 'nullable|array',
+            'remedial.*.*' => 'nullable|integer|min:0|max:100',
+            'pengayaan' => 'nullable|array',
+            'catatan_pengayaan' => 'nullable|array',
+            'catatan_pengayaan.*.*' => 'nullable|string|max:500',
         ]);
 
         $this->pastikanMapelMilikGuru($data['mata_pelajaran_id']);
@@ -117,23 +123,61 @@ class PenilaianController extends Controller
             return back()->with('error', 'Sebagian kolom N bukan milik semester/tahun ajaran aktif. Muat ulang halaman lalu isi kembali.');
         }
 
-        DB::transaction(function () use ($data, $tahunAjaranId) {
+        $kktp = $penilaian->kktpThreshold();
+
+        DB::transaction(function () use ($data, $tahunAjaranId, $penilaian, $kktp) {
             foreach ($data['nilai'] as $siswaId => $perTp) {
                 foreach ($perTp as $tujuanPembelajaranId => $nilai) {
                     if ($nilai === null || $nilai === '') {
                         continue;
                     }
 
-                    NilaiLm::updateOrCreate(
+                    $sebelum = NilaiLm::where('siswa_id', $siswaId)->where('tujuan_pembelajaran_id', $tujuanPembelajaranId)->first();
+
+                    $nl = NilaiLm::updateOrCreate(
                         ['siswa_id' => $siswaId, 'tujuan_pembelajaran_id' => $tujuanPembelajaranId],
                         ['nilai' => $nilai, 'tahun_ajaran_id' => $tahunAjaranId, 'guru_id' => Auth::id()]
                     );
+
+                    if ($sebelum && (int) $sebelum->nilai !== (int) $nilai) {
+                        LogPerubahanNilai::create([
+                            'nilai_lm_id' => $nl->id,
+                            'kolom' => 'nilai',
+                            'nilai_lama' => $sebelum->nilai,
+                            'nilai_baru' => $nilai,
+                            'guru_id' => Auth::id(),
+                        ]);
+                    }
+
+                    if ((int) $nilai < $kktp) {
+                        $baruRemedial = $data['remedial'][$siswaId][$tujuanPembelajaranId] ?? null;
+                        $baruRemedial = ($baruRemedial === null || $baruRemedial === '') ? null : (int) $baruRemedial;
+                        $lamaRemedial = $nl->nilai_remedial;
+                        if ($lamaRemedial !== $baruRemedial) {
+                            LogPerubahanNilai::create([
+                                'nilai_lm_id' => $nl->id,
+                                'kolom' => 'nilai_remedial',
+                                'nilai_lama' => $lamaRemedial,
+                                'nilai_baru' => $baruRemedial,
+                                'guru_id' => Auth::id(),
+                            ]);
+                        }
+                        $nl->update(['nilai_remedial' => $baruRemedial, 'sudah_pengayaan' => false, 'catatan_pengayaan' => null]);
+                    } else {
+                        $sudah = isset($data['pengayaan'][$siswaId][$tujuanPembelajaranId]);
+                        $nl->update([
+                            'nilai_remedial' => null,
+                            'sudah_pengayaan' => $sudah,
+                            'catatan_pengayaan' => $sudah ? ($data['catatan_pengayaan'][$siswaId][$tujuanPembelajaranId] ?? null) : null,
+                        ]);
+                    }
                 }
             }
 
             $tpIds = TujuanPembelajaran::where('mata_pelajaran_id', $data['mata_pelajaran_id'])->where('tahun_ajaran_id', $tahunAjaranId)->pluck('id');
             foreach (array_keys($data['nilai']) as $siswaId) {
-                $rata = NilaiLm::where('siswa_id', $siswaId)->whereIn('tujuan_pembelajaran_id', $tpIds)->avg('nilai');
+                $nilaiLmSiswa = NilaiLm::where('siswa_id', $siswaId)->whereIn('tujuan_pembelajaran_id', $tpIds)->get();
+                $rata = $penilaian->rataLm($nilaiLmSiswa);
                 if ($rata === null) {
                     continue;
                 }

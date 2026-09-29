@@ -727,6 +727,7 @@
     </div>
 
     @include('guru.penilaian.wali-matrix')
+    @include('guru.penilaian.wali-log')
     @include('guru.penilaian.wali-rilis')
 @endif
 

@@ -106,6 +106,7 @@ class PortalController extends Controller
             : collect();
 
         $nilaiLmBinaan = NilaiLm::whereIn('tujuan_pembelajaran_id', $tujuanPembelajarans->pluck('id'))
+            ->with('logs.guru')
             ->get()
             ->keyBy(fn ($n) => $n->siswa_id.'-'.$n->tujuan_pembelajaran_id);
         $nilaiSasBinaan = $tahunAjaranAktif
@@ -177,6 +178,13 @@ class PortalController extends Controller
             ? \App\Models\CatatanWaliKelas::whereIn('siswa_id', $siswaWali->pluck('id'))->where('tahun_ajaran_id', $tahunAjaranAktifId)->get()->keyBy('siswa_id')
             : collect();
         $pesanWaliKelasWali = \App\Models\PesanWaliKelas::whereIn('siswa_id', $siswaWali->pluck('id'))->latest()->get()->groupBy('siswa_id');
+        $logPerubahanNilaiBinaan = $tahunAjaranAktif
+            ? \App\Models\LogPerubahanNilai::whereHas('nilaiLm', fn ($q) => $q->whereIn('siswa_id', $siswaBinaan->pluck('id'))->where('tahun_ajaran_id', $tahunAjaranAktifId))
+                ->with(['nilaiLm.siswa.kelas', 'nilaiLm.tujuanPembelajaran.mataPelajaran', 'guru'])
+                ->latest()
+                ->get()
+            : collect();
+
         $raporFinalBinaan = $tahunAjaranAktif
             ? RaporFinal::whereIn('siswa_id', $siswaBinaan->pluck('id'))->where('tahun_ajaran_id', $tahunAjaranAktifId)->get()->keyBy('siswa_id')
             : collect();
@@ -239,7 +247,7 @@ class PortalController extends Controller
             'kelasBinaan', 'siswaBinaan', 'rerataBinaan', 'peringkatBinaan',
             'tahunAjaranAktif', 'mapelBinaan', 'tujuanPembelajarans',
             'nilaiLmBinaan', 'nilaiSasBinaan', 'catatanKompetensiBinaan', 'nilaiPklUkkBinaan',
-            'matrixPerKelas', 'raporFinalBinaan', 'siswaWali', 'catatanWaliKelasWali', 'pesanWaliKelasWali', 'siswaBinaanLengkap',
+            'matrixPerKelas', 'raporFinalBinaan', 'logPerubahanNilaiBinaan', 'siswaWali', 'catatanWaliKelasWali', 'pesanWaliKelasWali', 'siswaBinaanLengkap',
             'kelasWaliList', 'rekapPresensiWali', 'rekapHarianWali', 'tanggalPresensiTerbaruWali', 'tanggalPresensiDipilih', 'jadwalHariPresensiDipilih', 'presensiHariDipilihWali',
             'siswaPeringatanMingguan', 'ambangAlpaMingguan',
             'jadwalGuruMapel', 'jadwalHariIni', 'jurnalHariIniIds', 'namaHariIni',

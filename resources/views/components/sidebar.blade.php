@@ -82,6 +82,7 @@
             <div class="px-3 py-2 text-slate-400 small font-bold uppercase tracking-wider mt-2">Guru Wali Akademik</div>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-guru-wali-dashboard', this)"><i class="fa-solid fa-chart-simple w-6 text-center mr-2"></i> <span>Dashboard Akademik</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-guru-wali-nilai-matrix', this)"><i class="fa-solid fa-table-cells w-6 text-center mr-2"></i> <span>Rekap Nilai Rombel</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-guru-wali-log', this)"><i class="fa-solid fa-clock-rotate-left w-6 text-center mr-2"></i> <span>Log Perubahan Nilai</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-guru-wali-rilis', this)"><i class="fa-solid fa-lock w-6 text-center mr-2"></i> <span>Finalisasi & Rilis Nilai</span></a>
         @endif
 

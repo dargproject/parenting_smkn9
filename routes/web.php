@@ -127,6 +127,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::resource('master-pelanggaran', MasterPelanggaranController::class)->except(['show'])->parameters(['master-pelanggaran' => 'masterPelanggaran']);
     Route::resource('kategori-pengumuman', KategoriPengumumanController::class)->except(['show'])->parameters(['kategori-pengumuman' => 'kategoriPengumuman']);
     Route::get('import', [ImportController::class, 'index'])->name('import.index');
+    Route::get('import/template/siswa', [ImportController::class, 'templateSiswa'])->name('import.template.siswa');
     Route::post('import/siswa', [ImportController::class, 'students'])->name('import.siswa');
     Route::post('import/guru', [ImportController::class, 'teachers'])->name('import.guru');
 });

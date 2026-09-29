@@ -87,44 +87,65 @@
                 </div>
 
                 @if($tpMapel->isNotEmpty())
-                {{-- Nilai LM --}}
+                {{-- Nilai LM + Remedial & Pengayaan, satu kartu per siswa agar rapi & responsive --}}
+                @php $kktpLangkah2 = app(\App\Services\PenilaianService::class)->kktpThreshold(); @endphp
                 <form method="POST" action="{{ route('guru.penilaian.nilai-lm.store') }}">
                     @csrf
                     <input type="hidden" name="mata_pelajaran_id" value="{{ $mapel->id }}">
-                    <h6 class="font-bold text-slate-100 mb-2 text-sm"><span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-xs text-white mr-1">2</span> Nilai Sumatif Lingkup Materi</h6>
-                    <div class="overflow-x-auto rounded-xl border border-slate-700/60">
-                        <table class="w-full min-w-[560px] text-left text-sm">
-                            <thead class="bg-slate-900 border-b border-slate-700/60 text-xs text-slate-400">
-                                <tr>
-                                    <th class="px-3 py-2">Nama Siswa</th>
+                    <h6 class="font-bold text-slate-100 mb-1 text-sm"><span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-xs text-white mr-1">2</span> Nilai Sumatif Lingkup Materi</h6>
+                    <p class="text-xs text-slate-400 mb-3">Isi nilai tiap N. Kolom remedial (di bawah KKTP {{ $kktpLangkah2 }}) atau pengayaan (sudah tuntas) otomatis muncul begitu nilai diisi.</p>
+                    <div class="flex flex-col gap-3">
+                        @foreach($siswaKelas as $siswa)
+                            @php
+                                $nilaiRow = $tpMapel->map(fn ($tp) => $nilaiLmBinaan[$siswa->id.'-'.$tp->id]->nilai ?? null)->filter(fn ($v) => $v !== null);
+                                $avgAwal = $nilaiRow->isNotEmpty() ? round($nilaiRow->avg()) : '-';
+                            @endphp
+                            <div class="rounded-xl border border-slate-700/60 bg-slate-900 p-3 sm:p-4" x-data="{ avg: @js($avgAwal), hitung() { const a = [...this.$el.querySelectorAll('.nilai-input')].map(i => i.value).filter(v => v !== '').map(Number); this.avg = a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : '-' } }" @input="hitung()">
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="font-semibold text-slate-100">{{ $siswa->nama }}</span>
+                                    <span class="text-sm text-slate-400">Rata-rata: <span class="font-bold text-blue-400" x-text="avg"></span></span>
+                                </div>
+                                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
                                     @foreach($tpMapel as $tp)
-                                        <th class="px-3 py-2 text-center">{{ $tp->kode ?: 'N'.$loop->iteration }}</th>
+                                        @php $nl = $nilaiLmBinaan[$siswa->id.'-'.$tp->id] ?? null; @endphp
+                                        <div class="rounded-lg border border-slate-700/60 p-2.5" x-data="{ nilai: {{ $nl->nilai ?? 'null' }}, kktp: {{ $kktpLangkah2 }} }">
+                                            <span class="block text-xs font-semibold text-slate-400 mb-1" title="{{ $tp->deskripsi }}">{{ $tp->kode ?: 'N'.$loop->iteration }}</span>
+                                            <input type="number" min="0" max="100" name="nilai[{{ $siswa->id }}][{{ $tp->id }}]" x-model="nilai" class="nilai-input w-full rounded-lg border border-slate-600 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 text-center">
+
+                                            @if($nl && $nl->logs->isNotEmpty())
+                                                <div x-data="{ buka: false }" class="mt-1.5">
+                                                    <button type="button" @click="buka = !buka" class="text-amber-500 hover:text-amber-400" style="font-size: 10px;"><i class="fa-solid fa-clock-rotate-left mr-1"></i>Riwayat ({{ $nl->logs->count() }})</button>
+                                                    <div x-show="buka" x-cloak class="mt-1 space-y-0.5 border-l-2 border-slate-700/60 pl-2 text-slate-400" style="font-size: 10px;">
+                                                        @foreach($nl->logs as $log)
+                                                            <div>{{ $log->nilai_lama ?? '-' }} &rarr; {{ $log->nilai_baru ?? '-' }} <span class="opacity-70">({{ $log->created_at->translatedFormat('d M, H:i') }})</span></div>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            @endif
+
+                                            <template x-if="nilai !== null && nilai !== '' && Number(nilai) < kktp">
+                                                <div class="mt-2 border-t border-rose-500/20 pt-2">
+                                                    <span class="block text-rose-400 font-semibold mb-1" style="font-size: 10px;">Remedial</span>
+                                                    <input type="number" min="0" max="100" name="remedial[{{ $siswa->id }}][{{ $tp->id }}]" value="{{ $nl->nilai_remedial ?? '' }}" placeholder="Nilai remedial" class="w-full rounded-lg border border-rose-500/40 bg-slate-900 px-2 py-1 text-sm text-slate-100 text-center placeholder:text-slate-600">
+                                                </div>
+                                            </template>
+                                            <template x-if="nilai !== null && nilai !== '' && Number(nilai) >= kktp">
+                                                <div class="mt-2 border-t border-emerald-500/20 pt-2" x-data="{ cek: {{ $nl->sudah_pengayaan ? 'true' : 'false' }} }">
+                                                    <label class="flex items-center gap-1.5 text-slate-300" style="font-size: 11px;">
+                                                        <input type="checkbox" name="pengayaan[{{ $siswa->id }}][{{ $tp->id }}]" value="1" x-model="cek" class="rounded border-slate-600 bg-slate-900">
+                                                        Pengayaan
+                                                    </label>
+                                                    <input type="text" name="catatan_pengayaan[{{ $siswa->id }}][{{ $tp->id }}]" value="{{ $nl->catatan_pengayaan }}" placeholder="Catatan pengayaan..." x-show="cek" class="mt-1 w-full rounded-lg border border-slate-600 bg-slate-900 px-2 py-1 text-slate-100 placeholder:text-slate-600" style="font-size: 11px;">
+                                                </div>
+                                            </template>
+                                        </div>
                                     @endforeach
-                                    <th class="px-3 py-2 text-center">Nilai (Rata-rata)</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-700/60">
-                                @foreach($siswaKelas as $siswa)
-                                    @php
-                                        $nilaiRow = $tpMapel->map(fn ($tp) => $nilaiLmBinaan[$siswa->id.'-'.$tp->id]->nilai ?? null)->filter(fn ($v) => $v !== null);
-                                        $avgAwal = $nilaiRow->isNotEmpty() ? round($nilaiRow->avg()) : '-';
-                                    @endphp
-                                    <tr x-data="{ avg: @js($avgAwal), hitung() { const a = [...this.$el.querySelectorAll('input[type=number]')].map(i => i.value).filter(v => v !== '').map(Number); this.avg = a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : '-' } }" @input="hitung()">
-                                        <td class="px-3 py-2 font-semibold text-slate-100">{{ $siswa->nama }}</td>
-                                        @foreach($tpMapel as $tp)
-                                            @php $nl = $nilaiLmBinaan[$siswa->id.'-'.$tp->id] ?? null; @endphp
-                                            <td class="px-3 py-2 text-center">
-                                                <input type="number" min="0" max="100" name="nilai[{{ $siswa->id }}][{{ $tp->id }}]" value="{{ $nl->nilai ?? '' }}" class="w-16 rounded-lg border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-slate-100 text-center">
-                                            </td>
-                                        @endforeach
-                                        <td class="px-3 py-2 text-center font-bold text-slate-100" x-text="avg"></td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
-                    <div class="flex justify-end mt-2">
-                        <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500">Simpan Nilai LM</button>
+                    <div class="flex justify-end mt-3">
+                        <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500">Simpan Nilai</button>
                     </div>
                 </form>
                 @else
@@ -139,14 +160,14 @@
                     @csrf
                     <input type="hidden" name="mata_pelajaran_id" value="{{ $mapel->id }}">
                     <h6 class="font-bold text-slate-100 mb-1 text-sm"><span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-xs text-white mr-1">3</span> Catatan Tambahan <span class="font-normal text-slate-400">(opsional)</span></h6>
-                    <p class="text-xs text-slate-400 mb-2">Deskripsi capaian dibuat otomatis dari nilai per N dan tampil di rapor orang tua. Isi kolom di bawah hanya bila ada catatan khusus.</p>
+                    <p class="text-xs text-slate-400 mb-2">Deskripsi capaian dibuat otomatis dari nilai per N (nilai remedial dipakai bila ada) dan tampil di rapor orang tua. Isi kolom di bawah hanya bila ada catatan khusus.</p>
                     <div class="flex flex-col gap-2">
                         @foreach($siswaKelas as $siswa)
                             @php $ck = $catatanKompetensiBinaan[$siswa->id.'-'.$mapel->id] ?? null; @endphp
                             <div class="flex flex-col sm:flex-row gap-2 sm:items-start">
                                 <div class="sm:w-56"><span class="block text-sm font-semibold text-slate-100 sm:pt-2">{{ $siswa->nama }}</span>
                                     @php
-                                        $otomatis = app(\App\Services\PenilaianService::class)->deskripsiCapaian($tpMapel->map(fn ($tp) => ($nl = $nilaiLmBinaan[$siswa->id.'-'.$tp->id] ?? null) ? ['nama' => $tp->deskripsi, 'nilai' => $nl->nilai] : null)->filter());
+                                        $otomatis = app(\App\Services\PenilaianService::class)->deskripsiCapaian($tpMapel->map(fn ($tp) => ($nl = $nilaiLmBinaan[$siswa->id.'-'.$tp->id] ?? null) ? ['nama' => $tp->deskripsi, 'nilai' => $nl->nilai_efektif] : null)->filter());
                                     @endphp
                                     <span class="block text-xs text-slate-400">{{ $otomatis ?? 'Belum ada nilai.' }}</span></div>
                                 <textarea name="catatan[{{ $siswa->id }}]" rows="2" placeholder="Catatan tambahan (opsional)..." class="flex-1 rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500">{{ $ck->catatan ?? '' }}</textarea>

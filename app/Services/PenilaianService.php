@@ -83,7 +83,7 @@ class PenilaianService
 
     public function rataLm(Collection $nilaiLms): ?float
     {
-        return $nilaiLms->isEmpty() ? null : round($nilaiLms->avg('nilai'), 1);
+        return $nilaiLms->isEmpty() ? null : round($nilaiLms->avg('nilai_efektif'), 1);
     }
 
     /**
@@ -128,7 +128,7 @@ class PenilaianService
 
         $kktp = $this->kktpThreshold();
         $hasRemedialLm = $nilaiLms->contains(function ($item) use ($kktp) {
-            $val = is_object($item) ? ($item->nilai ?? null) : ($item['nilai'] ?? $item);
+            $val = is_object($item) ? ($item->nilai_efektif ?? null) : ($item['nilai'] ?? $item);
 
             return $val !== null && (float) $val < $kktp;
         });
@@ -172,7 +172,7 @@ class PenilaianService
 
     public function tpRemedial(Collection $nilaiLms): Collection
     {
-        return $nilaiLms->filter(fn ($nl) => $nl->nilai < $this->kktpThreshold())->values();
+        return $nilaiLms->filter(fn ($nl) => $nl->nilai_efektif < $this->kktpThreshold())->values();
     }
 
     public function siswaLengkap(Siswa $siswa, int $tahunAjaranId): bool
@@ -202,7 +202,7 @@ class PenilaianService
 
         $rataLm = NilaiLm::query()
             ->when($tahunAjaranId, fn ($q) => $q->where('tahun_ajaran_id', $tahunAjaranId))
-            ->get(['siswa_id', 'tujuan_pembelajaran_id', 'nilai'])
+            ->get(['siswa_id', 'tujuan_pembelajaran_id', 'nilai', 'nilai_remedial'])
             ->groupBy(fn ($n) => $n->siswa_id.'-'.($tpMapel[$n->tujuan_pembelajaran_id] ?? 0))
             ->map(fn ($g) => $this->rataLm($g));
 
