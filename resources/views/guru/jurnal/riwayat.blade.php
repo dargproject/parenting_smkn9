@@ -4,7 +4,7 @@
         <p class="text-slate-500 dark:text-slate-400 text-sm">Kalender pengisian jurnal mengajar Anda. Arahkan kursor ke simbol <i class="fa-solid fa-circle-info text-amber-500 dark:text-amber-400"></i> untuk melihat kekurangannya, atau klik tanggal untuk melihat rinciannya.</p>
     </div>
 
-    <div class="cal-card rounded-2xl border p-4 md:p-6 shadow-sm">
+    <div class="cal-card w-full max-w-xl rounded-2xl border p-4 shadow-sm">
         <div class="flex items-center justify-between mb-4">
             <a href="{{ route('guru.portal', ['jurnal_bulan' => $bulanSebelumnya]) }}" class="cal-nav-btn rounded-lg border px-3 py-1.5 text-sm transition-colors"><i class="fa-solid fa-chevron-left"></i></a>
             <span class="font-bold text-base md:text-lg" style="color: var(--text-primary);">{{ ucfirst($namaBulanTerpilih) }}</span>
@@ -33,15 +33,17 @@
                             $warna = 'cal-cell-terjadwal';
                         }
                     }
+                    $kolom = ($offsetAwalKalender + $loop->index) % 7;
+                    $posisiTooltip = $kolom <= 1 ? 'left-0' : ($kolom >= 5 ? 'right-0' : 'left-1/2 -translate-x-1/2');
                 @endphp
                 <button type="button" data-tgl="{{ $tgl }}" @click="pilih = pilih === '{{ $tgl }}' ? null : '{{ $tgl }}'"
                     {{ !$info['ada_jadwal'] ? 'disabled' : '' }}
-                    class="relative aspect-square rounded-lg text-sm font-semibold flex items-center justify-center transition-all {{ $warna }} {{ $info['ada_jadwal'] ? 'cursor-pointer hover:shadow-xs' : 'cursor-default opacity-80' }}">
+                    class="relative aspect-square rounded-lg text-xs sm:text-sm font-semibold flex items-center justify-center transition-all {{ $warna }} {{ $info['ada_jadwal'] ? 'cursor-pointer hover:shadow-xs' : 'cursor-default opacity-80' }}">
                     {{ (int) substr($tgl, -2) }}
                     @if($info['ada_jadwal'] && $info['lewat'] && $info['terisi'] < $info['total'])
                         <span class="group absolute -top-1.5 -right-1.5">
                             <i class="fa-solid fa-circle-info text-xs text-amber-500 rounded-full"></i>
-                            <span class="cal-tooltip pointer-events-none absolute bottom-full right-0 z-30 mb-1.5 hidden w-64 rounded-xl p-3 text-left text-xs font-normal normal-case shadow-xl group-hover:block transition-all">
+                            <span class="cal-tooltip pointer-events-none absolute bottom-full {{ $posisiTooltip }} z-30 mb-1.5 hidden w-48 sm:w-56 rounded-xl p-3 text-left text-xs font-normal normal-case shadow-xl group-hover:block transition-all">
                                 <span class="block font-bold cal-tooltip-title mb-1 flex items-center gap-1.5">
                                     <i class="fa-solid fa-triangle-exclamation text-[11px]"></i>
                                     <span>Belum diisi:</span>
