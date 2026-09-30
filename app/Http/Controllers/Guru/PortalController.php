@@ -85,6 +85,15 @@ class PortalController extends Controller
         // Nilai akhir seluruh siswa (sumber tunggal: nilai_lms + nilai_sas), dipakai legger & dashboard guru wali.
         $nilaiAkhirRows = $penilaian->nilaiAkhirRows($tahunAjaranAktifId);
         $nilaiAkhirMap = $nilaiAkhirRows->keyBy(fn ($r) => $r->siswa_id.'-'.$r->mata_pelajaran_id);
+
+        // Log audit perubahan nilai se-sekolah, dipakai panel audit di Validasi Legger (waka_kurikulum).
+        $logPerubahanNilaiSemua = $tahunAjaranAktif
+            ? \App\Models\LogPerubahanNilai::whereHas('nilaiLm', fn ($q) => $q->where('tahun_ajaran_id', $tahunAjaranAktifId))
+                ->with(['nilaiLm.siswa.kelas', 'nilaiLm.tujuanPembelajaran.mataPelajaran', 'guru'])
+                ->latest()
+                ->limit(100)
+                ->get()
+            : collect();
         $nilaiBinaan = $nilaiAkhirRows->whereIn('siswa_id', $siswaBinaan->pluck('id'));
         $rerataBinaan = $nilaiBinaan->isNotEmpty() ? round($nilaiBinaan->avg('nilai_akhir'), 1) : null;
         $peringkatBinaan = $siswaBinaan
@@ -242,7 +251,7 @@ class PortalController extends Controller
 
         return view('guru.portal', compact(
             'guru', 'siswas', 'kasusBks', 'pelanggarans', 'panggilanOrtus',
-            'jadwalPelajarans', 'mataPelajarans', 'kelasList', 'nilaiAkhirMap', 'kelasMapelBinaan', 'kelasMapelSemua', 'catatanAkademikMap', 'asesmenBkMap',
+            'jadwalPelajarans', 'mataPelajarans', 'kelasList', 'nilaiAkhirMap', 'logPerubahanNilaiSemua', 'kelasMapelBinaan', 'kelasMapelSemua', 'catatanAkademikMap', 'asesmenBkMap',
             'masterPelanggarans', 'masterPelanggaranAktif', 'rekapPoin', 'absensiBermasalah',
             'kelasBinaan', 'siswaBinaan', 'rerataBinaan', 'peringkatBinaan',
             'tahunAjaranAktif', 'mapelBinaan', 'tujuanPembelajarans',

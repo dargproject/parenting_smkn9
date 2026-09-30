@@ -151,9 +151,9 @@
     <!-- AUDIT LOG PANEL -->
     <div class="card border-0 rounded-xl shadow-sm p-3 bg-slate-800/80 mt-4 text-slate-100">
         <h6 class="font-bold text-slate-100 mb-3"><i
-                class="fa-solid fa-list-check text-info mr-1"></i> Log Audit Perubahan Nilai &
-            Catatan</h6>
-        <div class="overflow-x-auto" style="max-height: 200px; overflow-y: auto;">
+                class="fa-solid fa-list-check text-info mr-1"></i> Log Audit Perubahan Nilai
+            (100 Terbaru, Se-Sekolah)</h6>
+        <div class="overflow-x-auto" style="max-height: 300px; overflow-y: auto;">
             <table class="table table-hover table-striped align-middle table-sm"
                 style="font-size: 11px;">
                 <thead class="bg-slate-900 border-b border-slate-700/60 text-xs">
@@ -165,7 +165,27 @@
                     </tr>
                 </thead>
                 <tbody id="academic-audit-log-tbody">
-                    <!-- Dynamic audit logs -->
+                    @forelse($logPerubahanNilaiSemua as $log)
+                        @php
+                            $siswaLog = $log->nilaiLm->siswa ?? null;
+                            $tpLog = $log->nilaiLm->tujuanPembelajaran ?? null;
+                        @endphp
+                        @continue(!$siswaLog || !$tpLog)
+                        <tr>
+                            <td class="whitespace-nowrap">{{ $log->created_at->translatedFormat('d M Y, H:i') }}</td>
+                            <td>{{ $log->guru->nama ?? '-' }}</td>
+                            <td>{{ $tpLog->mataPelajaran->nama_mapel ?? '-' }} ({{ $tpLog->kode ?: 'N' }}) &mdash; {{ $siswaLog->nama }} <span class="text-slate-400">({{ $siswaLog->kelas->nama_kelas ?? '-' }})</span>: {{ $log->nilai_lama ?? '-' }} &rarr; {{ $log->nilai_baru ?? '-' }}</td>
+                            <td>
+                                @if($log->kolom === 'nilai_remedial')
+                                    <span class="badge bg-warning-subtle text-warning badge-pill-custom">Remedial</span>
+                                @else
+                                    <span class="badge bg-secondary-subtle text-slate-300 badge-pill-custom">Nilai N</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="4" class="text-center text-slate-400 py-3">Belum ada perubahan nilai yang tercatat.</td></tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
