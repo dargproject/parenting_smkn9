@@ -13,6 +13,15 @@ class GurusImport implements ToModel, WithHeadingRow
 
     public int $dilewati = 0;
 
+    private string $passwordHash;
+
+    public function __construct()
+    {
+        // Di-hash sekali di sini, bukan per baris: bcrypt sengaja lambat (~100-200ms),
+        // ratusan baris x Hash::make() per baris bisa gampang melebihi batas waktu eksekusi PHP.
+        $this->passwordHash = Hash::make('password');
+    }
+
     public function model(array $row): ?Guru
     {
         if (empty($row['nip'])) {
@@ -30,7 +39,7 @@ class GurusImport implements ToModel, WithHeadingRow
 
         return new Guru([
             'nip' => $row['nip'], 'nama' => $row['nama'] ?? '', 'email' => $email,
-            'phone' => $row['phone'] ?? null, 'password' => Hash::make('password'), 'is_active' => true,
+            'phone' => $row['phone'] ?? null, 'password' => $this->passwordHash, 'is_active' => true,
         ]);
     }
 }

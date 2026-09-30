@@ -126,16 +126,16 @@
                                             <template x-if="nilai !== null && nilai !== '' && Number(nilai) < kktp">
                                                 <div class="mt-2 border-t border-rose-500/20 pt-2">
                                                     <span class="block text-rose-400 font-semibold mb-1" style="font-size: 10px;">Remedial</span>
-                                                    <input type="number" min="0" max="100" name="remedial[{{ $siswa->id }}][{{ $tp->id }}]" value="{{ $nl->nilai_remedial ?? '' }}" placeholder="Nilai remedial" class="w-full rounded-lg border border-rose-500/40 bg-slate-900 px-2 py-1 text-sm text-slate-100 text-center placeholder:text-slate-600">
+                                                    <input type="number" min="0" max="100" name="remedial[{{ $siswa->id }}][{{ $tp->id }}]" value="{{ $nl?->nilai_remedial ?? '' }}" placeholder="Nilai remedial" class="w-full rounded-lg border border-rose-500/40 bg-slate-900 px-2 py-1 text-sm text-slate-100 text-center placeholder:text-slate-600">
                                                 </div>
                                             </template>
                                             <template x-if="nilai !== null && nilai !== '' && Number(nilai) >= kktp">
-                                                <div class="mt-2 border-t border-emerald-500/20 pt-2" x-data="{ cek: {{ $nl->sudah_pengayaan ? 'true' : 'false' }} }">
+                                                <div class="mt-2 border-t border-emerald-500/20 pt-2" x-data="{ cek: {{ $nl?->sudah_pengayaan ? 'true' : 'false' }} }">
                                                     <label class="flex items-center gap-1.5 text-slate-300" style="font-size: 11px;">
                                                         <input type="checkbox" name="pengayaan[{{ $siswa->id }}][{{ $tp->id }}]" value="1" x-model="cek" class="rounded border-slate-600 bg-slate-900">
                                                         Pengayaan
                                                     </label>
-                                                    <input type="text" name="catatan_pengayaan[{{ $siswa->id }}][{{ $tp->id }}]" value="{{ $nl->catatan_pengayaan }}" placeholder="Catatan pengayaan..." x-show="cek" class="mt-1 w-full rounded-lg border border-slate-600 bg-slate-900 px-2 py-1 text-slate-100 placeholder:text-slate-600" style="font-size: 11px;">
+                                                    <input type="text" name="catatan_pengayaan[{{ $siswa->id }}][{{ $tp->id }}]" value="{{ $nl?->catatan_pengayaan }}" placeholder="Catatan pengayaan..." x-show="cek" class="mt-1 w-full rounded-lg border border-slate-600 bg-slate-900 px-2 py-1 text-slate-100 placeholder:text-slate-600" style="font-size: 11px;">
                                                 </div>
                                             </template>
                                         </div>
