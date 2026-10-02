@@ -101,6 +101,7 @@ Route::middleware('role:guru_bk')->prefix('guru/bk')->name('guru.bk.')->group(fu
     Route::put('/kasus/{kasusBk}', [KasusBkController::class, 'update'])->name('kasus.update');
     Route::delete('/kasus/{kasusBk}', [KasusBkController::class, 'destroy'])->name('kasus.destroy');
     Route::patch('/kasus/{kasusBk}/status', [KasusBkController::class, 'updateStatus'])->name('kasus.status');
+    Route::get('/kasus/{kasusBk}/export/{template}', [KasusBkController::class, 'export'])->name('kasus.export');
 });
 
 Route::middleware('role:wali_kelas')->post('/guru/wali-kelas/catatan', [PenilaianController::class, 'storeCatatanWaliKelas'])->name('guru.wali-kelas.catatan.store');

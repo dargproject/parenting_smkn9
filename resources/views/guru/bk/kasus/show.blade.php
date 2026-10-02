@@ -54,6 +54,15 @@
             </div>
 
             <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5">
+                <h6 class="font-bold text-slate-100 mb-3">Export Dokumen Word</h6>
+                <div class="flex flex-wrap gap-2">
+                    @foreach(['form-penanganan-siswa' => 'Kartu Penanganan Siswa', 'komulatif-record' => 'Comulative Record', 'lembar-sosiometri' => 'Lembar Sosiometri'] as $template => $label)
+                        <a href="{{ route('guru.bk.kasus.export', [$kasusBk, $template]) }}" class="rounded-lg border border-slate-600 px-3 py-2 text-sm text-slate-300 hover:border-blue-500 hover:text-slate-100"><i class="fa-solid fa-file-word mr-1.5 text-blue-400"></i>{{ $label }}</a>
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5">
                 <h6 class="font-bold text-slate-100 mb-3">Layanan Terkait</h6>
                 <p class="text-slate-400 text-sm m-0">Konseling individu/kelompok, kunjungan rumah, alih tangan, dan konferensi kasus yang ditempel ke kasus ini akan tampil di sini (menyusul di fase berikutnya).</p>
             </div>

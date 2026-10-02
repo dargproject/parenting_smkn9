@@ -10,9 +10,11 @@ use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use App\Services\Bk\LampiranBkService;
+use App\Services\Bk\WordExportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 class KasusBkController extends Controller
 {
@@ -150,5 +152,22 @@ class KasusBkController extends Controller
         ]);
 
         return back()->with('success', 'Status kasus berhasil diperbarui.');
+    }
+
+    public function export(KasusBk $kasusBk, string $template, WordExportService $wordExportService)
+    {
+        abort_unless($kasusBk->konselor_id === Auth::id(), 403, 'Anda tidak memiliki akses ke kasus ini.');
+
+        $kasusBk->load(['siswa.kelas', 'siswa.profilSiswa', 'kategoriKasus', 'konselor', 'tahunAjaran']);
+
+        try {
+            $tempPath = $wordExportService->generateDocument($kasusBk, $template);
+        } catch (InvalidArgumentException $e) {
+            abort(404, $e->getMessage());
+        }
+
+        $filename = "kasus-bk-{$kasusBk->id}-{$template}.docx";
+
+        return response()->download($tempPath, $filename)->deleteFileAfterSend(true);
     }
 }
