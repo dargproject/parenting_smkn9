@@ -39,54 +39,54 @@
 
         @if(in_array('kepsek', $roles))
             <div class="px-3 py-2 text-slate-400 small font-bold uppercase tracking-wider mt-2">Kepala Sekolah</div>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-kepsek-dashboard', this)"><i class="fa-solid fa-chart-line w-6 text-center mr-2"></i> <span>Dashboard Global</span></a>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-kepsek-akademik', this)"><i class="fa-solid fa-square-poll-vertical w-6 text-center mr-2"></i> <span>Pantau Akademik</span></a>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-kepsek-kesiswaan', this)"><i class="fa-solid fa-shield-halved w-6 text-center mr-2"></i> <span>Pantau Kesiswaan</span></a>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-kepsek-laporan', this)"><i class="fa-solid fa-file-contract w-6 text-center mr-2"></i> <span>Laporan Eksekutif</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-kepsek-dashboard', this)"><i class="fa-solid fa-chart-line w-6 text-center mr-2"></i> <span>Dashboard Global</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-kepsek-akademik', this)"><i class="fa-solid fa-square-poll-vertical w-6 text-center mr-2"></i> <span>Pantau Akademik</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-kepsek-kesiswaan', this)"><i class="fa-solid fa-shield-halved w-6 text-center mr-2"></i> <span>Pantau Kesiswaan</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-kepsek-laporan', this)"><i class="fa-solid fa-file-contract w-6 text-center mr-2"></i> <span>Laporan Eksekutif</span></a>
         @endif
 
         @if(in_array('waka_kurikulum', $roles))
             <div class="px-3 py-2 text-slate-400 small font-bold uppercase tracking-wider mt-2">Waka Kurikulum</div>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-kurikulum-legger', this)"><i class="fa-solid fa-file-signature w-6 text-center mr-2"></i> <span>Validasi Legger</span></a>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-kurikulum-struktur', this)"><i class="fa-solid fa-sitemap w-6 text-center mr-2"></i> <span>Struktur Kurikulum</span></a>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-kurikulum-wali', this)"><i class="fa-solid fa-user-tie w-6 text-center mr-2"></i> <span>Wali Kelas &amp; Guru Wali</span></a>
-            {{-- <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-kurikulum-rapor', this)"><i class="fa-solid fa-file-pdf w-6 text-center mr-2"></i> <span>Cetak e-Rapor</span></a> --}}
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-kurikulum-legger', this)"><i class="fa-solid fa-file-signature w-6 text-center mr-2"></i> <span>Validasi Legger</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-kurikulum-struktur', this)"><i class="fa-solid fa-sitemap w-6 text-center mr-2"></i> <span>Struktur Kurikulum</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-kurikulum-wali', this)"><i class="fa-solid fa-user-tie w-6 text-center mr-2"></i> <span>Wali Kelas &amp; Guru Wali</span></a>
+            {{-- <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-kurikulum-rapor', this)"><i class="fa-solid fa-file-pdf w-6 text-center mr-2"></i> <span>Cetak e-Rapor</span></a> --}}
         @endif
 
         @if(in_array('waka_kesiswaan', $roles))
             <div class="px-3 py-2 text-slate-400 small font-bold uppercase tracking-wider mt-2">Waka Kesiswaan</div>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-kesiswaan-absensi', this)"><i class="fa-solid fa-user-clock w-6 text-center mr-2"></i> <span>Absensi Bermasalah</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-kesiswaan-absensi', this)"><i class="fa-solid fa-user-clock w-6 text-center mr-2"></i> <span>Absensi Bermasalah</span></a>
 
             @include('components.sidebar-tatib')
             @php $tatibRendered = true; @endphp
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-kesiswaan-petugas', this)"><i class="fa-solid fa-user-shield w-6 text-center mr-2"></i> <span>Petugas Tatib</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-kesiswaan-petugas', this)"><i class="fa-solid fa-user-shield w-6 text-center mr-2"></i> <span>Petugas Tatib</span></a>
 
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-kesiswaan-ortu', this)"><i class="fa-solid fa-handshake w-6 text-center mr-2"></i> <span>Panggilan Ortu</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-kesiswaan-ortu', this)"><i class="fa-solid fa-handshake w-6 text-center mr-2"></i> <span>Panggilan Ortu</span></a>
         @endif
 
         @if(in_array('guru_bk', $roles))
             <div class="px-3 py-2 text-slate-400 small font-bold uppercase tracking-wider mt-2">Bimbingan Konseling</div>
             <a href="{{ route('guru.bk.dashboard') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-chart-pie w-6 text-center mr-2"></i> <span>Dashboard BK</span></a>
             <a href="{{ route('guru.bk.kasus.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-folder-open w-6 text-center mr-2"></i> <span>Kasus BK</span></a>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-bk-asesmen', this)"><i class="fa-solid fa-clipboard-question w-6 text-center mr-2"></i> <span>Asesmen Psikologis</span></a>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-bk-kanban', this)"><i class="fa-solid fa-list-check w-6 text-center mr-2"></i> <span>Kanban Tindak Lanjut</span></a>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-bk-riwayat', this)"><i class="fa-solid fa-address-card w-6 text-center mr-2"></i> <span>Jejak Rekam Siswa</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-bk-asesmen', this)"><i class="fa-solid fa-clipboard-question w-6 text-center mr-2"></i> <span>Asesmen Psikologis</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-bk-kanban', this)"><i class="fa-solid fa-list-check w-6 text-center mr-2"></i> <span>Kanban Tindak Lanjut</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-bk-riwayat', this)"><i class="fa-solid fa-address-card w-6 text-center mr-2"></i> <span>Jejak Rekam Siswa</span></a>
         @endif
 
         @if(in_array('wali_kelas', $roles))
             <div class="px-3 py-2 text-slate-400 small font-bold uppercase tracking-wider mt-2">Wali Kelas</div>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-wali-dashboard', this)"><i class="fa-solid fa-users w-6 text-center mr-2"></i> <span>Dashboard Kelas</span></a>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-wali-presensi', this)"><i class="fa-solid fa-calendar-check w-6 text-center mr-2"></i> <span>Rekap Presensi Mapel</span></a>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-wali-catatan', this)"><i class="fa-solid fa-pen-clip w-6 text-center mr-2"></i> <span>Catatan Wali Kelas</span></a>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-wali-chat', this)"><i class="fa-solid fa-comments w-6 text-center mr-2"></i> <span>Komunikasi Ortu</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-wali-dashboard', this)"><i class="fa-solid fa-users w-6 text-center mr-2"></i> <span>Dashboard Kelas</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-wali-presensi', this)"><i class="fa-solid fa-calendar-check w-6 text-center mr-2"></i> <span>Rekap Presensi Mapel</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-wali-catatan', this)"><i class="fa-solid fa-pen-clip w-6 text-center mr-2"></i> <span>Catatan Wali Kelas</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-wali-chat', this)"><i class="fa-solid fa-comments w-6 text-center mr-2"></i> <span>Komunikasi Ortu</span></a>
         @endif
 
         @if(in_array('guru_wali', $roles))
             <div class="px-3 py-2 text-slate-400 small font-bold uppercase tracking-wider mt-2">Guru Wali Akademik</div>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-guru-wali-dashboard', this)"><i class="fa-solid fa-chart-simple w-6 text-center mr-2"></i> <span>Dashboard Akademik</span></a>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-guru-wali-nilai-matrix', this)"><i class="fa-solid fa-table-cells w-6 text-center mr-2"></i> <span>Rekap Nilai Rombel</span></a>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-guru-wali-log', this)"><i class="fa-solid fa-clock-rotate-left w-6 text-center mr-2"></i> <span>Log Perubahan Nilai</span></a>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-guru-wali-rilis', this)"><i class="fa-solid fa-lock w-6 text-center mr-2"></i> <span>Finalisasi & Rilis Nilai</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-guru-wali-dashboard', this)"><i class="fa-solid fa-chart-simple w-6 text-center mr-2"></i> <span>Dashboard Akademik</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-guru-wali-nilai-matrix', this)"><i class="fa-solid fa-table-cells w-6 text-center mr-2"></i> <span>Rekap Nilai Rombel</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-guru-wali-log', this)"><i class="fa-solid fa-clock-rotate-left w-6 text-center mr-2"></i> <span>Log Perubahan Nilai</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-guru-wali-rilis', this)"><i class="fa-solid fa-lock w-6 text-center mr-2"></i> <span>Finalisasi & Rilis Nilai</span></a>
         @endif
 
         @if(in_array('tatib', $roles))
@@ -99,9 +99,9 @@
 
         @if(in_array('guru_mapel', $roles))
             <div class="px-3 py-2 text-slate-400 small font-bold uppercase tracking-wider mt-2">Guru Mapel</div>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-guru-mapel-penilaian', this)"><i class="fa-solid fa-square-poll-vertical w-6 text-center mr-2"></i> <span>Input Nilai Sumatif</span></a>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-guru-mapel-dashboard', this)"><i class="fa-solid fa-book-open w-6 text-center mr-2"></i> <span>Jurnal & Presensi</span></a>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-guru-mapel-riwayat', this)"><i class="fa-solid fa-calendar-days w-6 text-center mr-2"></i> <span>Riwayat Jurnal</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-guru-mapel-penilaian', this)"><i class="fa-solid fa-square-poll-vertical w-6 text-center mr-2"></i> <span>Input Nilai Sumatif</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-guru-mapel-dashboard', this)"><i class="fa-solid fa-book-open w-6 text-center mr-2"></i> <span>Jurnal & Presensi</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-guru-mapel-riwayat', this)"><i class="fa-solid fa-calendar-days w-6 text-center mr-2"></i> <span>Riwayat Jurnal</span></a>
 
             @unless($tatibRendered)
                 @include('components.sidebar-tatib')

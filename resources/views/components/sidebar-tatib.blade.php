@@ -4,8 +4,8 @@
         <i class="fa-solid fa-chevron-down ml-auto text-xs transition-transform" :class="{ 'rotate-180': openTatib }"></i>
     </button>
     <div x-show="openTatib">
-        <a href="#" class="flex items-center pl-12 pr-4 py-2.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors text-sm" onclick="showPane('pane-kesiswaan-jenis', this)"><span>Jenis Pelanggaran</span></a>
-        <a href="#" class="flex items-center pl-12 pr-4 py-2.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors text-sm" onclick="showPane('pane-kesiswaan-catat', this)"><span>Catat Pelanggaran</span></a>
-        <a href="#" class="flex items-center pl-12 pr-4 py-2.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors text-sm" onclick="showPane('pane-kesiswaan-rekap', this)"><span>Rekap Poin</span></a>
+        <a href="#" class="flex items-center pl-12 pr-4 py-2.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors text-sm" onclick="gotoPane('pane-kesiswaan-jenis', this)"><span>Jenis Pelanggaran</span></a>
+        <a href="#" class="flex items-center pl-12 pr-4 py-2.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors text-sm" onclick="gotoPane('pane-kesiswaan-catat', this)"><span>Catat Pelanggaran</span></a>
+        <a href="#" class="flex items-center pl-12 pr-4 py-2.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors text-sm" onclick="gotoPane('pane-kesiswaan-rekap', this)"><span>Rekap Poin</span></a>
     </div>
 </div>

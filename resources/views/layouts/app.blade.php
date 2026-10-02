@@ -820,15 +820,16 @@
             try {
                 const saved = sessionStorage.getItem('activePane:' + location.pathname);
                 if (saved && document.getElementById(saved)) {
-                    const link = [...document.querySelectorAll('#sidebar-menu-list a[onclick*="showPane"]')]
+                    const link = [...document.querySelectorAll('#sidebar-menu-list a[onclick*="Pane"]')]
                         .find(a => a.getAttribute('onclick').includes("'" + saved + "'"));
                     showPane(saved, link || null);
                 }
             } catch (e) {}
 
             // Jika belum ada pane yang aktif (mis. peran tanpa pane default), tampilkan menu pertama yang tersedia.
-            if (!document.querySelector('.pane-content:not(.hidden-pane)')) {
-                const firstLink = document.querySelector('#sidebar-menu-list a[onclick*="showPane"]');
+            // Hanya berlaku di halaman yang memang punya pane (portal); halaman mandiri seperti /guru/bk tidak disentuh.
+            if (document.querySelector('.pane-content') && !document.querySelector('.pane-content:not(.hidden-pane)')) {
+                const firstLink = document.querySelector('#sidebar-menu-list a[onclick*="Pane"]');
                 if (firstLink) firstLink.click();
             }
         });
@@ -897,6 +898,19 @@
                 triggerToast('Gagal menyimpan catatan konseling.');
             }
         }
+        const PORTAL_GURU_URL = "{{ route('guru.portal') }}";
+
+        // Dipakai sidebar untuk menu "pane lama" (showPane): kalau sedang di halaman lain
+        // (mis. /guru/bk/...), pindah dulu ke portal lalu buka pane yang dituju di sana.
+        function gotoPane(paneId, element) {
+            if (location.pathname !== new URL(PORTAL_GURU_URL, location.origin).pathname) {
+                try { sessionStorage.setItem('activePane:' + new URL(PORTAL_GURU_URL, location.origin).pathname, paneId); } catch (e) {}
+                window.location.href = PORTAL_GURU_URL;
+                return;
+            }
+            showPane(paneId, element);
+        }
+
         function showPane(paneId, element) {
             // Hide all panes
             document.querySelectorAll('.pane-content').forEach(pane => {
