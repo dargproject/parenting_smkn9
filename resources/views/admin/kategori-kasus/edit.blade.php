@@ -1,0 +1,1 @@
+@include('admin.partials.entity-form', ['title'=>'Edit Kategori Kasus','action'=>route('admin.kategori-kasus.update',$item),'method'=>'PUT','back'=>route('admin.kategori-kasus.index'),'record'=>$item,'fields'=>[['name'=>'nama_kategori','label'=>'Nama Kategori','required'=>true]]])

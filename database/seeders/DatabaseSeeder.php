@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             SiswaSeeder::class,
             MasterDataSeeder::class,
             PenilaianSeeder::class,
+            BkSeeder::class,
         ]);
     }
 }

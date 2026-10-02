@@ -33,6 +33,7 @@
             <a href="{{ route('admin.rombel.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-people-roof w-6 text-center mr-2"></i> <span>Plotting Rombel</span></a>
             <a href="{{ route('admin.master-pelanggaran.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-triangle-exclamation w-6 text-center mr-2"></i> <span>Katalog Pelanggaran</span></a>
             <a href="{{ route('admin.kategori-pengumuman.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-tags w-6 text-center mr-2"></i> <span>Kategori Pengumuman</span></a>
+            <a href="{{ route('admin.kategori-kasus.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-folder-tree w-6 text-center mr-2"></i> <span>Kategori Kasus BK</span></a>
             <a href="{{ route('admin.import.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-file-import w-6 text-center mr-2"></i> <span>Import Data</span></a>
         @endif
 

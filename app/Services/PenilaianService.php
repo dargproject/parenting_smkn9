@@ -128,7 +128,7 @@ class PenilaianService
 
         $kktp = $this->kktpThreshold();
         $hasRemedialLm = $nilaiLms->contains(function ($item) use ($kktp) {
-            $val = is_object($item) ? ($item->nilai_efektif ?? null) : ($item['nilai'] ?? $item);
+            $val = is_object($item) ? ($item->nilai_efektif ?? $item->nilai ?? null) : ($item['nilai'] ?? $item);
 
             return $val !== null && (float) $val < $kktp;
         });

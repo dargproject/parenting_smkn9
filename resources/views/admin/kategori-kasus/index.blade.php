@@ -1,0 +1,1 @@
+@include('admin.partials.crud-index', ['title'=>'Kategori Kasus BK','description'=>'Kelola kategori kasus Bimbingan Konseling.','resource'=>'admin.kategori-kasus','createRoute'=>route('admin.kategori-kasus.create'),'items'=>$items,'columns'=>[['label'=>'Nama Kategori','key'=>'nama_kategori']]])

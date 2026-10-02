@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GuruController;
 use App\Http\Controllers\Admin\ImportController;
+use App\Http\Controllers\Admin\KategoriKasusController;
 use App\Http\Controllers\Admin\KategoriPengumumanController;
 use App\Http\Controllers\Admin\KelasController;
 use App\Http\Controllers\Admin\MasterPelanggaranController;
@@ -12,6 +13,9 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\SiswaController;
 use App\Http\Controllers\Admin\TahunAjaranController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Guru\BkController;
+use App\Http\Controllers\Guru\JurnalController;
+use App\Http\Controllers\Guru\KesiswaanController;
 use App\Http\Controllers\Guru\KurikulumController;
 use App\Http\Controllers\Guru\PenilaianController;
 use App\Http\Controllers\Guru\PesanWaliKelasController;
@@ -53,7 +57,7 @@ Route::post('/guru/pelanggaran', [PortalController::class, 'storePelanggaran'])
     ->middleware('role:waka_kesiswaan,guru_mapel,tatib')
     ->name('guru.pelanggaran.store');
 
-Route::post('/guru/kesiswaan/petugas-tatib', [\App\Http\Controllers\Guru\KesiswaanController::class, 'updatePetugasTatib'])
+Route::post('/guru/kesiswaan/petugas-tatib', [KesiswaanController::class, 'updatePetugasTatib'])
     ->middleware('role:waka_kesiswaan')
     ->name('guru.kesiswaan.petugas-tatib.update');
 
@@ -82,9 +86,9 @@ Route::middleware('role:guru_mapel')->prefix('guru/penilaian')->name('guru.penil
     Route::post('/nilai-pkl-ukk', [PenilaianController::class, 'storeNilaiPklUkk'])->name('nilai-pkl-ukk.store');
 });
 
-Route::middleware('role:guru_mapel')->post('/guru/jurnal', [\App\Http\Controllers\Guru\JurnalController::class, 'store'])->name('guru.jurnal.store');
+Route::middleware('role:guru_mapel')->post('/guru/jurnal', [JurnalController::class, 'store'])->name('guru.jurnal.store');
 
-Route::middleware('role:guru_bk')->post('/guru/bk/asesmen', [\App\Http\Controllers\Guru\BkController::class, 'storeAsesmen'])->name('guru.bk.asesmen.store');
+Route::middleware('role:guru_bk')->post('/guru/bk/asesmen', [BkController::class, 'storeAsesmen'])->name('guru.bk.asesmen.store');
 
 Route::middleware('role:wali_kelas')->post('/guru/wali-kelas/catatan', [PenilaianController::class, 'storeCatatanWaliKelas'])->name('guru.wali-kelas.catatan.store');
 
@@ -126,6 +130,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::post('rombel/promote', [RombelController::class, 'promote'])->name('rombel.promote');
     Route::resource('master-pelanggaran', MasterPelanggaranController::class)->except(['show'])->parameters(['master-pelanggaran' => 'masterPelanggaran']);
     Route::resource('kategori-pengumuman', KategoriPengumumanController::class)->except(['show'])->parameters(['kategori-pengumuman' => 'kategoriPengumuman']);
+    Route::resource('kategori-kasus', KategoriKasusController::class)->except(['show'])->parameters(['kategori-kasus' => 'kategoriKasus']);
     Route::get('import', [ImportController::class, 'index'])->name('import.index');
     Route::get('import/template/siswa', [ImportController::class, 'templateSiswa'])->name('import.template.siswa');
     Route::post('import/siswa', [ImportController::class, 'students'])->name('import.siswa');

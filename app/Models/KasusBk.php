@@ -8,11 +8,22 @@ class KasusBk extends Model
 {
     protected $fillable = [
         'siswa_id',
+        'tahun_ajaran_id',
         'judul',
         'kategori',
+        'kategori_id',
         'deskripsi',
         'status',
+        'prioritas',
+        'tanggal_mulai',
+        'tanggal_selesai',
+        'tindak_lanjut',
         'konselor_id',
+    ];
+
+    protected $casts = [
+        'tanggal_mulai' => 'date',
+        'tanggal_selesai' => 'date',
     ];
 
     public function siswa()
@@ -23,5 +34,20 @@ class KasusBk extends Model
     public function konselor()
     {
         return $this->belongsTo(Guru::class, 'konselor_id');
+    }
+
+    public function tahunAjaran()
+    {
+        return $this->belongsTo(TahunAjaran::class);
+    }
+
+    public function kategoriKasus()
+    {
+        return $this->belongsTo(KategoriKasus::class, 'kategori_id');
+    }
+
+    public function lampiran()
+    {
+        return $this->hasMany(LampiranKasusBk::class, 'kasus_bk_id');
     }
 }

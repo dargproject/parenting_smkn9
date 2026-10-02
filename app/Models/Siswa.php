@@ -85,4 +85,19 @@ class Siswa extends Authenticatable
     {
         return $this->hasOne(OrangTua::class);
     }
+
+    public function profilSiswa()
+    {
+        return $this->hasOne(ProfilSiswa::class);
+    }
+
+    public function dataKeluarga()
+    {
+        return $this->hasOne(DataKeluargaSiswa::class);
+    }
+
+    public function kasusBks()
+    {
+        return $this->hasMany(KasusBk::class);
+    }
 }
