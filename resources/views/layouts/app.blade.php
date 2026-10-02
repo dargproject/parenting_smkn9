@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
     <meta
       name="viewport"
       content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
@@ -689,8 +690,40 @@
             overlay.classList.toggle('hidden');
         }
 
-        // Dummy functions for mockup interactivity
-        function loadStudentHistoryBK() { triggerToast('Memuat riwayat BK siswa...'); }
+        // Jejak Rekam Siswa (BK): ambil riwayat asli lewat endpoint JSON, dilindungi role:guru_bk.
+        async function loadStudentHistoryBK() {
+            const siswaId = document.getElementById('bk-search-student-dropdown')?.value;
+            const resultBox = document.getElementById('bk-student-history-result');
+            if (!siswaId) { triggerToast('Pilih siswa terlebih dahulu.'); return; }
+
+            try {
+                const res = await fetch(`/guru/bk/riwayat-siswa/${siswaId}`, { headers: { 'Accept': 'application/json' } });
+                if (!res.ok) throw new Error('gagal memuat');
+                const data = await res.json();
+
+                document.getElementById('bk-hist-name').textContent = data.siswa.nama;
+                document.getElementById('bk-hist-class').textContent = `Kelas ${data.siswa.kelas} | NIS ${data.siswa.nis}`;
+                document.getElementById('bk-hist-points').textContent = `${data.poin_pelanggaran} Poin`;
+                document.getElementById('bk-hist-attendance').textContent = data.persen_kehadiran !== null ? `${data.persen_kehadiran}%` : '-';
+                document.getElementById('bk-hist-notes').textContent = data.catatan_terakhir ? `"${data.catatan_terakhir}"` : 'Belum ada catatan asesmen untuk siswa ini.';
+
+                const timeline = document.getElementById('bk-timeline-container');
+                timeline.innerHTML = data.timeline.length === 0
+                    ? '<p class="text-slate-400 small m-0">Belum ada riwayat kasus atau pelanggaran tercatat.</p>'
+                    : data.timeline.map(item => `
+                        <div class="position-relative mb-3" style="padding-left: 4px;">
+                            <span class="position-absolute rounded-circle" style="width:10px;height:10px;left:-24.5px;top:4px;background:${item.jenis === 'Pelanggaran' ? '#f43f5e' : '#3b82f6'};"></span>
+                            <p class="small text-slate-400 m-0">${item.tanggal} &middot; ${item.jenis}${item.status ? ' &middot; ' + item.status : ''}</p>
+                            <p class="font-bold text-slate-100 m-0" style="font-size: 13px;">${item.judul}</p>
+                            <p class="small text-slate-400 m-0">${item.keterangan ?? ''}</p>
+                        </div>
+                    `).join('');
+
+                resultBox.classList.remove('hidden-pane');
+            } catch (e) {
+                triggerToast('Gagal memuat riwayat siswa.');
+            }
+        }
         function saveWaliNotes() { triggerToast('Catatan wali kelas berhasil disimpan!'); }
 
         // Additional dummy functions
@@ -830,7 +863,40 @@
         function openSummonModalWithStudent(nis, nama) { triggerToast(`Membuka form panggilan ortu untuk ${nama}`); }
         function broadcastAnnouncementS() { triggerToast('Pengumuman Kesiswaan berhasil disiarkan!'); }
         function confirmSummonArrival(id) { triggerToast('Kehadiran Orang Tua berhasil dikonfirmasi!'); }
-        function submitIndividualBKLog() { triggerToast('Catatan konseling berhasil disimpan!'); }
+        // Tambah catatan konseling individu dari Jejak Rekam Siswa: membuat Kasus BK asli lewat endpoint yang sama.
+        async function submitIndividualBKLog() {
+            const siswaId = document.getElementById('bk-search-student-dropdown')?.value;
+            if (!siswaId) { triggerToast('Pilih siswa terlebih dahulu.'); return; }
+
+            const judul = document.getElementById('bk-indiv-log-title').value;
+            const kategoriId = document.getElementById('bk-indiv-log-urgency').value;
+            const deskripsi = document.getElementById('bk-indiv-log-desc').value;
+            const token = document.querySelector('meta[name="csrf-token"]').content;
+
+            const formData = new FormData();
+            formData.append('siswa_id', siswaId);
+            formData.append('judul', judul);
+            if (kategoriId) formData.append('kategori_id', kategoriId);
+            formData.append('deskripsi', deskripsi);
+            formData.append('tanggal_mulai', new Date().toISOString().slice(0, 10));
+            formData.append('prioritas', 'rendah');
+
+            try {
+                const res = await fetch('{{ route('guru.bk.kasus.store') }}', {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': token },
+                    body: formData,
+                });
+                if (!res.ok) throw new Error('gagal menyimpan');
+
+                triggerToast('Catatan konseling berhasil disimpan!');
+                document.getElementById('bk-indiv-log-title').value = '';
+                document.getElementById('bk-indiv-log-desc').value = '';
+                loadStudentHistoryBK();
+            } catch (e) {
+                triggerToast('Gagal menyimpan catatan konseling.');
+            }
+        }
         function showPane(paneId, element) {
             // Hide all panes
             document.querySelectorAll('.pane-content').forEach(pane => {

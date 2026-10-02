@@ -3,14 +3,18 @@
 namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
+use App\Models\AsesmenBk;
+use App\Models\CatatanAkademikSiswa;
 use App\Models\CatatanKompetensi;
 use App\Models\CatatanWaliKelas;
 use App\Models\Guru;
 use App\Models\JadwalPelajaran;
 use App\Models\JurnalMengajar;
 use App\Models\KasusBk;
+use App\Models\KategoriKasus;
 use App\Models\Kelas;
 use App\Models\KelasMataPelajaran;
+use App\Models\LogPerubahanNilai;
 use App\Models\MasterPelanggaran;
 use App\Models\MataPelajaran;
 use App\Models\NilaiLm;
@@ -18,11 +22,14 @@ use App\Models\NilaiPklUkk;
 use App\Models\NilaiSas;
 use App\Models\PanggilanOrtu;
 use App\Models\Pelanggaran;
+use App\Models\PesanWaliKelas;
+use App\Models\Presensi;
 use App\Models\RaporFinal;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use App\Models\TujuanPembelajaran;
 use App\Services\PenilaianService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
@@ -49,9 +56,11 @@ class PortalController extends Controller
 
         // Ambil data master untuk ditampilkan di portal
         $siswas = Siswa::with('kelas')->get();
-        $catatanAkademikMap = \App\Models\CatatanAkademikSiswa::where('tahun_ajaran_id', TahunAjaran::where('is_active', true)->value('id'))->get()->keyBy('siswa_id');
-        $asesmenBkMap = \App\Models\AsesmenBk::where('tahun_ajaran_id', TahunAjaran::where('is_active', true)->value('id'))->get()->keyBy('siswa_id');
-        $kasusBks = KasusBk::with(['siswa', 'konselor'])->get();
+        $catatanAkademikMap = CatatanAkademikSiswa::where('tahun_ajaran_id', TahunAjaran::where('is_active', true)->value('id'))->get()->keyBy('siswa_id');
+        $asesmenBkMap = AsesmenBk::where('tahun_ajaran_id', TahunAjaran::where('is_active', true)->value('id'))->get()->keyBy('siswa_id');
+        // Data BK bersifat rahasia: tiap guru BK hanya melihat kasus miliknya sendiri.
+        $kasusBks = KasusBk::with(['siswa', 'konselor'])->where('konselor_id', $guru->id)->get();
+        $kategoriKasusList = KategoriKasus::orderBy('nama_kategori')->get();
         $pelanggarans = Pelanggaran::with(['siswa', 'pelapor'])->orderBy('tanggal', 'desc')->get();
         $panggilanOrtus = PanggilanOrtu::with(['siswa', 'pemanggil'])->orderBy('tanggal', 'desc')->get();
         $jadwalPelajarans = JadwalPelajaran::with(['kelas', 'mataPelajaran', 'guru'])
@@ -88,7 +97,7 @@ class PortalController extends Controller
 
         // Log audit perubahan nilai se-sekolah, dipakai panel audit di Validasi Legger (waka_kurikulum).
         $logPerubahanNilaiSemua = $tahunAjaranAktif
-            ? \App\Models\LogPerubahanNilai::whereHas('nilaiLm', fn ($q) => $q->where('tahun_ajaran_id', $tahunAjaranAktifId))
+            ? LogPerubahanNilai::whereHas('nilaiLm', fn ($q) => $q->where('tahun_ajaran_id', $tahunAjaranAktifId))
                 ->with(['nilaiLm.siswa.kelas', 'nilaiLm.tujuanPembelajaran.mataPelajaran', 'guru'])
                 ->latest()
                 ->limit(100)
@@ -104,9 +113,9 @@ class PortalController extends Controller
             ->values();
 
         // Data untuk Guru Mapel: mapel yang diampu, TP semester berjalan, dan nilai yang sudah diinput
-        $kelasMapelBinaan = \App\Models\KelasMataPelajaran::with(['kelas', 'mataPelajaran'])->where('guru_id', $guru->id)->get()->filter(fn ($km) => $km->kelas && $km->mataPelajaran)->values();
+        $kelasMapelBinaan = KelasMataPelajaran::with(['kelas', 'mataPelajaran'])->where('guru_id', $guru->id)->get()->filter(fn ($km) => $km->kelas && $km->mataPelajaran)->values();
         $mapelBinaan = $mataPelajarans->whereIn('id', $kelasMapelBinaan->pluck('mata_pelajaran_id'))->values();
-        $kelasMapelSemua = \App\Models\KelasMataPelajaran::with(['kelas', 'mataPelajaran', 'guru'])->get();
+        $kelasMapelSemua = KelasMataPelajaran::with(['kelas', 'mataPelajaran', 'guru'])->get();
         $tujuanPembelajarans = $tahunAjaranAktif
             ? TujuanPembelajaran::whereIn('mata_pelajaran_id', $mapelBinaan->pluck('id'))
                 ->where('tahun_ajaran_id', $tahunAjaranAktifId)
@@ -184,11 +193,11 @@ class PortalController extends Controller
         $kelasWaliList = $kelasList->where('wali_kelas_id', $guru->id)->sortBy('nama_kelas', SORT_NATURAL)->values();
         $siswaWali = $siswas->whereIn('kelas_id', $kelasWaliList->pluck('id'))->values();
         $catatanWaliKelasWali = $tahunAjaranAktif
-            ? \App\Models\CatatanWaliKelas::whereIn('siswa_id', $siswaWali->pluck('id'))->where('tahun_ajaran_id', $tahunAjaranAktifId)->get()->keyBy('siswa_id')
+            ? CatatanWaliKelas::whereIn('siswa_id', $siswaWali->pluck('id'))->where('tahun_ajaran_id', $tahunAjaranAktifId)->get()->keyBy('siswa_id')
             : collect();
-        $pesanWaliKelasWali = \App\Models\PesanWaliKelas::whereIn('siswa_id', $siswaWali->pluck('id'))->latest()->get()->groupBy('siswa_id');
+        $pesanWaliKelasWali = PesanWaliKelas::whereIn('siswa_id', $siswaWali->pluck('id'))->latest()->get()->groupBy('siswa_id');
         $logPerubahanNilaiBinaan = $tahunAjaranAktif
-            ? \App\Models\LogPerubahanNilai::whereHas('nilaiLm', fn ($q) => $q->whereIn('siswa_id', $siswaBinaan->pluck('id'))->where('tahun_ajaran_id', $tahunAjaranAktifId))
+            ? LogPerubahanNilai::whereHas('nilaiLm', fn ($q) => $q->whereIn('siswa_id', $siswaBinaan->pluck('id'))->where('tahun_ajaran_id', $tahunAjaranAktifId))
                 ->with(['nilaiLm.siswa.kelas', 'nilaiLm.tujuanPembelajaran.mataPelajaran', 'guru'])
                 ->latest()
                 ->get()
@@ -203,7 +212,7 @@ class PortalController extends Controller
 
         // Data untuk Wali Kelas: rekap kehadiran (Dashboard Kelas & Rekap Presensi Mapel), dari presensi asli.
         $jadwalKelasWali = $jadwalPelajarans->whereIn('kelas_id', $kelasWaliList->pluck('id'))->values();
-        $presensiWali = \App\Models\Presensi::whereIn('jadwal_pelajaran_id', $jadwalKelasWali->pluck('id'))->get();
+        $presensiWali = Presensi::whereIn('jadwal_pelajaran_id', $jadwalKelasWali->pluck('id'))->get();
         $rekapPresensiWali = $siswaWali->mapWithKeys(function ($s) use ($presensiWali) {
             $milik = $presensiWali->where('siswa_id', $s->id);
             $jumlah = ['H' => 0, 'S' => 0, 'I' => 0, 'A' => 0];
@@ -220,8 +229,8 @@ class PortalController extends Controller
 
         // Peringatan alpa mingguan: siswa dengan hari Alpa Penuh >= ambang, dalam minggu kalender berjalan (Senin-Sabtu).
         $ambangAlpaMingguan = (int) setting('alpa_mingguan_threshold', 3);
-        $awalMingguIni = now()->startOfWeek(\Carbon\Carbon::MONDAY)->toDateString();
-        $akhirMingguIni = now()->startOfWeek(\Carbon\Carbon::MONDAY)->addDays(5)->toDateString();
+        $awalMingguIni = now()->startOfWeek(Carbon::MONDAY)->toDateString();
+        $akhirMingguIni = now()->startOfWeek(Carbon::MONDAY)->addDays(5)->toDateString();
         $siswaPeringatanMingguan = $siswaWali->map(function ($s) use ($presensiWali, $penilaian, $awalMingguIni, $akhirMingguIni) {
             $milikMingguIni = $presensiWali->where('siswa_id', $s->id)->whereBetween('tanggal', [$awalMingguIni, $akhirMingguIni]);
 
@@ -230,7 +239,7 @@ class PortalController extends Controller
 
         $tanggalPresensiTerbaruWali = $presensiWali->max('tanggal');
         $tanggalPresensiDipilih = request()->query('presensi_tanggal') ?: ($tanggalPresensiTerbaruWali ?: now()->toDateString());
-        $namaHariPresensiDipilih = self::NAMA_HARI[\Carbon\Carbon::parse($tanggalPresensiDipilih)->dayOfWeek];
+        $namaHariPresensiDipilih = self::NAMA_HARI[Carbon::parse($tanggalPresensiDipilih)->dayOfWeek];
         $jadwalHariPresensiDipilih = $jadwalKelasWali->where('hari', $namaHariPresensiDipilih)->values();
         $presensiHariDipilihWali = $presensiWali->where('tanggal', $tanggalPresensiDipilih);
 
@@ -241,7 +250,7 @@ class PortalController extends Controller
         $jurnalHariIniIds = JurnalMengajar::where('guru_id', $guru->id)->whereDate('tanggal', now())->pluck('jadwal_pelajaran_id');
 
         $bulanJurnal = request()->query('jurnal_bulan')
-            ? \Carbon\Carbon::createFromFormat('Y-m', request()->query('jurnal_bulan'))->startOfMonth()
+            ? Carbon::createFromFormat('Y-m', request()->query('jurnal_bulan'))->startOfMonth()
             : now()->startOfMonth();
         $kalenderJurnal = $this->buildKalenderJurnal($jadwalGuruMapel, $guru->id, $bulanJurnal);
         $namaBulanTerpilih = $bulanJurnal->locale('id')->translatedFormat('F Y');
@@ -250,7 +259,7 @@ class PortalController extends Controller
         $offsetAwalKalender = $bulanJurnal->copy()->startOfMonth()->dayOfWeekIso - 1;
 
         return view('guru.portal', compact(
-            'guru', 'siswas', 'kasusBks', 'pelanggarans', 'panggilanOrtus',
+            'guru', 'siswas', 'kasusBks', 'kategoriKasusList', 'pelanggarans', 'panggilanOrtus',
             'jadwalPelajarans', 'mataPelajarans', 'kelasList', 'nilaiAkhirMap', 'logPerubahanNilaiSemua', 'kelasMapelBinaan', 'kelasMapelSemua', 'catatanAkademikMap', 'asesmenBkMap',
             'masterPelanggarans', 'masterPelanggaranAktif', 'rekapPoin', 'absensiBermasalah',
             'kelasBinaan', 'siswaBinaan', 'rerataBinaan', 'peringkatBinaan',
@@ -268,7 +277,7 @@ class PortalController extends Controller
      * Kalender sebulan: untuk tiap tanggal yang punya jadwal mengajar guru ini, cek jurnal mana yang
      * sudah/belum diisi. Tanggal tanpa jadwal (mis. hari Minggu) diberi ada_jadwal=false.
      */
-    private function buildKalenderJurnal($jadwalGuru, int $guruId, \Carbon\Carbon $bulan): array
+    private function buildKalenderJurnal($jadwalGuru, int $guruId, Carbon $bulan): array
     {
         $awal = $bulan->copy()->startOfMonth();
         $akhir = $bulan->copy()->endOfMonth();
@@ -276,7 +285,7 @@ class PortalController extends Controller
         $jurnalSebulan = JurnalMengajar::where('guru_id', $guruId)
             ->whereBetween('tanggal', [$awal->toDateString(), $akhir->toDateString()])
             ->get()
-            ->groupBy(fn ($j) => \Carbon\Carbon::parse($j->tanggal)->toDateString());
+            ->groupBy(fn ($j) => Carbon::parse($j->tanggal)->toDateString());
 
         $kalender = [];
         for ($tgl = $awal->copy(); $tgl->lte($akhir); $tgl->addDay()) {
@@ -333,8 +342,8 @@ class PortalController extends Controller
         $presensi = [];
 
         if ($tanggal) {
-            $materi = \App\Models\JurnalMengajar::where('jadwal_pelajaran_id', $jadwal->id)->where('tanggal', $tanggal)->value('materi');
-            $presensi = \App\Models\Presensi::where('jadwal_pelajaran_id', $jadwal->id)->where('tanggal', $tanggal)
+            $materi = JurnalMengajar::where('jadwal_pelajaran_id', $jadwal->id)->where('tanggal', $tanggal)->value('materi');
+            $presensi = Presensi::where('jadwal_pelajaran_id', $jadwal->id)->where('tanggal', $tanggal)
                 ->get()->keyBy('siswa_id')->map(fn ($p) => ['status' => $p->status, 'keterangan' => $p->keterangan]);
         }
 

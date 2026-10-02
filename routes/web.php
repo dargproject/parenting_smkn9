@@ -13,6 +13,8 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\SiswaController;
 use App\Http\Controllers\Admin\TahunAjaranController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Guru\Bk\JejakRekamController;
+use App\Http\Controllers\Guru\Bk\KasusBkController;
 use App\Http\Controllers\Guru\BkController;
 use App\Http\Controllers\Guru\JurnalController;
 use App\Http\Controllers\Guru\KesiswaanController;
@@ -89,6 +91,17 @@ Route::middleware('role:guru_mapel')->prefix('guru/penilaian')->name('guru.penil
 Route::middleware('role:guru_mapel')->post('/guru/jurnal', [JurnalController::class, 'store'])->name('guru.jurnal.store');
 
 Route::middleware('role:guru_bk')->post('/guru/bk/asesmen', [BkController::class, 'storeAsesmen'])->name('guru.bk.asesmen.store');
+
+Route::middleware('role:guru_bk')->prefix('guru/bk')->name('guru.bk.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Guru\Bk\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/riwayat-siswa/{siswa}', [JejakRekamController::class, 'show'])->name('riwayat-siswa');
+    Route::get('/kasus', [KasusBkController::class, 'index'])->name('kasus.index');
+    Route::post('/kasus', [KasusBkController::class, 'store'])->name('kasus.store');
+    Route::get('/kasus/{kasusBk}', [KasusBkController::class, 'show'])->name('kasus.show');
+    Route::put('/kasus/{kasusBk}', [KasusBkController::class, 'update'])->name('kasus.update');
+    Route::delete('/kasus/{kasusBk}', [KasusBkController::class, 'destroy'])->name('kasus.destroy');
+    Route::patch('/kasus/{kasusBk}/status', [KasusBkController::class, 'updateStatus'])->name('kasus.status');
+});
 
 Route::middleware('role:wali_kelas')->post('/guru/wali-kelas/catatan', [PenilaianController::class, 'storeCatatanWaliKelas'])->name('guru.wali-kelas.catatan.store');
 

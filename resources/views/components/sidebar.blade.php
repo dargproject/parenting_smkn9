@@ -66,6 +66,8 @@
 
         @if(in_array('guru_bk', $roles))
             <div class="px-3 py-2 text-slate-400 small font-bold uppercase tracking-wider mt-2">Bimbingan Konseling</div>
+            <a href="{{ route('guru.bk.dashboard') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-chart-pie w-6 text-center mr-2"></i> <span>Dashboard BK</span></a>
+            <a href="{{ route('guru.bk.kasus.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-folder-open w-6 text-center mr-2"></i> <span>Kasus BK</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-bk-asesmen', this)"><i class="fa-solid fa-clipboard-question w-6 text-center mr-2"></i> <span>Asesmen Psikologis</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-bk-kanban', this)"><i class="fa-solid fa-list-check w-6 text-center mr-2"></i> <span>Kanban Tindak Lanjut</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="showPane('pane-bk-riwayat', this)"><i class="fa-solid fa-address-card w-6 text-center mr-2"></i> <span>Jejak Rekam Siswa</span></a>

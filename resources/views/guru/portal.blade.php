@@ -134,8 +134,8 @@
                 <p class="text-slate-400 small m-0">Alur penanganan kasus BK secara konseptual.</p>
             </div>
             <div class="flex items-center gap-2">
-                <button class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-lg transition-colors"
-                    data-bs-toggle="modal" data-bs-target="#addBKCaseModal">
+                <button type="button" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-lg transition-colors"
+                    onclick="document.getElementById('modal-kasus-baru-kanban').style.display='flex'">
                     <i class="fa-solid fa-plus mr-1"></i> Kasus Baru
                 </button>
                 <span class="confidential-badge"><i class="fa-solid fa-shield-halved mr-1"></i>
@@ -143,63 +143,45 @@
             </div>
         </div>
 
+        @php
+            $kolomKanban = [
+                'antrean' => ['label' => 'Antrean Masuk', 'next' => 'proses', 'aksi' => 'Proses Kasus', 'icon' => 'fa-arrow-right'],
+                'proses' => ['label' => 'Sedang Diproses', 'next' => 'selesai', 'aksi' => 'Tutup Kasus', 'icon' => 'fa-check'],
+                'selesai' => ['label' => 'Selesai (Ditutup)', 'next' => null, 'aksi' => null, 'icon' => null],
+            ];
+        @endphp
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-            <!-- Antrean -->
-            <div class="col-span-1">
-                <div class="kanban-col">
-                    <h6
-                        class="font-bold text-slate-400 mb-3 border-b border-slate-700/60 pb-2 uppercase text-xs tracking-wider">
-                        Antrean Masuk</h6>
-                    <div id="kanban-antrean" class="flex flex-col gap-2">
-                        @foreach($kasusBks->where('status', 'antrean') as $kasus)
-                            <div class="kanban-card text-slate-100">
-                                <span class="badge bg-rose-500/10 text-rose-400 border border-rose-500/20 uppercase mb-1" style="font-size: 8px;">{{ $kasus->kategori }}</span>
-                                <h6 class="font-bold text-slate-100 mb-1" style="font-size: 13px;">{{ $kasus->judul }}</h6>
-                                <p class="text-slate-400 mb-2" style="font-size: 11px;">Siswa: {{ $kasus->siswa->nama ?? '-' }}</p>
-                                <button class="btn btn-outline-primary btn-sm w-full py-1 font-semibold" style="font-size: 10px;">Proses Kasus <i class="fa-solid fa-arrow-right"></i></button>
-                            </div>
-                        @endforeach
+            @foreach($kolomKanban as $statusKolom => $kolom)
+                <div class="col-span-1">
+                    <div class="kanban-col">
+                        <h6 class="font-bold text-slate-400 mb-3 border-b border-slate-700/60 pb-2 uppercase text-xs tracking-wider">{{ $kolom['label'] }}</h6>
+                        <div id="kanban-{{ $statusKolom }}" class="flex flex-col gap-2">
+                            @foreach($kasusBks->where('status', $statusKolom) as $kasus)
+                                <div class="kanban-card text-slate-100">
+                                    <a href="{{ route('guru.bk.kasus.show', $kasus) }}" class="block hover:opacity-80">
+                                        <span class="badge bg-rose-500/10 text-rose-400 border border-rose-500/20 uppercase mb-1" style="font-size: 8px;">{{ $kasus->kategori }}</span>
+                                        <h6 class="font-bold text-slate-100 mb-1" style="font-size: 13px;">{{ $kasus->judul }}</h6>
+                                        <p class="text-slate-400 mb-2" style="font-size: 11px;">Siswa: {{ $kasus->siswa->nama ?? '-' }}</p>
+                                    </a>
+                                    @if($kolom['next'])
+                                        <form method="POST" action="{{ route('guru.bk.kasus.status', $kasus) }}">
+                                            @csrf @method('PATCH')
+                                            <input type="hidden" name="status" value="{{ $kolom['next'] }}">
+                                            <button type="submit" class="btn btn-outline-primary btn-sm w-full py-1 font-semibold" style="font-size: 10px;">{{ $kolom['aksi'] }} <i class="fa-solid {{ $kolom['icon'] }}"></i></button>
+                                        </form>
+                                    @else
+                                        <span class="badge bg-secondary-subtle text-slate-400 w-full block text-center py-1">Kasus Ditutup</span>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
-            </div>
-            <!-- Proses -->
-            <div class="col-span-1">
-                <div class="kanban-col">
-                    <h6
-                        class="font-bold text-primary mb-3 border-b border-slate-700/60 pb-2 uppercase text-xs tracking-wider">
-                        Sedang Diproses</h6>
-                    <div id="kanban-proses" class="flex flex-col gap-2">
-                        @foreach($kasusBks->where('status', 'proses') as $kasus)
-                            <div class="kanban-card text-slate-100">
-                                <span class="badge bg-rose-500/10 text-rose-400 border border-rose-500/20 uppercase mb-1" style="font-size: 8px;">{{ $kasus->kategori }}</span>
-                                <h6 class="font-bold text-slate-100 mb-1" style="font-size: 13px;">{{ $kasus->judul }}</h6>
-                                <p class="text-slate-400 mb-2" style="font-size: 11px;">Siswa: {{ $kasus->siswa->nama ?? '-' }}</p>
-                                <button class="btn btn-outline-success btn-sm w-full py-1 font-semibold" style="font-size: 10px;">Tutup Kasus <i class="fa-solid fa-check"></i></button>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-            <!-- Selesai -->
-            <div class="col-span-1">
-                <div class="kanban-col">
-                    <h6
-                        class="font-bold text-success mb-3 border-b border-slate-700/60 pb-2 uppercase text-xs tracking-wider">
-                        Selesai (Ditutup)</h6>
-                    <div id="kanban-selesai" class="flex flex-col gap-2">
-                        @foreach($kasusBks->where('status', 'selesai') as $kasus)
-                            <div class="kanban-card text-slate-100">
-                                <span class="badge bg-rose-500/10 text-rose-400 border border-rose-500/20 uppercase mb-1" style="font-size: 8px;">{{ $kasus->kategori }}</span>
-                                <h6 class="font-bold text-slate-100 mb-1" style="font-size: 13px;">{{ $kasus->judul }}</h6>
-                                <p class="text-slate-400 mb-2" style="font-size: 11px;">Siswa: {{ $kasus->siswa->nama ?? '-' }}</p>
-                                <span class="badge bg-secondary-subtle text-slate-400 w-full block text-center py-1">Kasus Ditutup</span>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
+            @endforeach
         </div>
     </div>
+
+    @include('guru.bk.kasus._form-modal', ['formId' => 'modal-kasus-baru-kanban', 'siswas' => $siswas, 'kategoriKasusList' => $kategoriKasusList])
 
     <div id="pane-bk-riwayat" class="pane-content hidden-pane fade-transition">
         <h4 class="font-bold text-slate-100 mb-2">Cari Jejak Rekam Siswa</h4>
@@ -209,9 +191,11 @@
         <div class="card border-0 rounded-xl shadow-sm p-4 bg-slate-800/80 mb-4 text-slate-100">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <div class="col-md-9">
-                    <select class="form-select" id="bk-search-student-dropdown"
-                        onchange="loadStudentHistoryBK()">
-                        <!-- Option list injected -->
+                    <select class="form-select" id="bk-search-student-dropdown" onchange="loadStudentHistoryBK()">
+                        <option value="">-- Pilih Siswa --</option>
+                        @foreach($siswas as $siswa)
+                            <option value="{{ $siswa->id }}">{{ $siswa->nama }} &middot; {{ $siswa->kelas->nama_kelas ?? '-' }} &middot; NIS {{ $siswa->nis }}</option>
+                        @endforeach
                     </select>
                 </div>
                 <div class="col-md-3">
@@ -237,10 +221,10 @@
                     </div>
                     <div class="col-span-1">
                         <select id="bk-indiv-log-urgency" class="form-select form-select-sm">
-                            <option value="Ringan">Poin Ringan</option>
-                            <option value="Atribut">Pelanggaran Atribut</option>
-                            <option value="Bolos">Sikap Membolos</option>
-                            <option value="Penghargaan">Prestasi / Penghargaan</option>
+                            <option value="">Tanpa Kategori</option>
+                            @foreach($kategoriKasusList as $kategori)
+                                <option value="{{ $kategori->id }}">{{ $kategori->nama_kategori }}</option>
+                            @endforeach
                         </select>
                     </div>
                     <div class="col-md-10">

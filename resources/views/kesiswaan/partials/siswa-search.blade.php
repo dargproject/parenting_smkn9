@@ -7,7 +7,7 @@
 @endphp
 <div x-data="{
         query: '',
-        siswaId: '{{ old($fieldName, '') }}',
+        siswaId: '{{ old($fieldName, $default ?? '') }}',
         siswas: @js($siswaOptions),
         open: false,
         get filtered() {
