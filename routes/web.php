@@ -243,6 +243,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::resource('tahun-ajaran', TahunAjaranController::class)->except(['show']);
     Route::resource('guru', GuruController::class)->except(['show']);
     Route::post('guru/{guru}/reset-password', [GuruController::class, 'resetPassword'])->name('guru.reset-password');
+    Route::delete('siswa-hapus-semua', [SiswaController::class, 'destroyAll'])->name('siswa.destroy-all');
     Route::resource('siswa', SiswaController::class)->except(['show']);
     Route::post('siswa/{siswa}/reset-password', [SiswaController::class, 'resetPassword'])->name('siswa.reset-password');
     Route::post('siswa/{siswa}/akun-ortu', [SiswaController::class, 'buatAkunOrtu'])->name('siswa.akun-ortu.store');

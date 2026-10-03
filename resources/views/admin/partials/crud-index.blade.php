@@ -4,8 +4,44 @@
 <div class="admin-dashboard space-y-6">
     <div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div><h1 class="text-2xl font-bold">{{ $title }}</h1><p class="text-sm text-slate-500 dark:text-slate-400">{{ $description }}</p></div>
-        <a href="{{ $createRoute }}" class="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-500">Tambah</a>
+        <div class="flex items-center gap-2">
+            @if($resource === 'admin.siswa' && ($totalSiswaKeseluruhan ?? 0) > 0)
+                <button type="button" onclick="document.getElementById('modal-hapus-semua-siswa-1').style.display='flex'" class="rounded-lg border border-rose-500 px-4 py-2.5 text-sm font-semibold text-rose-500 hover:bg-rose-500/10">Hapus Semua Siswa</button>
+            @endif
+            <a href="{{ $createRoute }}" class="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-500">Tambah</a>
+        </div>
     </div>
+
+    @if($resource === 'admin.siswa' && ($totalSiswaKeseluruhan ?? 0) > 0)
+        {{-- Modal 1: konfirmasi jumlah --}}
+        <div id="modal-hapus-semua-siswa-1" class="fixed inset-0 z-[100] items-center justify-center p-4 bg-black/50" style="display: none;">
+            <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl dark:border-slate-700/60 dark:bg-slate-800">
+                <h5 class="admin-title m-0 font-bold">Hapus Semua Data Siswa</h5>
+                <p class="admin-body mt-3 text-sm">
+                    Anda akan menghapus <span class="font-bold text-rose-500">{{ $totalSiswaKeseluruhan }} siswa</span> beserta seluruh data yang terhubung ke mereka: nilai, presensi, pelanggaran, kasus &amp; layanan BK, asesmen, profil, dan akun orang tua. Tindakan ini <span class="font-bold">tidak bisa dibatalkan</span>.
+                </p>
+                <div class="mt-5 flex justify-end gap-2">
+                    <button type="button" onclick="document.getElementById('modal-hapus-semua-siswa-1').style.display='none'" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold dark:border-slate-600">Batal</button>
+                    <button type="button" onclick="document.getElementById('modal-hapus-semua-siswa-1').style.display='none'; document.getElementById('modal-hapus-semua-siswa-2').style.display='flex';" class="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-500">Ya, Lanjutkan</button>
+                </div>
+            </div>
+        </div>
+
+        {{-- Modal 2: konfirmasi akhir --}}
+        <div id="modal-hapus-semua-siswa-2" class="fixed inset-0 z-[100] items-center justify-center p-4 bg-black/50" style="display: none;">
+            <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl dark:border-slate-700/60 dark:bg-slate-800">
+                <h5 class="admin-title m-0 font-bold"><i class="fa-solid fa-triangle-exclamation text-rose-500 mr-1.5"></i> Apakah Anda benar-benar yakin?</h5>
+                <p class="admin-body mt-3 text-sm">Sekali lagi: {{ $totalSiswaKeseluruhan }} data siswa dan semua data terkaitnya akan terhapus permanen dan tidak dapat dikembalikan.</p>
+                <div class="mt-5 flex justify-end gap-2">
+                    <button type="button" onclick="document.getElementById('modal-hapus-semua-siswa-2').style.display='none'" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold dark:border-slate-600">Batal</button>
+                    <form method="POST" action="{{ route('admin.siswa.destroy-all') }}">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-500">Ya, Hapus Semua</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
     @include('admin.partials.flash')
     @if(!empty($searchPlaceholder) || !empty($filters))
         @php

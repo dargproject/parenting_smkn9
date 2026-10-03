@@ -8,11 +8,12 @@ use App\Http\Requests\UpdateSiswaRequest;
 use App\Models\Kelas;
 use App\Models\OrangTua;
 use App\Models\Siswa;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 class SiswaController extends Controller
 {
-    public function index(\Illuminate\Http\Request $request)
+    public function index(Request $request)
     {
         $siswas = Siswa::with(['kelas', 'orangTua'])
             ->when($request->filled('q'), fn ($q) => $q->where(fn ($w) => $w->where('nama', 'like', '%'.$request->q.'%')->orWhere('nis', 'like', '%'.$request->q.'%')->orWhere('nisn', 'like', '%'.$request->q.'%')->orWhere('nipd', 'like', '%'.$request->q.'%')))
@@ -20,7 +21,11 @@ class SiswaController extends Controller
             ->when($request->filled('status'), fn ($q) => $q->where('status_aktif', $request->status === 'aktif'))
             ->latest()->paginate(15);
 
-        return view('admin.siswa.index', ['siswas' => $siswas, 'kelasOptions' => \App\Models\Kelas::orderBy('tingkat')->orderBy('nama_kelas')->pluck('nama_kelas', 'id')]);
+        return view('admin.siswa.index', [
+            'siswas' => $siswas,
+            'kelasOptions' => Kelas::orderBy('tingkat')->orderBy('nama_kelas')->pluck('nama_kelas', 'id'),
+            'totalSiswaKeseluruhan' => Siswa::count(),
+        ]);
     }
 
     public function create()
@@ -54,6 +59,19 @@ class SiswaController extends Controller
         $siswa->delete();
 
         return back()->with('success', 'Data siswa berhasil dihapus.');
+    }
+
+    public function destroyAll()
+    {
+        $jumlah = Siswa::count();
+
+        if ($jumlah === 0) {
+            return back()->with('error', 'Tidak ada data siswa untuk dihapus.');
+        }
+
+        Siswa::query()->delete();
+
+        return back()->with('success', "Berhasil menghapus seluruh {$jumlah} data siswa, beserta seluruh data nilai, presensi, pelanggaran, BK, dan akun orang tua yang terkait.");
     }
 
     public function resetPassword(Siswa $siswa)
