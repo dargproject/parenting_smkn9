@@ -26,6 +26,7 @@ use App\Http\Controllers\Guru\Bk\KonferensiKasusController;
 use App\Http\Controllers\Guru\Bk\KunjunganRumahController;
 use App\Http\Controllers\Guru\Bk\PeminatanController;
 use App\Http\Controllers\Guru\Bk\PengunduranDiriController;
+use App\Http\Controllers\Guru\Bk\SiswaProfilController;
 use App\Http\Controllers\Guru\Bk\SosiometriController;
 use App\Http\Controllers\Guru\BkController;
 use App\Http\Controllers\Guru\JurnalController;
@@ -144,6 +145,10 @@ Route::middleware('role:guru_bk')->prefix('guru/bk')->name('guru.bk.')->group(fu
     Route::get('/konferensi/{konferensi}', [KonferensiKasusController::class, 'show'])->name('konferensi.show');
     Route::put('/konferensi/{konferensi}', [KonferensiKasusController::class, 'update'])->name('konferensi.update');
     Route::delete('/konferensi/{konferensi}', [KonferensiKasusController::class, 'destroy'])->name('konferensi.destroy');
+
+    Route::get('/siswa/{siswa}', [SiswaProfilController::class, 'show'])->name('siswa.show');
+    Route::put('/siswa/{siswa}/profil', [SiswaProfilController::class, 'updateProfil'])->name('siswa.profil.update');
+    Route::put('/siswa/{siswa}/keluarga', [SiswaProfilController::class, 'updateKeluarga'])->name('siswa.keluarga.update');
 
     Route::get('/pengunduran-diri', [PengunduranDiriController::class, 'index'])->name('pengunduran-diri.index');
     Route::post('/pengunduran-diri', [PengunduranDiriController::class, 'store'])->name('pengunduran-diri.store');

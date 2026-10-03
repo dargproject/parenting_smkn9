@@ -6,7 +6,14 @@
         <div>
             <a href="{{ route('guru.bk.kasus.index') }}" class="text-sm text-blue-400 hover:text-blue-300"><i class="fa-solid fa-arrow-left mr-1"></i> Kembali ke Daftar Kasus</a>
             <h4 class="font-bold text-slate-100 m-0 mt-1 text-xl">{{ $kasusBk->judul }}</h4>
-            <p class="text-slate-400 text-sm m-0">{{ $kasusBk->siswa->nama ?? '-' }} &middot; {{ $kasusBk->siswa->kelas->nama_kelas ?? '-' }} &middot; NIS {{ $kasusBk->siswa->nis ?? '-' }} <span class="confidential-badge ml-2"><i class="fa-solid fa-shield-halved mr-1"></i>RAHASIA BK</span></p>
+            <p class="text-slate-400 text-sm m-0">
+                @if($kasusBk->siswa)
+                    <a href="{{ route('guru.bk.siswa.show', $kasusBk->siswa) }}" class="text-blue-400 hover:text-blue-300">{{ $kasusBk->siswa->nama }}</a>
+                @else
+                    -
+                @endif
+                &middot; {{ $kasusBk->siswa->kelas->nama_kelas ?? '-' }} &middot; NIS {{ $kasusBk->siswa->nis ?? '-' }} <span class="confidential-badge ml-2"><i class="fa-solid fa-shield-halved mr-1"></i>RAHASIA BK</span>
+            </p>
         </div>
         <div class="flex gap-2">
             <button type="button" onclick="document.getElementById('modal-edit-kasus').style.display='flex'" class="rounded-lg border border-slate-600 px-4 py-2 text-sm font-semibold text-slate-300 hover:border-blue-500"><i class="fa-solid fa-pen mr-1"></i> Edit</button>

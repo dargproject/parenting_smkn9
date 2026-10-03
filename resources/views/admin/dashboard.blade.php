@@ -55,17 +55,20 @@
     </div>
 
     <div class="admin-surface rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700/60 dark:bg-slate-800/80">
-        <h2 class="admin-title font-bold">Kasus BK Terbaru</h2>
-        <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
-            @forelse($kasusBkTerbaru as $item)
-                <div class="admin-inner rounded-lg border border-slate-200 p-3 dark:border-slate-700">
-                    <p class="admin-body font-semibold">{{ $item->siswa?->nama ?? '-' }}</p>
-                    <p class="admin-muted mt-1 text-xs">{{ $item->judul }}</p>
-                    <span class="mt-3 inline-block rounded-full bg-amber-500/10 px-2 py-1 text-xs text-amber-500">{{ $item->status }}</span>
+        <h2 class="admin-title font-bold">Statistik Bimbingan Konseling</h2>
+        <p class="admin-muted text-xs mt-1">Hanya ringkasan jumlah -- isi kasus BK bersifat rahasia dan tidak ditampilkan di sini.</p>
+        @php $prioritasLabel = ['tinggi' => 'Tinggi', 'sedang' => 'Sedang', 'rendah' => 'Rendah']; @endphp
+        <div class="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+            <div class="admin-inner rounded-lg border border-slate-200 p-3 text-center dark:border-slate-700">
+                <p class="admin-muted text-xs m-0">Kasus Aktif</p>
+                <p class="admin-title mt-1 text-xl font-bold m-0">{{ $kasusBkAktif }}</p>
+            </div>
+            @foreach(['tinggi', 'sedang', 'rendah'] as $prioritas)
+                <div class="admin-inner rounded-lg border border-slate-200 p-3 text-center dark:border-slate-700">
+                    <p class="admin-muted text-xs m-0">Prioritas {{ $prioritasLabel[$prioritas] }}</p>
+                    <p class="admin-title mt-1 text-xl font-bold m-0">{{ $kasusBkPerPrioritas[$prioritas] ?? 0 }}</p>
                 </div>
-            @empty
-                <p class="admin-muted text-sm">Belum ada kasus BK.</p>
-            @endforelse
+            @endforeach
         </div>
     </div>
 </div>

@@ -243,12 +243,14 @@ class KepsekController extends Controller
 
         $totalKasusBk = KasusBk::count();
         $rekapKasusBk = KasusBk::selectRaw('status, COUNT(*) as total')->groupBy('status')->pluck('total', 'status');
+        $rekapPrioritasKasusBk = KasusBk::where('status', '!=', 'selesai')->selectRaw('prioritas, COUNT(*) as total')->groupBy('prioritas')->pluck('total', 'prioritas');
 
         return [
             'total_presensi' => $totalPresensi,
             'rekap_status_presensi' => $rekapStatus,
             'total_kasus_bk' => $totalKasusBk,
             'rekap_status_kasus_bk' => $rekapKasusBk,
+            'rekap_prioritas_kasus_bk' => $rekapPrioritasKasusBk,
         ];
     }
 }

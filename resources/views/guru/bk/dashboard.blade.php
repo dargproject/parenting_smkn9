@@ -7,7 +7,7 @@
         <p class="text-slate-400 text-sm m-0">Ringkasan kasus bimbingan konseling yang Anda tangani. <span class="confidential-badge"><i class="fa-solid fa-shield-halved mr-1"></i>RAHASIA BK</span></p>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5">
             <span class="text-slate-400 text-sm block">Total Kasus</span>
             <span class="text-3xl font-bold text-slate-100">{{ $totalKasus }}</span>
@@ -20,35 +20,72 @@
             <span class="text-slate-400 text-sm block">Sedang Diproses</span>
             <span class="text-3xl font-bold text-blue-400">{{ $perStatus['proses'] ?? 0 }}</span>
         </div>
+        <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5">
+            <span class="text-slate-400 text-sm block">Layanan Bulan Ini</span>
+            <span class="text-3xl font-bold text-emerald-400">{{ $layananBulanIni }}</span>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5">
+            <span class="text-slate-400 text-sm block">Siswa Kelas X</span>
+            <span class="text-2xl font-bold text-slate-100">{{ $countKelasX }}</span>
+        </div>
+        <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5">
+            <span class="text-slate-400 text-sm block">Siswa Kelas XI</span>
+            <span class="text-2xl font-bold text-slate-100">{{ $countKelasXI }}</span>
+        </div>
+        <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5">
+            <span class="text-slate-400 text-sm block">Siswa Kelas XII</span>
+            <span class="text-2xl font-bold text-slate-100">{{ $countKelasXII }}</span>
+        </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5">
-            <h6 class="font-bold text-slate-100 mb-3">Kasus per Tingkat Kelas</h6>
-            <div class="flex flex-col gap-2">
-                @forelse($perTingkat as $tingkat => $jumlah)
-                    <div class="flex items-center justify-between rounded-lg bg-slate-900/50 px-3 py-2">
-                        <span class="text-sm font-semibold text-slate-100">Kelas {{ $tingkat }}</span>
-                        <span class="text-sm font-bold text-blue-400">{{ $jumlah }} siswa</span>
-                    </div>
-                @empty
-                    <p class="text-slate-400 text-sm m-0">Belum ada kasus tercatat.</p>
-                @endforelse
-            </div>
+            <h6 class="font-bold text-slate-100 mb-3">Kasus per Status</h6>
+            @if($totalKasus === 0)
+                <div class="flex items-center justify-center min-h-[220px] bg-slate-900/50 rounded-xl border border-slate-700/30">
+                    <p class="text-slate-400 text-sm">Belum ada kasus tercatat.</p>
+                </div>
+            @else
+                <div id="chartKasusStatus"></div>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        registerChart(new ApexCharts(document.querySelector('#chartKasusStatus'), {
+                            chart: { type: 'donut', height: 260, fontFamily: 'inherit' },
+                            series: @json([$perStatus['antrean'] ?? 0, $perStatus['proses'] ?? 0, $perStatus['selesai'] ?? 0]),
+                            labels: ['Antrean', 'Sedang Diproses', 'Selesai'],
+                            colors: ['#f43f5e', '#3b82f6', '#10b981'],
+                            legend: { position: 'bottom' },
+                            dataLabels: { enabled: true },
+                        }));
+                    });
+                </script>
+            @endif
         </div>
         <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5">
             <h6 class="font-bold text-slate-100 mb-3">Kasus per Prioritas</h6>
-            <div class="flex flex-col gap-2">
-                @forelse(['tinggi' => 'Tinggi', 'sedang' => 'Sedang', 'rendah' => 'Rendah'] as $key => $label)
-                    @continue(!($perPrioritas[$key] ?? 0))
-                    <div class="flex items-center justify-between rounded-lg bg-slate-900/50 px-3 py-2">
-                        <span class="text-sm font-semibold text-slate-100">{{ $label }}</span>
-                        <span class="text-sm font-bold text-amber-400">{{ $perPrioritas[$key] }} kasus</span>
-                    </div>
-                @empty
-                    <p class="text-slate-400 text-sm m-0">Belum ada kasus tercatat.</p>
-                @endforelse
-            </div>
+            @if($totalKasus === 0)
+                <div class="flex items-center justify-center min-h-[220px] bg-slate-900/50 rounded-xl border border-slate-700/30">
+                    <p class="text-slate-400 text-sm">Belum ada kasus tercatat.</p>
+                </div>
+            @else
+                <div id="chartKasusPrioritas"></div>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        registerChart(new ApexCharts(document.querySelector('#chartKasusPrioritas'), {
+                            chart: { type: 'bar', height: 260, toolbar: { show: false }, fontFamily: 'inherit' },
+                            series: [{ name: 'Kasus', data: @json([$perPrioritas['tinggi'] ?? 0, $perPrioritas['sedang'] ?? 0, $perPrioritas['rendah'] ?? 0]) }],
+                            xaxis: { categories: ['Tinggi', 'Sedang', 'Rendah'] },
+                            plotOptions: { bar: { borderRadius: 6, horizontal: true, barHeight: '55%' } },
+                            colors: ['#f59e0b'],
+                            dataLabels: { enabled: false },
+                            grid: { strokeDashArray: 4 },
+                        }));
+                    });
+                </script>
+            @endif
         </div>
     </div>
 

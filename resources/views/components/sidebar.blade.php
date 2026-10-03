@@ -39,10 +39,10 @@
 
         @if(in_array('kepsek', $roles))
             <div class="px-3 py-2 text-slate-400 small font-bold uppercase tracking-wider mt-2">Kepala Sekolah</div>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-kepsek-dashboard', this)"><i class="fa-solid fa-chart-line w-6 text-center mr-2"></i> <span>Dashboard Global</span></a>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-kepsek-akademik', this)"><i class="fa-solid fa-square-poll-vertical w-6 text-center mr-2"></i> <span>Pantau Akademik</span></a>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-kepsek-kesiswaan', this)"><i class="fa-solid fa-shield-halved w-6 text-center mr-2"></i> <span>Pantau Kesiswaan</span></a>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-kepsek-laporan', this)"><i class="fa-solid fa-file-contract w-6 text-center mr-2"></i> <span>Laporan Eksekutif</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-kepsek-dashboard', this, '{{ route('kepsek.dashboard') }}')"><i class="fa-solid fa-chart-line w-6 text-center mr-2"></i> <span>Dashboard Global</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-kepsek-akademik', this, '{{ route('kepsek.dashboard') }}')"><i class="fa-solid fa-square-poll-vertical w-6 text-center mr-2"></i> <span>Pantau Akademik</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-kepsek-kesiswaan', this, '{{ route('kepsek.dashboard') }}')"><i class="fa-solid fa-shield-halved w-6 text-center mr-2"></i> <span>Pantau Kesiswaan</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-kepsek-laporan', this, '{{ route('kepsek.dashboard') }}')"><i class="fa-solid fa-file-contract w-6 text-center mr-2"></i> <span>Laporan Eksekutif</span></a>
         @endif
 
         @if(in_array('waka_kurikulum', $roles))

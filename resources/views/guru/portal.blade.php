@@ -242,7 +242,10 @@
             <div class="card border-0 rounded-xl shadow-sm p-4 bg-slate-800/80 mb-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="col-md-6 border-r border-slate-700/60">
-                        <h6 class="font-bold mb-2">Profil Siswa</h6>
+                        <div class="flex items-center justify-between">
+                            <h6 class="font-bold mb-2">Profil Siswa</h6>
+                            <a id="bk-hist-profile-link" href="#" class="text-xs text-blue-400 hover:text-blue-300">Profil Lengkap &rarr;</a>
+                        </div>
                         <h5 class="font-bold text-slate-100 m-0" id="bk-hist-name">Andi Susanto</h5>
                         <p class="text-slate-400 small m-0" id="bk-hist-class">Kelas XI TKJ 1 | NIS
                             1001</p>

@@ -703,6 +703,7 @@
 
                 document.getElementById('bk-hist-name').textContent = data.siswa.nama;
                 document.getElementById('bk-hist-class').textContent = `Kelas ${data.siswa.kelas} | NIS ${data.siswa.nis}`;
+                document.getElementById('bk-hist-profile-link').href = `/guru/bk/siswa/${data.siswa.id}`;
                 document.getElementById('bk-hist-points').textContent = `${data.poin_pelanggaran} Poin`;
                 document.getElementById('bk-hist-attendance').textContent = data.persen_kehadiran !== null ? `${data.persen_kehadiran}%` : '-';
                 document.getElementById('bk-hist-notes').textContent = data.catatan_terakhir ? `"${data.catatan_terakhir}"` : 'Belum ada catatan asesmen untuk siswa ini.';
@@ -901,11 +902,14 @@
         const PORTAL_GURU_URL = "{{ route('guru.portal') }}";
 
         // Dipakai sidebar untuk menu "pane lama" (showPane): kalau sedang di halaman lain
-        // (mis. /guru/bk/...), pindah dulu ke portal lalu buka pane yang dituju di sana.
-        function gotoPane(paneId, element) {
-            if (location.pathname !== new URL(PORTAL_GURU_URL, location.origin).pathname) {
-                try { sessionStorage.setItem('activePane:' + new URL(PORTAL_GURU_URL, location.origin).pathname, paneId); } catch (e) {}
-                window.location.href = PORTAL_GURU_URL;
+        // (mis. /guru/bk/...), pindah dulu ke halaman yang punya pane itu lalu buka di sana.
+        // targetUrl opsional -- default ke portal guru (dipakai waka/wali/guru_mapel/tatib/guru_bk lama),
+        // tapi kepsek punya halaman pane sendiri (/kepsek/dashboard) jadi harus dioper eksplisit.
+        function gotoPane(paneId, element, targetUrl) {
+            targetUrl = targetUrl || PORTAL_GURU_URL;
+            if (location.pathname !== new URL(targetUrl, location.origin).pathname) {
+                try { sessionStorage.setItem('activePane:' + new URL(targetUrl, location.origin).pathname, paneId); } catch (e) {}
+                window.location.href = targetUrl;
                 return;
             }
             showPane(paneId, element);

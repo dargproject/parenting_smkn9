@@ -327,7 +327,7 @@
         <div class="rounded-xl border border-slate-700/60 bg-slate-800/80 p-4 md:p-5">
             <div class="flex items-center justify-between mb-3">
                 <h6 class="font-bold text-slate-100 m-0">Rekap Presensi ({{ $laporanRecap['total_presensi'] }} data)</h6>
-                <a href="{{ route('kepsek.laporan.export', 'kehadiran') }}" class="text-xs font-semibold text-blue-400 hover:text-blue-300"><i class="fa-solid fa-download mr-1"></i> Unduh CSV</a>
+                <a href="{{ route('kepsek.laporan.export', 'kehadiran') }}" class="text-xs font-semibold text-blue-400 hover:text-blue-300"><i class="fa-solid fa-download mr-1"></i> Unduh Laporan</a>
             </div>
             @php $statusLabel = ['H'=>'Hadir','I'=>'Izin','S'=>'Sakit','A'=>'Alpa']; @endphp
             <div class="flex flex-col gap-2">
@@ -345,7 +345,7 @@
         <div class="rounded-xl border border-slate-700/60 bg-slate-800/80 p-4 md:p-5">
             <div class="flex items-center justify-between mb-3">
                 <h6 class="font-bold text-slate-100 m-0">Rekap Legger Nilai</h6>
-                <a href="{{ route('kepsek.laporan.export', 'legger') }}" class="text-xs font-semibold text-blue-400 hover:text-blue-300"><i class="fa-solid fa-download mr-1"></i> Unduh CSV</a>
+                <a href="{{ route('kepsek.laporan.export', 'legger') }}" class="text-xs font-semibold text-blue-400 hover:text-blue-300"><i class="fa-solid fa-download mr-1"></i> Unduh Laporan</a>
             </div>
             <div class="flex justify-between text-sm text-slate-400">
                 <span>Total Nilai Tercatat</span>
@@ -360,7 +360,7 @@
         <div class="rounded-xl border border-slate-700/60 bg-slate-800/80 p-4 md:p-5 md:col-span-2">
             <div class="flex items-center justify-between mb-3">
                 <h6 class="font-bold text-slate-100 m-0">Rekap Kasus Bimbingan Konseling ({{ $laporanRecap['total_kasus_bk'] }} kasus)</h6>
-                <a href="{{ route('kepsek.laporan.export', 'bk') }}" class="text-xs font-semibold text-blue-400 hover:text-blue-300"><i class="fa-solid fa-download mr-1"></i> Unduh CSV</a>
+                <a href="{{ route('kepsek.laporan.export', 'bk') }}" class="text-xs font-semibold text-blue-400 hover:text-blue-300"><i class="fa-solid fa-download mr-1"></i> Unduh Laporan</a>
             </div>
             @php $bkLabel = ['antrean'=>'Antrean','proses'=>'Proses','selesai'=>'Selesai']; @endphp
             <div class="grid grid-cols-3 gap-3">
@@ -371,6 +371,18 @@
                     </div>
                 @empty
                     <p class="text-slate-400 text-sm col-span-3">Belum ada kasus BK tercatat.</p>
+                @endforelse
+            </div>
+            @php $prioritasLabel = ['tinggi'=>'Tinggi','sedang'=>'Sedang','rendah'=>'Rendah']; @endphp
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mt-4 mb-2">Kasus Aktif per Prioritas</p>
+            <div class="grid grid-cols-3 gap-3">
+                @forelse($laporanRecap['rekap_prioritas_kasus_bk'] as $prioritas => $total)
+                    <div class="rounded-lg bg-slate-900/50 px-3 py-2 text-center">
+                        <p class="text-xs text-slate-400 m-0">{{ $prioritasLabel[$prioritas] ?? $prioritas }}</p>
+                        <p class="text-lg font-bold text-amber-400 m-0">{{ $total }}</p>
+                    </div>
+                @empty
+                    <p class="text-slate-400 text-sm col-span-3">Tidak ada kasus aktif.</p>
                 @endforelse
             </div>
         </div>
