@@ -13,8 +13,17 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\SiswaController;
 use App\Http\Controllers\Admin\TahunAjaranController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Guru\Bk\AkpdController;
+use App\Http\Controllers\Guru\Bk\AsesmenController;
+use App\Http\Controllers\Guru\Bk\BimbinganIndividuController;
+use App\Http\Controllers\Guru\Bk\BimbinganKelompokController;
+use App\Http\Controllers\Guru\Bk\DcmController;
+use App\Http\Controllers\Guru\Bk\GayaBelajarController;
 use App\Http\Controllers\Guru\Bk\JejakRekamController;
 use App\Http\Controllers\Guru\Bk\KasusBkController;
+use App\Http\Controllers\Guru\Bk\KunjunganRumahController;
+use App\Http\Controllers\Guru\Bk\PeminatanController;
+use App\Http\Controllers\Guru\Bk\SosiometriController;
 use App\Http\Controllers\Guru\BkController;
 use App\Http\Controllers\Guru\JurnalController;
 use App\Http\Controllers\Guru\KesiswaanController;
@@ -102,6 +111,81 @@ Route::middleware('role:guru_bk')->prefix('guru/bk')->name('guru.bk.')->group(fu
     Route::delete('/kasus/{kasusBk}', [KasusBkController::class, 'destroy'])->name('kasus.destroy');
     Route::patch('/kasus/{kasusBk}/status', [KasusBkController::class, 'updateStatus'])->name('kasus.status');
     Route::get('/kasus/{kasusBk}/export/{template}', [KasusBkController::class, 'export'])->name('kasus.export');
+
+    Route::get('/individu', [BimbinganIndividuController::class, 'index'])->name('individu.index');
+    Route::post('/individu', [BimbinganIndividuController::class, 'store'])->name('individu.store');
+    Route::get('/individu/{individu}', [BimbinganIndividuController::class, 'show'])->name('individu.show');
+    Route::put('/individu/{individu}', [BimbinganIndividuController::class, 'update'])->name('individu.update');
+    Route::delete('/individu/{individu}', [BimbinganIndividuController::class, 'destroy'])->name('individu.destroy');
+
+    Route::get('/kelompok', [BimbinganKelompokController::class, 'index'])->name('kelompok.index');
+    Route::post('/kelompok', [BimbinganKelompokController::class, 'store'])->name('kelompok.store');
+    Route::get('/kelompok/{kelompok}', [BimbinganKelompokController::class, 'show'])->name('kelompok.show');
+    Route::put('/kelompok/{kelompok}', [BimbinganKelompokController::class, 'update'])->name('kelompok.update');
+    Route::delete('/kelompok/{kelompok}', [BimbinganKelompokController::class, 'destroy'])->name('kelompok.destroy');
+
+    Route::get('/kunjungan-rumah', [KunjunganRumahController::class, 'index'])->name('kunjungan-rumah.index');
+    Route::post('/kunjungan-rumah', [KunjunganRumahController::class, 'store'])->name('kunjungan-rumah.store');
+    Route::get('/kunjungan-rumah/{kunjunganRumah}', [KunjunganRumahController::class, 'show'])->name('kunjungan-rumah.show');
+    Route::put('/kunjungan-rumah/{kunjunganRumah}', [KunjunganRumahController::class, 'update'])->name('kunjungan-rumah.update');
+    Route::delete('/kunjungan-rumah/{kunjunganRumah}', [KunjunganRumahController::class, 'destroy'])->name('kunjungan-rumah.destroy');
+
+    Route::get('/asesmen', [AsesmenController::class, 'index'])->name('asesmen.index');
+
+    Route::prefix('asesmen/akpd')->name('asesmen.akpd.')->group(function () {
+        Route::get('/', [AkpdController::class, 'index'])->name('index');
+        Route::post('/', [AkpdController::class, 'store'])->name('store');
+        Route::get('/template', [AkpdController::class, 'downloadTemplate'])->name('template');
+        Route::post('/import', [AkpdController::class, 'import'])->name('import');
+        Route::get('/export', [AkpdController::class, 'export'])->name('export');
+        Route::get('/{akpd}', [AkpdController::class, 'show'])->name('show');
+        Route::put('/{akpd}', [AkpdController::class, 'update'])->name('update');
+        Route::delete('/{akpd}', [AkpdController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('asesmen/gaya-belajar')->name('asesmen.gaya-belajar.')->group(function () {
+        Route::get('/', [GayaBelajarController::class, 'index'])->name('index');
+        Route::post('/', [GayaBelajarController::class, 'store'])->name('store');
+        Route::get('/template', [GayaBelajarController::class, 'downloadTemplate'])->name('template');
+        Route::post('/import', [GayaBelajarController::class, 'import'])->name('import');
+        Route::get('/export', [GayaBelajarController::class, 'export'])->name('export');
+        Route::get('/{gayaBelajar}', [GayaBelajarController::class, 'show'])->name('show');
+        Route::put('/{gayaBelajar}', [GayaBelajarController::class, 'update'])->name('update');
+        Route::delete('/{gayaBelajar}', [GayaBelajarController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('asesmen/dcm')->name('asesmen.dcm.')->group(function () {
+        Route::get('/', [DcmController::class, 'index'])->name('index');
+        Route::post('/', [DcmController::class, 'store'])->name('store');
+        Route::get('/template', [DcmController::class, 'downloadTemplate'])->name('template');
+        Route::post('/import', [DcmController::class, 'import'])->name('import');
+        Route::get('/export', [DcmController::class, 'export'])->name('export');
+        Route::get('/{dcm}', [DcmController::class, 'show'])->name('show');
+        Route::put('/{dcm}', [DcmController::class, 'update'])->name('update');
+        Route::delete('/{dcm}', [DcmController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('asesmen/sosiometri')->name('asesmen.sosiometri.')->group(function () {
+        Route::get('/', [SosiometriController::class, 'index'])->name('index');
+        Route::post('/', [SosiometriController::class, 'store'])->name('store');
+        Route::get('/template', [SosiometriController::class, 'downloadTemplate'])->name('template');
+        Route::post('/import', [SosiometriController::class, 'import'])->name('import');
+        Route::get('/export', [SosiometriController::class, 'export'])->name('export');
+        Route::get('/{sosiometri}', [SosiometriController::class, 'show'])->name('show');
+        Route::put('/{sosiometri}', [SosiometriController::class, 'update'])->name('update');
+        Route::delete('/{sosiometri}', [SosiometriController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('asesmen/tes-bakat-minat')->name('asesmen.peminatan.')->group(function () {
+        Route::get('/', [PeminatanController::class, 'index'])->name('index');
+        Route::post('/', [PeminatanController::class, 'store'])->name('store');
+        Route::get('/template', [PeminatanController::class, 'downloadTemplate'])->name('template');
+        Route::post('/import', [PeminatanController::class, 'import'])->name('import');
+        Route::get('/export', [PeminatanController::class, 'export'])->name('export');
+        Route::get('/{peminatan}', [PeminatanController::class, 'show'])->name('show');
+        Route::put('/{peminatan}', [PeminatanController::class, 'update'])->name('update');
+        Route::delete('/{peminatan}', [PeminatanController::class, 'destroy'])->name('destroy');
+    });
 });
 
 Route::middleware('role:wali_kelas')->post('/guru/wali-kelas/catatan', [PenilaianController::class, 'storeCatatanWaliKelas'])->name('guru.wali-kelas.catatan.store');

@@ -50,4 +50,19 @@ class KasusBk extends Model
     {
         return $this->hasMany(LampiranKasusBk::class, 'kasus_bk_id');
     }
+
+    public function bimbinganIndividu()
+    {
+        return $this->hasOne(BimbinganIndividu::class);
+    }
+
+    public function bimbinganKelompok()
+    {
+        return $this->hasOne(BimbinganKelompok::class);
+    }
+
+    public function kunjunganRumah()
+    {
+        return $this->hasOne(KunjunganRumah::class);
+    }
 }

@@ -64,7 +64,27 @@
 
             <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5">
                 <h6 class="font-bold text-slate-100 mb-3">Layanan Terkait</h6>
-                <p class="text-slate-400 text-sm m-0">Konseling individu/kelompok, kunjungan rumah, alih tangan, dan konferensi kasus yang ditempel ke kasus ini akan tampil di sini (menyusul di fase berikutnya).</p>
+                @if($kasusBk->bimbinganIndividu)
+                    <a href="{{ route('guru.bk.individu.show', $kasusBk->bimbinganIndividu) }}" class="flex items-center justify-between gap-2 rounded-lg border border-slate-700/60 px-3 py-2 text-sm text-slate-200 hover:border-blue-500 mb-2">
+                        <span><i class="fa-solid fa-user mr-1.5 text-blue-400"></i>Konseling Individu &middot; {{ $kasusBk->bimbinganIndividu->tanggal_layanan->translatedFormat('d M Y') }}</span>
+                        <i class="fa-solid fa-arrow-right text-blue-400"></i>
+                    </a>
+                @endif
+                @if($kasusBk->bimbinganKelompok)
+                    <a href="{{ route('guru.bk.kelompok.show', $kasusBk->bimbinganKelompok) }}" class="flex items-center justify-between gap-2 rounded-lg border border-slate-700/60 px-3 py-2 text-sm text-slate-200 hover:border-blue-500 mb-2">
+                        <span><i class="fa-solid fa-people-group mr-1.5 text-blue-400"></i>Konseling Kelompok &middot; {{ $kasusBk->bimbinganKelompok->tanggal_layanan->translatedFormat('d M Y') }}</span>
+                        <i class="fa-solid fa-arrow-right text-blue-400"></i>
+                    </a>
+                @endif
+                @if($kasusBk->kunjunganRumah)
+                    <a href="{{ route('guru.bk.kunjungan-rumah.show', $kasusBk->kunjunganRumah) }}" class="flex items-center justify-between gap-2 rounded-lg border border-slate-700/60 px-3 py-2 text-sm text-slate-200 hover:border-blue-500 mb-2">
+                        <span><i class="fa-solid fa-house mr-1.5 text-blue-400"></i>Kunjungan Rumah &middot; {{ $kasusBk->kunjunganRumah->tanggal_kunjungan->translatedFormat('d M Y') }}</span>
+                        <i class="fa-solid fa-arrow-right text-blue-400"></i>
+                    </a>
+                @endif
+                @if(! $kasusBk->bimbinganIndividu && ! $kasusBk->bimbinganKelompok && ! $kasusBk->kunjunganRumah)
+                    <p class="text-slate-400 text-sm m-0">Alih tangan dan konferensi kasus yang ditempel ke kasus ini akan tampil di sini (menyusul di fase berikutnya).</p>
+                @endif
             </div>
         </div>
 
