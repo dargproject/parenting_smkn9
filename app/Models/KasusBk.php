@@ -65,4 +65,24 @@ class KasusBk extends Model
     {
         return $this->hasOne(KunjunganRumah::class);
     }
+
+    public function alihTangans()
+    {
+        return $this->hasMany(AlihTanganKasus::class);
+    }
+
+    public function alihTanganTerakhir()
+    {
+        return $this->hasOne(AlihTanganKasus::class)->latestOfMany();
+    }
+
+    public function konferensiKasuses()
+    {
+        return $this->hasMany(KonferensiKasus::class);
+    }
+
+    public function konferensiTerakhir()
+    {
+        return $this->hasOne(KonferensiKasus::class)->latestOfMany('tanggal_konferensi');
+    }
 }

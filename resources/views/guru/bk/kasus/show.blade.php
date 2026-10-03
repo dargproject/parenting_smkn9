@@ -82,8 +82,20 @@
                         <i class="fa-solid fa-arrow-right text-blue-400"></i>
                     </a>
                 @endif
-                @if(! $kasusBk->bimbinganIndividu && ! $kasusBk->bimbinganKelompok && ! $kasusBk->kunjunganRumah)
-                    <p class="text-slate-400 text-sm m-0">Alih tangan dan konferensi kasus yang ditempel ke kasus ini akan tampil di sini (menyusul di fase berikutnya).</p>
+                @if($kasusBk->alihTanganTerakhir)
+                    <a href="{{ route('guru.bk.alih-tangan.show', $kasusBk->alihTanganTerakhir) }}" class="flex items-center justify-between gap-2 rounded-lg border border-slate-700/60 px-3 py-2 text-sm text-slate-200 hover:border-blue-500 mb-2">
+                        <span><i class="fa-solid fa-right-left mr-1.5 text-blue-400"></i>Alih Tangan &middot; {{ $kasusBk->alihTanganTerakhir->tanggal_alih->translatedFormat('d M Y') }}</span>
+                        <i class="fa-solid fa-arrow-right text-blue-400"></i>
+                    </a>
+                @endif
+                @if($kasusBk->konferensiTerakhir)
+                    <a href="{{ route('guru.bk.konferensi.show', $kasusBk->konferensiTerakhir) }}" class="flex items-center justify-between gap-2 rounded-lg border border-slate-700/60 px-3 py-2 text-sm text-slate-200 hover:border-blue-500 mb-2">
+                        <span><i class="fa-solid fa-people-roof mr-1.5 text-blue-400"></i>Konferensi Kasus &middot; {{ $kasusBk->konferensiTerakhir->tanggal_konferensi->translatedFormat('d M Y') }}</span>
+                        <i class="fa-solid fa-arrow-right text-blue-400"></i>
+                    </a>
+                @endif
+                @if(! $kasusBk->bimbinganIndividu && ! $kasusBk->bimbinganKelompok && ! $kasusBk->kunjunganRumah && ! $kasusBk->alihTanganTerakhir && ! $kasusBk->konferensiTerakhir)
+                    <p class="text-slate-400 text-sm m-0">Pengunduran diri yang ditempel ke kasus ini akan tampil di sini (menyusul di fase berikutnya).</p>
                 @endif
             </div>
         </div>

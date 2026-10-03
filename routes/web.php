@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\SiswaController;
 use App\Http\Controllers\Admin\TahunAjaranController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Guru\Bk\AkpdController;
+use App\Http\Controllers\Guru\Bk\AlihTanganKasusController;
 use App\Http\Controllers\Guru\Bk\AsesmenController;
 use App\Http\Controllers\Guru\Bk\BimbinganIndividuController;
 use App\Http\Controllers\Guru\Bk\BimbinganKelompokController;
@@ -21,8 +22,10 @@ use App\Http\Controllers\Guru\Bk\DcmController;
 use App\Http\Controllers\Guru\Bk\GayaBelajarController;
 use App\Http\Controllers\Guru\Bk\JejakRekamController;
 use App\Http\Controllers\Guru\Bk\KasusBkController;
+use App\Http\Controllers\Guru\Bk\KonferensiKasusController;
 use App\Http\Controllers\Guru\Bk\KunjunganRumahController;
 use App\Http\Controllers\Guru\Bk\PeminatanController;
+use App\Http\Controllers\Guru\Bk\PengunduranDiriController;
 use App\Http\Controllers\Guru\Bk\SosiometriController;
 use App\Http\Controllers\Guru\BkController;
 use App\Http\Controllers\Guru\JurnalController;
@@ -129,6 +132,24 @@ Route::middleware('role:guru_bk')->prefix('guru/bk')->name('guru.bk.')->group(fu
     Route::get('/kunjungan-rumah/{kunjunganRumah}', [KunjunganRumahController::class, 'show'])->name('kunjungan-rumah.show');
     Route::put('/kunjungan-rumah/{kunjunganRumah}', [KunjunganRumahController::class, 'update'])->name('kunjungan-rumah.update');
     Route::delete('/kunjungan-rumah/{kunjunganRumah}', [KunjunganRumahController::class, 'destroy'])->name('kunjungan-rumah.destroy');
+
+    Route::get('/alih-tangan', [AlihTanganKasusController::class, 'index'])->name('alih-tangan.index');
+    Route::post('/alih-tangan', [AlihTanganKasusController::class, 'store'])->name('alih-tangan.store');
+    Route::get('/alih-tangan/{alihTangan}', [AlihTanganKasusController::class, 'show'])->name('alih-tangan.show');
+    Route::put('/alih-tangan/{alihTangan}', [AlihTanganKasusController::class, 'update'])->name('alih-tangan.update');
+    Route::delete('/alih-tangan/{alihTangan}', [AlihTanganKasusController::class, 'destroy'])->name('alih-tangan.destroy');
+
+    Route::get('/konferensi', [KonferensiKasusController::class, 'index'])->name('konferensi.index');
+    Route::post('/konferensi', [KonferensiKasusController::class, 'store'])->name('konferensi.store');
+    Route::get('/konferensi/{konferensi}', [KonferensiKasusController::class, 'show'])->name('konferensi.show');
+    Route::put('/konferensi/{konferensi}', [KonferensiKasusController::class, 'update'])->name('konferensi.update');
+    Route::delete('/konferensi/{konferensi}', [KonferensiKasusController::class, 'destroy'])->name('konferensi.destroy');
+
+    Route::get('/pengunduran-diri', [PengunduranDiriController::class, 'index'])->name('pengunduran-diri.index');
+    Route::post('/pengunduran-diri', [PengunduranDiriController::class, 'store'])->name('pengunduran-diri.store');
+    Route::get('/pengunduran-diri/{pengunduranDiri}', [PengunduranDiriController::class, 'show'])->name('pengunduran-diri.show');
+    Route::put('/pengunduran-diri/{pengunduranDiri}', [PengunduranDiriController::class, 'update'])->name('pengunduran-diri.update');
+    Route::delete('/pengunduran-diri/{pengunduranDiri}', [PengunduranDiriController::class, 'destroy'])->name('pengunduran-diri.destroy');
 
     Route::get('/asesmen', [AsesmenController::class, 'index'])->name('asesmen.index');
 
