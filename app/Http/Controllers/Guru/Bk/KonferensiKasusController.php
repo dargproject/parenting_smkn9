@@ -7,6 +7,7 @@ use App\Http\Requests\StoreKonferensiKasusRequest;
 use App\Models\KasusBk;
 use App\Models\KonferensiKasus;
 use App\Models\KonferensiKasusPeserta;
+use App\Models\PanggilanOrtu;
 use App\Services\Bk\LampiranBkService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -45,6 +46,7 @@ class KonferensiKasusController extends Controller
                 'kasus_bk_id' => $kasusBk->id,
                 'tanggal_konferensi' => $data['tanggal_konferensi'],
                 'tempat_pertemuan' => $data['tempat_pertemuan'] ?? null,
+                'tampilkan_ke_ortu' => $request->boolean('tampilkan_ke_ortu'),
             ]);
 
             $this->syncPesertas($record, $data['peserta']);
@@ -65,7 +67,10 @@ class KonferensiKasusController extends Controller
 
         $konferensi->load(['kasusBk.siswa.kelas', 'kasusBk.lampiran', 'kasusBk.konselor', 'pesertas']);
 
-        return view('guru.bk.konferensi.show', ['konferensi' => $konferensi]);
+        return view('guru.bk.konferensi.show', [
+            'konferensi' => $konferensi,
+            'panggilanOrtus' => PanggilanOrtu::where('siswa_id', $konferensi->kasusBk->siswa_id)->orderByDesc('tanggal')->get(),
+        ]);
     }
 
     public function update(StoreKonferensiKasusRequest $request, KonferensiKasus $konferensi, LampiranBkService $lampiranService)
@@ -78,6 +83,7 @@ class KonferensiKasusController extends Controller
             $konferensi->update([
                 'tanggal_konferensi' => $data['tanggal_konferensi'],
                 'tempat_pertemuan' => $data['tempat_pertemuan'] ?? null,
+                'tampilkan_ke_ortu' => $request->boolean('tampilkan_ke_ortu'),
             ]);
 
             $this->syncPesertas($konferensi, $data['peserta']);

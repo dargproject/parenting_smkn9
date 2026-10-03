@@ -49,6 +49,7 @@ class PeminatanController extends Controller
             'pilihan3' => ($data['pilihan3'] ?? '') !== '' ? $data['pilihan3'] : ($top3[2] ?: null),
             'hasil' => $top3[0] ?: null,
             'catatan' => $data['catatan'] ?? null,
+            'tampilkan_ke_ortu' => $request->boolean('tampilkan_ke_ortu'),
         ]);
 
         return redirect()->route('guru.bk.asesmen.peminatan.show', $peminatan)->with('success', 'Data Tes Bakat Minat berhasil ditambahkan.');
@@ -75,6 +76,7 @@ class PeminatanController extends Controller
             'pilihan3' => ($data['pilihan3'] ?? '') !== '' ? $data['pilihan3'] : ($top3[2] ?: null),
             'hasil' => $top3[0] ?: null,
             'catatan' => $data['catatan'] ?? null,
+            'tampilkan_ke_ortu' => $request->boolean('tampilkan_ke_ortu'),
         ]);
 
         return redirect()->route('guru.bk.asesmen.peminatan.show', $peminatan)->with('success', 'Data Tes Bakat Minat berhasil diperbarui.');

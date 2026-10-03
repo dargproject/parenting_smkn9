@@ -10,10 +10,12 @@ class KunjunganRumah extends Model
         'kasus_bk_id',
         'tanggal_kunjungan',
         'status',
+        'tampilkan_ke_ortu',
     ];
 
     protected $casts = [
         'tanggal_kunjungan' => 'date',
+        'tampilkan_ke_ortu' => 'boolean',
     ];
 
     public function kasusBk()

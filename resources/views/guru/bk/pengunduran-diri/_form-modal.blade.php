@@ -1,6 +1,5 @@
 {{--
-    Modal tambah/edit Pengunduran Diri, 2 langkah (Data, Review). Tidak ada langkah lampiran --
-    di aplikasi BK sumber upload berkas di modal ini tidak pernah benar-benar disimpan ke manapun.
+    Modal tambah/edit Pengunduran Diri, 3 langkah (Data, Review, Lampiran).
 
     Variabel wajib: $formId, $siswas. Variabel opsional: $pengunduranDiri (untuk mode edit).
 --}}
@@ -17,7 +16,7 @@
             alasan_pengunduran: {{ \Illuminate\Support\Js::from(old('alasan_pengunduran', $pengunduranDiri->alasan_pengunduran ?? '')) }},
             tanggal_pengunduran: {{ \Illuminate\Support\Js::from(old('tanggal_pengunduran', optional($pengunduranDiri->tanggal_pengunduran ?? null)->toDateString() ?? now()->toDateString())) }},
         }">
-        <form method="POST" action="{{ $action }}" class="p-5">
+        <form method="POST" action="{{ $action }}" enctype="multipart/form-data" class="p-5">
             @csrf
             @if($mode === 'edit')
                 @method('PUT')
@@ -29,10 +28,10 @@
             </div>
 
             <div class="mb-4">
-                <p class="text-xs font-bold text-blue-400 mb-1.5" x-text="'Langkah ' + step + ' dari 2: ' + (step === 1 ? 'Data' : 'Review')"></p>
+                <p class="text-xs font-bold text-blue-400 mb-1.5" x-text="'Langkah ' + step + ' dari 3: ' + (step === 1 ? 'Data' : step === 2 ? 'Review' : 'Lampiran')"></p>
                 <div class="flex gap-1.5">
-                    <template x-for="s in [1, 2]" :key="s">
-                        <div class="h-1.5 w-1/2 rounded-full" :class="step >= s ? 'bg-blue-600' : 'bg-slate-700'"></div>
+                    <template x-for="s in [1, 2, 3]" :key="s">
+                        <div class="h-1.5 w-1/3 rounded-full" :class="step >= s ? 'bg-blue-600' : 'bg-slate-700'"></div>
                     </template>
                 </div>
             </div>
@@ -75,11 +74,34 @@
                 </dl>
             </div>
 
+            {{-- Langkah 3: Lampiran --}}
+            <div x-show="step === 3" x-cloak class="space-y-3">
+                @if($mode === 'edit' && $pengunduranDiri->lampirans->isNotEmpty())
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-slate-400">Lampiran Tersimpan</label>
+                        <div class="flex flex-col gap-2">
+                            @foreach($pengunduranDiri->lampirans as $lampiran)
+                                <label class="flex items-center justify-between gap-2 rounded-lg border border-slate-700/60 bg-slate-900 px-3 py-2 text-sm text-slate-300">
+                                    <a href="{{ \Illuminate\Support\Facades\Storage::url($lampiran->path_file) }}" target="_blank" class="truncate text-blue-400 hover:text-blue-300">{{ $lampiran->nama_file }}</a>
+                                    <span class="flex items-center gap-1.5 text-xs text-rose-400 whitespace-nowrap">
+                                        <input type="checkbox" name="lampiran_dihapus[]" value="{{ $lampiran->id }}" class="rounded border-slate-600 bg-slate-900"> Hapus
+                                    </span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-400">Tambah Lampiran <span class="font-normal">(maks. 5 file, 12MB/file: pdf, jpg, png, doc, docx)</span></label>
+                    <input type="file" name="lampiran[]" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+                </div>
+            </div>
+
             <div class="mt-5 flex justify-end gap-2">
                 <button type="button" x-show="step === 1" onclick="document.getElementById('{{ $formId }}').style.display='none'" class="rounded-lg border border-slate-600 px-4 py-2 text-sm font-semibold text-slate-300">Batal</button>
                 <button type="button" x-show="step > 1" x-cloak @click="step--" class="rounded-lg border border-slate-600 px-4 py-2 text-sm font-semibold text-slate-300">Kembali</button>
-                <button type="button" x-show="step < 2" @click="step++" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500">Selanjutnya</button>
-                <button type="submit" x-show="step === 2" x-cloak class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500">{{ $mode === 'edit' ? 'Perbarui' : 'Simpan' }}</button>
+                <button type="button" x-show="step < 3" @click="step++" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500">Selanjutnya</button>
+                <button type="submit" x-show="step === 3" x-cloak class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500">{{ $mode === 'edit' ? 'Perbarui' : 'Simpan' }}</button>
             </div>
         </form>
     </div>

@@ -19,6 +19,10 @@ class StorePengunduranDiriRequest extends FormRequest
             'alamat_ortu_wali' => 'required|string',
             'alasan_pengunduran' => 'required|string',
             'tanggal_pengunduran' => 'required|date',
+            'lampiran' => 'nullable|array|max:5',
+            'lampiran.*' => 'file|max:12288|mimes:pdf,jpg,jpeg,png,doc,docx',
+            'lampiran_dihapus' => 'nullable|array',
+            'lampiran_dihapus.*' => 'integer|exists:lampiran_pengunduran_diris,id',
         ];
     }
 }

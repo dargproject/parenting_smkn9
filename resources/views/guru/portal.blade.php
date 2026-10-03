@@ -494,6 +494,40 @@
         @if($siswaWali->isEmpty())
             <p class="text-slate-400 text-sm">Anda belum ditetapkan sebagai wali kelas untuk kelas manapun. Hubungi Waka Kurikulum.</p>
         @else
+            <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-4 mb-4">
+                <h6 class="font-bold text-slate-100 mb-1"><i class="fa-solid fa-paper-plane text-blue-400 mr-1.5"></i>Rujuk Siswa ke BK</h6>
+                <p class="text-slate-400 text-xs mb-3">Kirim rujukan ke guru BK untuk ditinjau -- bukan langsung jadi kasus, guru BK yang menerima akan memegang kasusnya.</p>
+                <form method="POST" action="{{ route('guru.wali-kelas.rujukan-bk.store') }}" class="grid grid-cols-1 md:grid-cols-4 gap-2">
+                    @csrf
+                    <select name="siswa_id" required class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 md:col-span-1">
+                        <option value="">- Pilih Siswa -</option>
+                        @foreach($siswaWali as $siswa)
+                            <option value="{{ $siswa->id }}">{{ $siswa->nama }}</option>
+                        @endforeach
+                    </select>
+                    <select name="kategori" required class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 md:col-span-1">
+                        <option value="Akademik">Akademik</option>
+                        <option value="Perilaku">Perilaku</option>
+                        <option value="Sosial">Sosial</option>
+                        <option value="Keluarga">Keluarga</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                    <input type="text" name="alasan" required placeholder="Alasan rujukan..." class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 md:col-span-1">
+                    <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500 md:col-span-1">Kirim Rujukan</button>
+                </form>
+                @if($rujukanBkSaya->isNotEmpty())
+                    <div class="mt-3 flex flex-col gap-1.5">
+                        @foreach($rujukanBkSaya as $r)
+                            @php $badge = match($r->status) { 'diterima' => 'bg-emerald-500/10 text-emerald-400', 'ditolak' => 'bg-rose-500/10 text-rose-400', default => 'bg-amber-500/10 text-amber-400' }; @endphp
+                            <div class="flex items-center justify-between text-xs rounded-lg bg-slate-900/50 px-3 py-1.5">
+                                <span class="text-slate-300">{{ $r->siswa->nama ?? '-' }} &middot; {{ $r->kategori }}</span>
+                                <span class="rounded-full px-2 py-0.5 font-bold {{ $badge }}">{{ ucfirst($r->status) }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+
             <div class="mb-3">@include('guru.partials.pilih-kelas', ['daftarKelas' => $kelasWaliList, 'jumlahSiswa' => $jumlahSiswaWali, 'cari' => true])</div>
             <form method="POST" action="{{ route('guru.wali-kelas.catatan.store') }}" class="rounded-2xl border border-slate-700/60 bg-slate-800/80 text-slate-100 overflow-hidden">
                 @csrf

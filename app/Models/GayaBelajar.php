@@ -20,6 +20,7 @@ class GayaBelajar extends Model
         'catatan',
         'faktor_penghambat',
         'faktor_pendukung',
+        'tampilkan_ke_ortu',
     ];
 
     protected $casts = [
@@ -28,6 +29,7 @@ class GayaBelajar extends Model
         'visual' => 'integer',
         'auditori' => 'integer',
         'kinestetik' => 'integer',
+        'tampilkan_ke_ortu' => 'boolean',
     ];
 
     public const QUESTION_GROUPS = [

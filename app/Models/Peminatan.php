@@ -18,11 +18,13 @@ class Peminatan extends Model
         'pilihan3',
         'hasil',
         'catatan',
+        'tampilkan_ke_ortu',
     ];
 
     protected $casts = [
         'tanggal' => 'date',
         'jawaban' => 'array',
+        'tampilkan_ke_ortu' => 'boolean',
     ];
 
     public const SECTIONS = [

@@ -40,6 +40,18 @@
                     <dd class="text-slate-200 mt-1 whitespace-pre-line">{{ $pengunduranDiri->alasan_pengunduran }}</dd>
                 </div>
             </div>
+
+            <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5">
+                <h6 class="font-bold text-slate-100 mb-3">Lampiran</h6>
+                @forelse($pengunduranDiri->lampirans as $lampiran)
+                    <a href="{{ \Illuminate\Support\Facades\Storage::url($lampiran->path_file) }}" target="_blank" class="flex items-center justify-between gap-2 rounded-lg border border-slate-700/60 px-3 py-2 text-sm text-blue-400 hover:bg-slate-900 mb-2">
+                        <span class="truncate"><i class="fa-solid fa-paperclip mr-1.5"></i>{{ $lampiran->nama_file }}</span>
+                        <span class="text-slate-500 text-xs whitespace-nowrap">{{ $lampiran->ukuran ? round($lampiran->ukuran / 1024, 1).' KB' : '' }}</span>
+                    </a>
+                @empty
+                    <p class="text-slate-400 text-sm m-0">Belum ada lampiran.</p>
+                @endforelse
+            </div>
         </div>
 
         <div class="space-y-5">

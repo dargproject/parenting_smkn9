@@ -102,7 +102,7 @@
                     </a>
                 @endif
                 @if(! $kasusBk->bimbinganIndividu && ! $kasusBk->bimbinganKelompok && ! $kasusBk->kunjunganRumah && ! $kasusBk->alihTanganTerakhir && ! $kasusBk->konferensiTerakhir)
-                    <p class="text-slate-400 text-sm m-0">Pengunduran diri yang ditempel ke kasus ini akan tampil di sini (menyusul di fase berikutnya).</p>
+                    <p class="text-slate-400 text-sm m-0">Belum ada layanan terkait untuk kasus ini.</p>
                 @endif
             </div>
         </div>

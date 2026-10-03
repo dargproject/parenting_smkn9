@@ -24,19 +24,23 @@ use App\Http\Controllers\Guru\Bk\JejakRekamController;
 use App\Http\Controllers\Guru\Bk\KasusBkController;
 use App\Http\Controllers\Guru\Bk\KonferensiKasusController;
 use App\Http\Controllers\Guru\Bk\KunjunganRumahController;
+use App\Http\Controllers\Guru\Bk\PanggilanOrtuBkController;
 use App\Http\Controllers\Guru\Bk\PeminatanController;
 use App\Http\Controllers\Guru\Bk\PengunduranDiriController;
+use App\Http\Controllers\Guru\Bk\RujukanBkController;
 use App\Http\Controllers\Guru\Bk\SiswaProfilController;
 use App\Http\Controllers\Guru\Bk\SosiometriController;
 use App\Http\Controllers\Guru\BkController;
 use App\Http\Controllers\Guru\JurnalController;
 use App\Http\Controllers\Guru\KesiswaanController;
 use App\Http\Controllers\Guru\KurikulumController;
+use App\Http\Controllers\Guru\PanggilanOrtuController;
 use App\Http\Controllers\Guru\PenilaianController;
 use App\Http\Controllers\Guru\PesanWaliKelasController;
 use App\Http\Controllers\Guru\PortalController;
 use App\Http\Controllers\KepsekController;
 use App\Http\Controllers\OrangTua\DashboardController as OrangTuaDashboardController;
+use App\Http\Controllers\OrangTua\KeluargaController as OrangTuaKeluargaController;
 use App\Http\Controllers\OrangTuaAuthController;
 use App\Http\Controllers\ProfilController;
 use Illuminate\Support\Facades\Route;
@@ -79,6 +83,12 @@ Route::post('/guru/kesiswaan/petugas-tatib', [KesiswaanController::class, 'updat
 Route::post('/guru/panggilan-ortu', [PortalController::class, 'storePanggilanOrtu'])
     ->middleware('role:waka_kesiswaan')
     ->name('guru.panggilan-ortu.store');
+
+Route::middleware('role:waka_kesiswaan,guru_bk')->prefix('panggilan-ortu')->name('panggilan-ortu.')->group(function () {
+    Route::put('/{panggilanOrtu}', [PanggilanOrtuController::class, 'update'])->name('update');
+    Route::patch('/{panggilanOrtu}/status', [PanggilanOrtuController::class, 'updateStatus'])->name('update-status');
+    Route::delete('/{panggilanOrtu}', [PanggilanOrtuController::class, 'destroy'])->name('destroy');
+});
 
 Route::middleware('role:waka_kurikulum')->prefix('guru/kurikulum')->name('guru.kurikulum.')->group(function () {
     Route::post('/jadwal', [KurikulumController::class, 'storeJadwal'])->name('jadwal.store');
@@ -150,6 +160,12 @@ Route::middleware('role:guru_bk')->prefix('guru/bk')->name('guru.bk.')->group(fu
     Route::put('/siswa/{siswa}/profil', [SiswaProfilController::class, 'updateProfil'])->name('siswa.profil.update');
     Route::put('/siswa/{siswa}/keluarga', [SiswaProfilController::class, 'updateKeluarga'])->name('siswa.keluarga.update');
 
+    Route::post('/panggilan-ortu', [PanggilanOrtuBkController::class, 'store'])->name('panggilan-ortu.store');
+
+    Route::get('/rujukan', [RujukanBkController::class, 'index'])->name('rujukan.index');
+    Route::post('/rujukan/{rujukan}/terima', [RujukanBkController::class, 'accept'])->name('rujukan.accept');
+    Route::post('/rujukan/{rujukan}/tolak', [RujukanBkController::class, 'reject'])->name('rujukan.reject');
+
     Route::get('/pengunduran-diri', [PengunduranDiriController::class, 'index'])->name('pengunduran-diri.index');
     Route::post('/pengunduran-diri', [PengunduranDiriController::class, 'store'])->name('pengunduran-diri.store');
     Route::get('/pengunduran-diri/{pengunduranDiri}', [PengunduranDiriController::class, 'show'])->name('pengunduran-diri.show');
@@ -216,6 +232,8 @@ Route::middleware('role:guru_bk')->prefix('guru/bk')->name('guru.bk.')->group(fu
 
 Route::middleware('role:wali_kelas')->post('/guru/wali-kelas/catatan', [PenilaianController::class, 'storeCatatanWaliKelas'])->name('guru.wali-kelas.catatan.store');
 
+Route::middleware('role:wali_kelas')->post('/guru/wali-kelas/rujukan-bk', [PenilaianController::class, 'storeRujukanBk'])->name('guru.wali-kelas.rujukan-bk.store');
+
 Route::middleware('role:wali_kelas')->post('/guru/wali-kelas/pesan', [PesanWaliKelasController::class, 'store'])->name('guru.wali-kelas.pesan.store');
 
 Route::middleware('role:guru_wali')->prefix('guru/wali')->name('guru.wali.')->group(function () {
@@ -232,6 +250,8 @@ Route::prefix('ortu')->name('ortu.')->group(function () {
     Route::middleware('auth:orangtua')->group(function () {
         Route::get('/dashboard', [OrangTuaDashboardController::class, 'index'])->name('dashboard');
         Route::get('/mapel/{mataPelajaran}', [OrangTuaDashboardController::class, 'show'])->name('mapel.show');
+        Route::get('/keluarga', [OrangTuaKeluargaController::class, 'edit'])->name('keluarga.edit');
+        Route::put('/keluarga', [OrangTuaKeluargaController::class, 'update'])->name('keluarga.update');
     });
 });
 

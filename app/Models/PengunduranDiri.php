@@ -22,4 +22,9 @@ class PengunduranDiri extends Model
     {
         return $this->belongsTo(Siswa::class);
     }
+
+    public function lampirans()
+    {
+        return $this->hasMany(LampiranPengunduranDiri::class);
+    }
 }

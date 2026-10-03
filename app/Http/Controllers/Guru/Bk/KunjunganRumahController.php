@@ -7,6 +7,7 @@ use App\Http\Requests\StoreKunjunganRumahRequest;
 use App\Models\KasusBk;
 use App\Models\Kelas;
 use App\Models\KunjunganRumah;
+use App\Models\PanggilanOrtu;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use App\Services\Bk\LampiranBkService;
@@ -63,6 +64,7 @@ class KunjunganRumahController extends Controller
                 'kasus_bk_id' => $kasusBk->id,
                 'tanggal_kunjungan' => $data['tanggal_kunjungan'],
                 'status' => $data['status'],
+                'tampilkan_ke_ortu' => $request->boolean('tampilkan_ke_ortu'),
             ]);
 
             if ($request->hasFile('lampiran')) {
@@ -84,6 +86,7 @@ class KunjunganRumahController extends Controller
         return view('guru.bk.kunjungan-rumah.show', [
             'kunjunganRumah' => $kunjunganRumah,
             'siswas' => Siswa::with('kelas')->orderBy('nama')->get(),
+            'panggilanOrtus' => PanggilanOrtu::where('siswa_id', $kunjunganRumah->kasusBk->siswa_id)->orderByDesc('tanggal')->get(),
         ]);
     }
 
@@ -105,6 +108,7 @@ class KunjunganRumahController extends Controller
             $kunjunganRumah->update([
                 'tanggal_kunjungan' => $data['tanggal_kunjungan'],
                 'status' => $data['status'],
+                'tampilkan_ke_ortu' => $request->boolean('tampilkan_ke_ortu'),
             ]);
 
             $idBolehDihapus = $kunjunganRumah->kasusBk->lampiran->pluck('id');

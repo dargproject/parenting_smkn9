@@ -51,6 +51,7 @@ class GayaBelajarController extends Controller
             'catatan' => $data['catatan'] ?? null,
             'faktor_penghambat' => $data['faktor_penghambat'] ?? null,
             'faktor_pendukung' => $data['faktor_pendukung'] ?? null,
+            'tampilkan_ke_ortu' => $request->boolean('tampilkan_ke_ortu'),
         ]);
 
         return redirect()->route('guru.bk.asesmen.gaya-belajar.show', $gayaBelajar)->with('success', 'Data Gaya Belajar berhasil ditambahkan.');
@@ -79,6 +80,7 @@ class GayaBelajarController extends Controller
             'catatan' => $data['catatan'] ?? null,
             'faktor_penghambat' => $data['faktor_penghambat'] ?? null,
             'faktor_pendukung' => $data['faktor_pendukung'] ?? null,
+            'tampilkan_ke_ortu' => $request->boolean('tampilkan_ke_ortu'),
         ]);
 
         return redirect()->route('guru.bk.asesmen.gaya-belajar.show', $gayaBelajar)->with('success', 'Data Gaya Belajar berhasil diperbarui.');

@@ -10,6 +10,7 @@
             <p class="text-slate-400 text-sm m-0">{{ $kasusBk->judul }} &middot; {{ $konferensi->tanggal_konferensi->translatedFormat('d M Y') }}{{ $konferensi->tempat_pertemuan ? ' · '.$konferensi->tempat_pertemuan : '' }} <span class="confidential-badge ml-2"><i class="fa-solid fa-shield-halved mr-1"></i>RAHASIA BK</span></p>
         </div>
         <div class="flex gap-2">
+            <button type="button" onclick="document.getElementById('modal-panggilan-ortu-konferensi').style.display='flex'" class="rounded-lg border border-slate-600 px-4 py-2 text-sm font-semibold text-slate-300 hover:border-blue-500"><i class="fa-solid fa-phone mr-1"></i> Buat Panggilan Ortu</button>
             <button type="button" onclick="document.getElementById('modal-edit-konferensi').style.display='flex'" class="rounded-lg border border-slate-600 px-4 py-2 text-sm font-semibold text-slate-300 hover:border-blue-500"><i class="fa-solid fa-pen mr-1"></i> Edit</button>
             <form method="POST" action="{{ route('guru.bk.konferensi.destroy', $konferensi) }}" onsubmit="return confirm('Hapus konferensi kasus ini beserta seluruh lampirannya?')">
                 @csrf @method('DELETE')
@@ -53,9 +54,34 @@
                 <p class="text-slate-400 text-sm mb-2">Status: <span class="font-semibold text-slate-100">{{ ucfirst($kasusBk->status) }}</span></p>
                 <a href="{{ route('guru.bk.kasus.show', $kasusBk) }}" class="text-sm text-blue-400 hover:text-blue-300">Lihat detail kasus <i class="fa-solid fa-arrow-right ml-1"></i></a>
             </div>
+
+            <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5">
+                <h6 class="font-bold text-slate-100 mb-3">Panggilan Orang Tua</h6>
+                @forelse($panggilanOrtus as $panggilan)
+                    <div class="rounded-lg border border-slate-700/60 bg-slate-900 px-3 py-2 text-sm mb-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-slate-200">{{ \Carbon\Carbon::parse($panggilan->tanggal)->translatedFormat('d M Y') }}, {{ \Carbon\Carbon::parse($panggilan->waktu)->format('H:i') }}</span>
+                            <span class="rounded-full px-2 py-0.5 text-xs font-bold {{ str_contains($panggilan->status, 'Hadir') ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400' }}">{{ $panggilan->status }}</span>
+                        </div>
+                        @if($panggilan->pemanggil_id === Auth::id())
+                            <div class="mt-2 flex gap-2">
+                                <button type="button" onclick="document.getElementById('modal-edit-panggilan-{{ $panggilan->id }}').style.display='flex'" class="text-xs text-blue-400 hover:text-blue-300"><i class="fa-solid fa-pen mr-1"></i>Edit</button>
+                                <form method="POST" action="{{ route('panggilan-ortu.destroy', $panggilan) }}" onsubmit="return confirm('Hapus jadwal panggilan orang tua ini?')">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="text-xs text-rose-400 hover:text-rose-300"><i class="fa-solid fa-trash mr-1"></i>Hapus</button>
+                                </form>
+                            </div>
+                            @include('kesiswaan.partials._panggilan-ortu-edit-modal', ['panggilan' => $panggilan, 'formId' => 'modal-edit-panggilan-'.$panggilan->id])
+                        @endif
+                    </div>
+                @empty
+                    <p class="text-slate-400 text-sm m-0">Belum ada panggilan orang tua untuk siswa ini.</p>
+                @endforelse
+            </div>
         </div>
     </div>
 </div>
 
 @include('guru.bk.konferensi._form-modal', ['formId' => 'modal-edit-konferensi', 'konferensi' => $konferensi])
+@include('guru.bk.partials._panggilan-ortu-modal', ['formId' => 'modal-panggilan-ortu-konferensi', 'siswaId' => $kasusBk->siswa_id, 'alasanDefault' => 'Undangan konferensi kasus: '.$kasusBk->judul.' pada '.$konferensi->tanggal_konferensi->translatedFormat('d M Y')])
 @endsection

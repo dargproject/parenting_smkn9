@@ -27,6 +27,7 @@ class StoreGayaBelajarRequest extends FormRequest
             'catatan' => 'nullable|string',
             'faktor_penghambat' => 'nullable|string',
             'faktor_pendukung' => 'nullable|string',
+            'tampilkan_ke_ortu' => 'nullable|boolean',
         ];
     }
 }

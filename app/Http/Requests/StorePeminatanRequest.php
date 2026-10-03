@@ -22,6 +22,7 @@ class StorePeminatanRequest extends FormRequest
             'pilihan2' => 'nullable|string|max:255',
             'pilihan3' => 'nullable|string|max:255',
             'catatan' => 'nullable|string',
+            'tampilkan_ke_ortu' => 'nullable|boolean',
         ];
 
         foreach (Peminatan::SECTIONS as $section) {

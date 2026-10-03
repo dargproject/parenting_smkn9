@@ -67,6 +67,7 @@
         @if(in_array('guru_bk', $roles))
             <div class="px-3 py-2 text-slate-400 small font-bold uppercase tracking-wider mt-2">Bimbingan Konseling</div>
             <a href="{{ route('guru.bk.dashboard') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-chart-pie w-6 text-center mr-2"></i> <span>Dashboard BK</span></a>
+            <a href="{{ route('guru.bk.rujukan.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-inbox w-6 text-center mr-2"></i> <span>Rujukan Masuk</span></a>
             <a href="{{ route('guru.bk.kasus.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-folder-open w-6 text-center mr-2"></i> <span>Kasus BK</span></a>
             <a href="{{ route('guru.bk.individu.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-user w-6 text-center mr-2"></i> <span>Konseling Individu</span></a>
             <a href="{{ route('guru.bk.kelompok.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-people-group w-6 text-center mr-2"></i> <span>Konseling Kelompok</span></a>

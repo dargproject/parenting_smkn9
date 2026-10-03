@@ -33,4 +33,9 @@ class Kelas extends Model
     {
         return $this->hasMany(Siswa::class);
     }
+
+    public function guruBks()
+    {
+        return $this->belongsToMany(Guru::class, 'guru_bk_kelas');
+    }
 }

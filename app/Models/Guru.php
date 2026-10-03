@@ -26,4 +26,9 @@ class Guru extends Authenticatable
     {
         return $this->belongsToMany(Role::class);
     }
+
+    public function kelasBk()
+    {
+        return $this->belongsToMany(Kelas::class, 'guru_bk_kelas');
+    }
 }

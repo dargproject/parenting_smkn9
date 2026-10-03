@@ -3,21 +3,27 @@
 namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
+use App\Models\CatatanAkademikSiswa;
 use App\Models\CatatanKompetensi;
 use App\Models\CatatanWaliKelas;
+use App\Models\JadwalPelajaran;
 use App\Models\Kelas;
+use App\Models\KelasMataPelajaran;
 use App\Models\LogPerubahanNilai;
 use App\Models\MataPelajaran;
 use App\Models\NilaiLm;
 use App\Models\NilaiPklUkk;
 use App\Models\NilaiSas;
+use App\Models\Presensi;
 use App\Models\RaporFinal;
+use App\Models\RujukanBk;
 use App\Models\TahunAjaran;
 use App\Models\TujuanPembelajaran;
 use App\Services\PenilaianService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class PenilaianController extends Controller
 {
@@ -31,7 +37,7 @@ class PenilaianController extends Controller
     {
         $mapel = MataPelajaran::findOrFail($mataPelajaranId);
         abort_unless(
-            \App\Models\KelasMataPelajaran::where('mata_pelajaran_id', $mapel->id)->where('guru_id', Auth::id())->exists(),
+            KelasMataPelajaran::where('mata_pelajaran_id', $mapel->id)->where('guru_id', Auth::id())->exists(),
             403,
             'Anda bukan pengampu mata pelajaran ini.'
         );
@@ -41,7 +47,7 @@ class PenilaianController extends Controller
 
     public function storeTujuanPembelajaran(Request $request)
     {
-        $tpUnik = fn (string $kolom) => \Illuminate\Validation\Rule::unique('tujuan_pembelajarans', $kolom)
+        $tpUnik = fn (string $kolom) => Rule::unique('tujuan_pembelajarans', $kolom)
             ->where('mata_pelajaran_id', $request->input('mata_pelajaran_id'))
             ->where('tahun_ajaran_id', $this->tahunAjaranAktifId());
 
@@ -74,7 +80,7 @@ class PenilaianController extends Controller
     {
         $this->pastikanMapelMilikGuru($tujuanPembelajaran->mata_pelajaran_id);
 
-        $tpUnik = fn (string $kolom) => \Illuminate\Validation\Rule::unique('tujuan_pembelajarans', $kolom)
+        $tpUnik = fn (string $kolom) => Rule::unique('tujuan_pembelajarans', $kolom)
             ->where('mata_pelajaran_id', $tujuanPembelajaran->mata_pelajaran_id)
             ->where('tahun_ajaran_id', $tujuanPembelajaran->tahun_ajaran_id)
             ->ignore($tujuanPembelajaran->id);
@@ -301,7 +307,7 @@ class PenilaianController extends Controller
         // Sakit/Izin/Alpa tidak lagi diketik manual: dihitung otomatis dari presensi asli (hari
         // Sakit/Izin/Alpa Penuh, lihat PenilaianService::rekapHarian) agar selalu sesuai dengan
         // Rekap Presensi Mapel dan tidak perlu diinput dua kali oleh wali kelas.
-        $presensiSemester = \App\Models\Presensi::whereIn('jadwal_pelajaran_id', \App\Models\JadwalPelajaran::whereIn('kelas_id', $kelasWaliIds)->pluck('id'))
+        $presensiSemester = Presensi::whereIn('jadwal_pelajaran_id', JadwalPelajaran::whereIn('kelas_id', $kelasWaliIds)->pluck('id'))
             ->where('tahun_ajaran_id', $tahunAjaranId)
             ->get();
 
@@ -313,7 +319,7 @@ class PenilaianController extends Controller
 
                 $rekap = $penilaian->rekapHarian($presensiSemester->where('siswa_id', (int) $siswaId));
 
-                \App\Models\CatatanWaliKelas::updateOrCreate(
+                CatatanWaliKelas::updateOrCreate(
                     ['siswa_id' => $siswaId, 'tahun_ajaran_id' => $tahunAjaranId],
                     [
                         'catatan_karakter' => $row['catatan_karakter'] ?? null,
@@ -327,6 +333,23 @@ class PenilaianController extends Controller
         });
 
         return redirect()->route('guru.portal')->with('success', 'Catatan wali kelas berhasil disimpan.');
+    }
+
+    public function storeRujukanBk(Request $request)
+    {
+        $guru = Auth::user();
+        $kelasWaliIds = Kelas::where('wali_kelas_id', $guru->id)->pluck('id');
+        $siswaWaliIds = Kelas::whereIn('id', $kelasWaliIds)->with('siswas:id,kelas_id')->get()->flatMap->siswas->pluck('id');
+
+        $data = $request->validate([
+            'siswa_id' => ['required', 'integer', Rule::in($siswaWaliIds)],
+            'kategori' => 'required|string|max:50',
+            'alasan' => 'required|string|max:2000',
+        ]);
+
+        RujukanBk::create($data + ['dirujuk_oleh' => $guru->id]);
+
+        return redirect()->route('guru.portal')->with('success', 'Rujukan ke BK berhasil dikirim, menunggu ditinjau oleh guru BK.');
     }
 
     public function storeCatatanAkademik(Request $request)
@@ -347,7 +370,7 @@ class PenilaianController extends Controller
                     continue;
                 }
 
-                \App\Models\CatatanAkademikSiswa::updateOrCreate(
+                CatatanAkademikSiswa::updateOrCreate(
                     ['siswa_id' => $siswaId, 'tahun_ajaran_id' => $tahunAjaranId],
                     ['catatan' => $catatan, 'guru_id' => $guru->id]
                 );

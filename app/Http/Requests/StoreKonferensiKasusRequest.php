@@ -20,6 +20,7 @@ class StoreKonferensiKasusRequest extends FormRequest
             'peserta' => 'required|array|min:1',
             'peserta.*.nama_peserta' => 'required|string|max:255',
             'peserta.*.peran_peserta' => 'required|string|max:100',
+            'tampilkan_ke_ortu' => 'nullable|boolean',
             'lampiran' => 'nullable|array|max:5',
             'lampiran.*' => 'file|max:12288|mimes:pdf,jpg,jpeg,png,doc,docx',
             'lampiran_dihapus' => 'nullable|array',

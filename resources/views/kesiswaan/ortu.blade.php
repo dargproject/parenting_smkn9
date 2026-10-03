@@ -77,10 +77,24 @@
                         <span class="badge {{ $statusClass }} badge-pill-custom">{{ $panggilan->status }}</span>
                     </div>
                     <p class="small text-slate-400 m-0 mb-3"><i class="fa-regular fa-clock mr-1"></i> {{ \Carbon\Carbon::parse($panggilan->tanggal)->translatedFormat('l, d F Y') }} Pukul {{ \Carbon\Carbon::parse($panggilan->waktu)->format('H:i') }} WIB</p>
-                    <div class="flex gap-2">
+                    <div class="flex gap-2 mb-2">
                         <button onclick="triggerToast('Menghubungi Ortu {{ $panggilan->siswa->nama ?? '-' }}...')" class="btn btn-outline-secondary btn-sm rounded-lg flex-grow-1"><i class="fa-brands fa-whatsapp"></i> Chat</button>
-                        <button onclick="confirmSummonArrival('{{ $panggilan->id }}')" class="btn btn-brand-primary btn-sm rounded-lg flex-grow-1" {{ str_contains($panggilan->status, 'Hadir') ? 'disabled' : '' }}>Konfirmasi Hadir</button>
+                        <form method="POST" action="{{ route('panggilan-ortu.update-status', $panggilan) }}" class="flex-grow-1">
+                            @csrf @method('PATCH')
+                            <input type="hidden" name="status" value="Hadir / Mediasi Selesai">
+                            <button type="submit" class="btn btn-brand-primary btn-sm rounded-lg w-full" {{ str_contains($panggilan->status, 'Hadir') ? 'disabled' : '' }}>Konfirmasi Hadir</button>
+                        </form>
                     </div>
+                    @if($panggilan->pemanggil_id === Auth::id())
+                        <div class="flex gap-2">
+                            <button type="button" onclick="document.getElementById('modal-edit-panggilan-{{ $panggilan->id }}').style.display='flex'" class="btn btn-outline-secondary btn-sm rounded-lg flex-grow-1"><i class="fa-solid fa-pen"></i> Edit</button>
+                            <form method="POST" action="{{ route('panggilan-ortu.destroy', $panggilan) }}" onsubmit="return confirm('Hapus jadwal panggilan orang tua ini?')" class="flex-grow-1">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn btn-outline-secondary btn-sm rounded-lg w-full text-rose-400"><i class="fa-solid fa-trash"></i> Hapus</button>
+                            </form>
+                        </div>
+                        @include('kesiswaan.partials._panggilan-ortu-edit-modal', ['panggilan' => $panggilan, 'formId' => 'modal-edit-panggilan-'.$panggilan->id])
+                    @endif
                 </div>
             </div>
         @endforeach

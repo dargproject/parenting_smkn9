@@ -12,10 +12,12 @@ class KonferensiKasus extends Model
         'kasus_bk_id',
         'tanggal_konferensi',
         'tempat_pertemuan',
+        'tampilkan_ke_ortu',
     ];
 
     protected $casts = [
         'tanggal_konferensi' => 'date',
+        'tampilkan_ke_ortu' => 'boolean',
     ];
 
     public function kasusBk()

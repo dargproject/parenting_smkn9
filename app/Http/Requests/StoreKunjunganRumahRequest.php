@@ -20,6 +20,7 @@ class StoreKunjunganRumahRequest extends FormRequest
             'judul' => 'required|string|max:255',
             'deskripsi' => 'required|string',
             'tindak_lanjut' => 'nullable|string',
+            'tampilkan_ke_ortu' => 'nullable|boolean',
             'lampiran' => 'nullable|array|max:5',
             'lampiran.*' => 'file|max:12288|mimes:pdf,jpg,jpeg,png,doc,docx',
             'lampiran_dihapus' => 'nullable|array',

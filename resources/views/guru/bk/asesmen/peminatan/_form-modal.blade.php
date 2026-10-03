@@ -90,6 +90,10 @@
                     <label class="mb-1 block text-sm font-medium text-slate-400">Catatan <span class="font-normal">(opsional)</span></label>
                     <textarea name="catatan" rows="2" class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">{{ old('catatan', $peminatan->catatan ?? '') }}</textarea>
                 </div>
+                <label class="flex items-start gap-2 rounded-lg border border-slate-700/60 bg-slate-900 px-3 py-2 text-sm text-slate-300">
+                    <input type="checkbox" name="tampilkan_ke_ortu" value="1" @checked(old('tampilkan_ke_ortu', $peminatan->tampilkan_ke_ortu ?? false)) class="mt-0.5 rounded border-slate-600 bg-slate-900">
+                    <span>Tampilkan hasil Tes Bakat Minat ini ke dashboard orang tua.</span>
+                </label>
             </div>
 
             <div class="mt-5 flex justify-end gap-2">

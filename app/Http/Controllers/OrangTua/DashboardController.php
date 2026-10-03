@@ -5,10 +5,15 @@ namespace App\Http\Controllers\OrangTua;
 use App\Http\Controllers\Controller;
 use App\Models\CatatanKompetensi;
 use App\Models\CatatanWaliKelas;
+use App\Models\GayaBelajar;
+use App\Models\KonferensiKasus;
+use App\Models\KunjunganRumah;
 use App\Models\MataPelajaran;
 use App\Models\NilaiLm;
 use App\Models\NilaiPklUkk;
 use App\Models\NilaiSas;
+use App\Models\PanggilanOrtu;
+use App\Models\Peminatan;
 use App\Models\PesanWaliKelas;
 use App\Models\RaporFinal;
 use App\Models\TahunAjaran;
@@ -26,12 +31,14 @@ class DashboardController extends Controller
         $pesanWaliKelas = PesanWaliKelas::where('siswa_id', $siswa->id)->with('guru')->latest()->get();
         PesanWaliKelas::where('siswa_id', $siswa->id)->whereNull('dibaca_at')->update(['dibaca_at' => now()]);
 
+        $infoBk = $this->infoBk($siswa);
+
         $raporFinal = $tahunAjaranAktif
             ? RaporFinal::where(['siswa_id' => $siswa->id, 'tahun_ajaran_id' => $tahunAjaranAktif->id])->first()
             : null;
 
         if (! $raporFinal || $raporFinal->status !== 'final') {
-            return view('ortu.dashboard', ['siswa' => $siswa, 'dirilis' => false, 'ringkasan' => collect(), 'riwayat' => $riwayat, 'tahunAjaranTerpilih' => $tahunAjaranAktif, 'pesanWaliKelas' => $pesanWaliKelas]);
+            return view('ortu.dashboard', ['siswa' => $siswa, 'dirilis' => false, 'ringkasan' => collect(), 'riwayat' => $riwayat, 'tahunAjaranTerpilih' => $tahunAjaranAktif, 'pesanWaliKelas' => $pesanWaliKelas] + $infoBk);
         }
 
         // Mapel diambil dari nilai yang tersimpan pada semester tsb, bukan kelas siswa saat ini (siswa bisa sudah naik kelas).
@@ -64,7 +71,28 @@ class DashboardController extends Controller
             'tahunAjaranTerpilih' => $tahunAjaranAktif,
             'perluPerhatian' => $ringkasan->filter(fn ($r) => $r['status'] === 'remedial'),
             'pesanWaliKelas' => $pesanWaliKelas,
-        ]);
+        ] + $infoBk);
+    }
+
+    /**
+     * Data BK yang boleh dilihat orang tua: hanya yang ditandai tampilkan_ke_ortu oleh guru BK,
+     * plus panggilan ortu (selalu tampil, sudah pasti ditujukan untuk ortu) dan nama konselor BK
+     * kelas siswa (dari alokasi guru_bk_kelas, bukan dari kasus_bk mana pun -- kasus BK tetap rahasia).
+     *
+     * Kunjungan Rumah & Konferensi otomatis hilang dari dashboard ortu begitu kasus_bk induknya
+     * berstatus 'selesai' (datanya tetap utuh di sisi guru BK). Panggilan ortu hilang begitu
+     * statusnya 'Hadir / Mediasi Selesai'. GayaBelajar/Peminatan tidak punya kasus_bk, tidak terdampak.
+     */
+    private function infoBk($siswa): array
+    {
+        return [
+            'konselorBk' => $siswa->kelas?->guruBks ?? collect(),
+            'panggilanOrtus' => PanggilanOrtu::where('siswa_id', $siswa->id)->where('status', '!=', 'Hadir / Mediasi Selesai')->orderByDesc('tanggal')->get(),
+            'bkKunjunganRumah' => KunjunganRumah::whereHas('kasusBk', fn ($q) => $q->where('siswa_id', $siswa->id)->where('status', '!=', 'selesai'))->where('tampilkan_ke_ortu', true)->latest('tanggal_kunjungan')->get(),
+            'bkKonferensi' => KonferensiKasus::whereHas('kasusBk', fn ($q) => $q->where('siswa_id', $siswa->id)->where('status', '!=', 'selesai'))->where('tampilkan_ke_ortu', true)->latest('tanggal_konferensi')->get(),
+            'bkGayaBelajar' => GayaBelajar::where('siswa_id', $siswa->id)->where('tampilkan_ke_ortu', true)->latest('tanggal')->first(),
+            'bkPeminatan' => Peminatan::where('siswa_id', $siswa->id)->where('tampilkan_ke_ortu', true)->latest('tanggal')->first(),
+        ];
     }
 
     public function show(MataPelajaran $mataPelajaran, PenilaianService $penilaian)

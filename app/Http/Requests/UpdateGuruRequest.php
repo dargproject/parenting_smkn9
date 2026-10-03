@@ -22,6 +22,6 @@ class UpdateGuruRequest extends FormRequest
      */
     public function rules(): array
     {
-        return ['nama' => 'required|string|max:255', 'nip' => 'required|string|max:50|unique:gurus,nip,'.$this->route('guru')->id, 'email' => 'nullable|email|max:255|unique:gurus,email,'.$this->route('guru')->id, 'phone' => 'nullable|string|max:30', 'is_active' => 'sometimes|boolean', 'roles' => 'array', 'roles.*' => 'exists:roles,id'];
+        return ['nama' => 'required|string|max:255', 'nip' => 'required|string|max:50|unique:gurus,nip,'.$this->route('guru')->id, 'email' => 'nullable|email|max:255|unique:gurus,email,'.$this->route('guru')->id, 'phone' => 'nullable|string|max:30', 'is_active' => 'sometimes|boolean', 'roles' => 'array', 'roles.*' => 'exists:roles,id', 'kelas_bk' => 'array', 'kelas_bk.*' => 'exists:kelas,id'];
     }
 }
