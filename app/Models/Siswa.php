@@ -100,4 +100,19 @@ class Siswa extends Authenticatable
     {
         return $this->hasMany(KasusBk::class);
     }
+
+    public function prestasiNonAkademiks()
+    {
+        return $this->hasMany(PrestasiNonAkademik::class);
+    }
+
+    public function nilaiEkstrakurikulers()
+    {
+        return $this->hasMany(NilaiEkstrakurikuler::class);
+    }
+
+    public function ekstrakurikulerSiswas()
+    {
+        return $this->hasMany(EkstrakurikulerSiswa::class);
+    }
 }

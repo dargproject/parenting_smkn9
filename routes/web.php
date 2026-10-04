@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\EkstrakurikulerController;
 use App\Http\Controllers\Admin\GuruController;
 use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\KategoriKasusController;
@@ -34,10 +35,12 @@ use App\Http\Controllers\Guru\BkController;
 use App\Http\Controllers\Guru\JurnalController;
 use App\Http\Controllers\Guru\KesiswaanController;
 use App\Http\Controllers\Guru\KurikulumController;
+use App\Http\Controllers\Guru\NilaiEkstrakurikulerController;
 use App\Http\Controllers\Guru\PanggilanOrtuController;
 use App\Http\Controllers\Guru\PenilaianController;
 use App\Http\Controllers\Guru\PesanWaliKelasController;
 use App\Http\Controllers\Guru\PortalController;
+use App\Http\Controllers\Guru\PrestasiNonAkademikController;
 use App\Http\Controllers\KepsekController;
 use App\Http\Controllers\OrangTua\DashboardController as OrangTuaDashboardController;
 use App\Http\Controllers\OrangTua\KeluargaController as OrangTuaKeluargaController;
@@ -235,10 +238,23 @@ Route::middleware('role:wali_kelas')->post('/guru/wali-kelas/rujukan-bk', [Penil
 
 Route::middleware('role:wali_kelas')->post('/guru/wali-kelas/pesan', [PesanWaliKelasController::class, 'store'])->name('guru.wali-kelas.pesan.store');
 
+Route::middleware('role:wali_kelas')->prefix('guru/wali-kelas/prestasi')->name('guru.wali-kelas.prestasi.')->group(function () {
+    Route::post('/', [PrestasiNonAkademikController::class, 'store'])->name('store');
+    Route::put('/{prestasi}', [PrestasiNonAkademikController::class, 'update'])->name('update');
+    Route::delete('/{prestasi}', [PrestasiNonAkademikController::class, 'destroy'])->name('destroy');
+});
+
 Route::middleware('role:guru_wali')->prefix('guru/wali')->name('guru.wali.')->group(function () {
     Route::post('/catatan-akademik', [PenilaianController::class, 'storeCatatanAkademik'])->name('catatan-akademik.store');
     Route::post('/rapor/rilis', [PenilaianController::class, 'rilisRapor'])->name('rapor.rilis');
     Route::post('/rapor/batalkan', [PenilaianController::class, 'batalkanRilis'])->name('rapor.batalkan');
+});
+
+Route::middleware('role:pembina_ekskul')->prefix('guru/ekskul')->name('guru.ekskul.')->group(function () {
+    Route::get('/', [NilaiEkstrakurikulerController::class, 'index'])->name('index');
+    Route::post('/siswa', [NilaiEkstrakurikulerController::class, 'storeSiswa'])->name('siswa.store');
+    Route::delete('/siswa/{ekstrakurikulerSiswa}', [NilaiEkstrakurikulerController::class, 'destroySiswa'])->name('siswa.destroy');
+    Route::post('/nilai', [NilaiEkstrakurikulerController::class, 'storeNilai'])->name('nilai.store');
 });
 
 Route::prefix('ortu')->name('ortu.')->group(function () {
@@ -275,6 +291,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::resource('master-pelanggaran', MasterPelanggaranController::class)->except(['show'])->parameters(['master-pelanggaran' => 'masterPelanggaran']);
     Route::resource('kategori-pengumuman', KategoriPengumumanController::class)->except(['show'])->parameters(['kategori-pengumuman' => 'kategoriPengumuman']);
     Route::resource('kategori-kasus', KategoriKasusController::class)->except(['show'])->parameters(['kategori-kasus' => 'kategoriKasus']);
+    Route::resource('ekstrakurikuler', EkstrakurikulerController::class)->except(['show'])->parameters(['ekstrakurikuler' => 'ekstrakurikuler']);
     Route::get('import', [ImportController::class, 'index'])->name('import.index');
     Route::get('import/template/siswa', [ImportController::class, 'templateSiswa'])->name('import.template.siswa');
     Route::post('import/siswa', [ImportController::class, 'students'])->name('import.siswa');

@@ -287,15 +287,42 @@
         $totalPresensiWali = $rekapPresensiWali->sum('total');
         $totalHadirWali = $rekapPresensiWali->sum(fn ($r) => $r['jumlah']['H']);
         $rerataKehadiranWali = $totalPresensiWali > 0 ? round($totalHadirWali / $totalPresensiWali * 100, 1) : null;
-        $jumlahHariIniWali = ['H' => 0, 'S' => 0, 'I' => 0, 'A' => 0];
-        foreach ($presensiHariDipilihWali as $p) {
-            $jumlahHariIniWali[$p->status]++;
-        }
-        $perluPerhatianWali = $siswaWali
-            ->map(fn ($s) => (object) ['siswa' => $s, 'alpa' => $rekapPresensiWali[$s->id]['jumlah']['A'] ?? 0])
-            ->filter(fn ($r) => $r->alpa >= 2)
-            ->sortByDesc('alpa')
-            ->take(5)
+        $rangkumanPerMapelWali = $jadwalHariPresensiDipilih->map(function ($jadwal) use ($presensiHariDipilihWali) {
+            $milik = $presensiHariDipilihWali->where('jadwal_pelajaran_id', $jadwal->id);
+            $jumlah = ['H' => 0, 'S' => 0, 'I' => 0, 'A' => 0];
+            foreach ($milik as $p) {
+                $jumlah[$p->status]++;
+            }
+
+            return ['mapel' => $jadwal->mataPelajaran->nama_mapel ?? '-', 'jumlah' => $jumlah];
+        });
+        $rekapPerHariWali = $presensiWali
+            ->groupBy('tanggal')
+            ->sortKeysDesc()
+            ->take(7)
+            ->sortKeys()
+            ->map(function ($group, $tanggal) {
+                $jumlah = ['H' => 0, 'S' => 0, 'I' => 0, 'A' => 0];
+                foreach ($group as $p) {
+                    $jumlah[$p->status]++;
+                }
+                $total = array_sum($jumlah);
+
+                return [
+                    'tanggal' => $tanggal,
+                    'persen' => $total > 0 ? round($jumlah['H'] / $total * 100, 1) : null,
+                    'siswa_alpa' => $group->where('status', 'A')->pluck('siswa_id')->unique()->count(),
+                ];
+            })
+            ->values();
+        $rekapKetidakhadiranWali = $siswaWali
+            ->map(function ($s) use ($rekapHarianWali) {
+                $h = $rekapHarianWali[$s->id] ?? ['sakit' => 0, 'izin' => 0, 'alpa' => 0];
+
+                return (object) ['siswa' => $s, 'sakit' => $h['sakit'], 'izin' => $h['izin'], 'alpa' => $h['alpa']];
+            })
+            ->filter(fn ($r) => $r->sakit > 0 || $r->izin > 0 || $r->alpa > 0)
+            ->sortByDesc(fn ($r) => $r->sakit + $r->izin + $r->alpa)
             ->values();
     @endphp
     <div id="pane-wali-dashboard" class="pane-content hidden-pane fade-transition">
@@ -333,43 +360,115 @@
         @if($kelasWaliList->isEmpty())
             <p class="text-slate-400 text-sm">Anda belum ditetapkan sebagai wali kelas untuk kelas manapun. Hubungi Waka Kurikulum.</p>
         @else
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-100">
-                <div class="col-md-6">
-                    <div class="card border-0 rounded-xl shadow-sm p-4 bg-slate-800/80 h-full">
-                        <h6 class="font-bold text-slate-100 mb-3"><i class="fa-solid fa-calendar-check text-success mr-1"></i> Rangkuman Presensi Rombel
-                            @if($tanggalPresensiTerbaruWali)
-                                <span class="block text-slate-400 font-normal text-xs mt-0.5">Data terbaru: {{ \Carbon\Carbon::parse($tanggalPresensiTerbaruWali)->locale('id')->translatedFormat('l, d F Y') }}</span>
+            <div class="card border-0 rounded-xl shadow-sm p-4 bg-slate-800/80 text-slate-100">
+                <h6 class="font-bold text-slate-100 mb-3"><i class="fa-solid fa-calendar-check text-success mr-1"></i> Rangkuman Presensi Rombel
+                    @if($tanggalPresensiTerbaruWali)
+                        <span class="block text-slate-400 font-normal text-xs mt-0.5">Data terbaru: {{ \Carbon\Carbon::parse($tanggalPresensiTerbaruWali)->locale('id')->translatedFormat('l, d F Y') }}</span>
+                    @endif
+                </h6>
+                @if(!$tanggalPresensiTerbaruWali)
+                    <p class="text-slate-400 text-sm m-0">Belum ada presensi tercatat untuk kelas ini.</p>
+                @elseif($rangkumanPerMapelWali->isEmpty())
+                    <p class="text-slate-400 text-sm m-0">Tidak ada jadwal pelajaran pada hari itu untuk kelas Anda.</p>
+                @else
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="text-xs text-slate-500">
+                                    <tr>
+                                        <th class="py-1.5 pr-2">Mapel</th>
+                                        <th class="py-1.5 px-1.5 text-center text-emerald-400">H</th>
+                                        <th class="py-1.5 px-1.5 text-center text-cyan-400">S</th>
+                                        <th class="py-1.5 px-1.5 text-center text-amber-400">I</th>
+                                        <th class="py-1.5 px-1.5 text-center text-rose-400">A</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-700/60">
+                                    @foreach($rangkumanPerMapelWali as $row)
+                                        <tr>
+                                            <td class="py-1.5 pr-2 text-slate-300">{{ $row['mapel'] }}</td>
+                                            <td class="py-1.5 px-1.5 text-center font-bold text-emerald-400">{{ $row['jumlah']['H'] }}</td>
+                                            <td class="py-1.5 px-1.5 text-center font-bold text-cyan-400">{{ $row['jumlah']['S'] }}</td>
+                                            <td class="py-1.5 px-1.5 text-center font-bold text-amber-400">{{ $row['jumlah']['I'] }}</td>
+                                            <td class="py-1.5 px-1.5 text-center font-bold text-rose-400">{{ $row['jumlah']['A'] }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div>
+                            <h6 class="font-bold text-slate-100 mb-2 text-sm">Tren Kehadiran 7 Hari Terakhir</h6>
+                            @if($rekapPerHariWali->isEmpty())
+                                <p class="text-slate-400 text-sm m-0">Belum ada data presensi.</p>
+                            @else
+                                <div id="chartTrenKehadiranWali"></div>
+                                <script>
+                                    document.addEventListener('DOMContentLoaded', function () {
+                                        const siswaAlpaPerHariWali = @json($rekapPerHariWali->pluck('siswa_alpa'));
+                                        registerChart(new ApexCharts(document.querySelector('#chartTrenKehadiranWali'), {
+                                            chart: { type: 'area', height: 180, toolbar: { show: false }, fontFamily: 'inherit' },
+                                            series: [{ name: 'Kehadiran', data: @json($rekapPerHariWali->pluck('persen')->map(fn ($v) => $v ?? 0)) }],
+                                            xaxis: {
+                                                type: 'category',
+                                                categories: @json($rekapPerHariWali->pluck('tanggal')->map(fn ($t) => \Carbon\Carbon::parse($t)->locale('id')->translatedFormat('d M'))),
+                                                axisBorder: { show: false },
+                                                axisTicks: { show: false },
+                                            },
+                                            yaxis: { min: 0, max: 100, labels: { formatter: (v) => v + '%' } },
+                                            colors: ['#10b981'],
+                                            stroke: { curve: 'straight', width: 2 },
+                                            fill: { type: 'gradient', gradient: { opacityFrom: 0.55, opacityTo: 0 } },
+                                            markers: { size: 0, hover: { size: 5 } },
+                                            dataLabels: { enabled: false },
+                                            grid: { xaxis: { lines: { show: false } }, yaxis: { lines: { show: true } }, strokeDashArray: 4 },
+                                            tooltip: { y: { formatter: function (val, opts) {
+                                                const alpa = siswaAlpaPerHariWali[opts.dataPointIndex];
+                                                return val + '% hadir &middot; ' + alpa + ' siswa alpa';
+                                            } } },
+                                        }));
+                                    });
+                                </script>
                             @endif
-                        </h6>
-                        @if(!$tanggalPresensiTerbaruWali)
-                            <p class="text-slate-400 text-sm m-0">Belum ada presensi tercatat untuk kelas ini.</p>
-                        @else
-                            <div class="flex flex-col gap-2">
-                                @foreach([['H', 'Hadir', 'emerald'], ['S', 'Sakit', 'cyan'], ['I', 'Izin', 'amber'], ['A', 'Alpa', 'rose']] as [$kode, $label, $warna])
-                                    <div class="flex items-center justify-between rounded-lg bg-slate-900/50 px-3 py-2">
-                                        <span class="text-sm text-slate-300">{{ $label }}</span>
-                                        <span class="text-sm font-bold @if($warna === 'emerald') text-emerald-400 @elseif($warna === 'cyan') text-cyan-400 @elseif($warna === 'amber') text-amber-400 @else text-rose-400 @endif">{{ $jumlahHariIniWali[$kode] }}</span>
-                                    </div>
+                        </div>
+                    </div>
+                @endif
+            </div>
+
+            <div class="card border-0 rounded-xl shadow-sm p-4 bg-slate-800/80 mt-4 text-slate-100">
+                <h6 class="font-bold text-slate-100 mb-1"><i class="fa-solid fa-user-clock text-amber-400 mr-1"></i> Rekap Siswa Sakit / Izin / Alpa</h6>
+                <p class="text-slate-400 text-xs mb-3">Baris bergaris merah menandai siswa yang perlu perhatian khusus (alpa penuh &ge; 2 hari).</p>
+                @if($rekapKetidakhadiranWali->isEmpty())
+                    <p class="text-slate-400 text-sm m-0">Semua siswa hadir penuh, belum ada sakit/izin/alpa tercatat.</p>
+                @else
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="text-xs text-slate-500">
+                                <tr>
+                                    <th class="py-1.5 pr-2">Nama Siswa</th>
+                                    <th class="py-1.5 px-1.5 text-center text-cyan-400">Sakit</th>
+                                    <th class="py-1.5 px-1.5 text-center text-amber-400">Izin</th>
+                                    <th class="py-1.5 px-1.5 text-center text-rose-400">Alpa</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-700/60">
+                                @foreach($rekapKetidakhadiranWali as $r)
+                                    <tr @class(['border-l-4 border-rose-500' => $r->alpa >= 2])>
+                                        <td class="py-1.5 pr-2 font-semibold text-slate-100">
+                                            {{ $r->siswa->nama }}
+                                            @if($r->alpa >= 2)
+                                                <i class="fa-solid fa-circle-exclamation text-rose-400 ml-1" title="Perlu perhatian khusus"></i>
+                                            @endif
+                                        </td>
+                                        <td class="py-1.5 px-1.5 text-center font-bold text-cyan-400">{{ $r->sakit }}</td>
+                                        <td class="py-1.5 px-1.5 text-center font-bold text-amber-400">{{ $r->izin }}</td>
+                                        <td class="py-1.5 px-1.5 text-center font-bold text-rose-400">{{ $r->alpa }}</td>
+                                    </tr>
                                 @endforeach
-                            </div>
-                        @endif
+                            </tbody>
+                        </table>
                     </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card border-0 rounded-xl shadow-sm p-4 bg-slate-800/80 h-full border-t border-slate-700/60 border-rose-500 border-4">
-                        <h6 class="font-bold text-danger mb-3"><i class="fa-solid fa-circle-exclamation mr-1"></i> Perlu Perhatian Khusus (Alpa &ge; 2)</h6>
-                        <ul class="list-group list-group-flush">
-                            @forelse($perluPerhatianWali as $r)
-                                <li class="list-group-item flex justify-between items-center px-0 py-2">
-                                    <span class="font-bold small" style="font-size: 13px;">{{ $r->siswa->nama }}</span>
-                                    <span class="badge bg-rose-500/10 text-rose-400 border border-rose-500/20 font-semibold" style="font-size: 10px;">{{ $r->alpa }}x Alpa</span>
-                                </li>
-                            @empty
-                                <p class="text-slate-400 text-sm m-0">Tidak ada siswa dengan alpa berulang saat ini.</p>
-                            @endforelse
-                        </ul>
-                    </div>
-                </div>
+                @endif
             </div>
         @endif
     </div>
@@ -566,6 +665,99 @@
                     <button type="submit" class="rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-blue-500"><i class="fa-solid fa-floppy-disk mr-1"></i> Simpan Semua Catatan</button>
                 </div>
             </form>
+        @endif
+    </div>
+    <div id="pane-wali-prestasi" class="pane-content hidden-pane fade-transition">
+        <div class="mb-3">
+            <h4 class="font-bold m-0 text-slate-100">Prestasi Non-Akademik</h4>
+            <p class="text-slate-400 small m-0">Catat prestasi siswa binaan di luar nilai akademik (lomba, olahraga, seni, dsb).</p>
+        </div>
+
+        @if($kelasWaliList->isEmpty())
+            <p class="text-slate-400 text-sm">Anda belum ditetapkan sebagai wali kelas untuk kelas manapun. Hubungi Waka Kurikulum.</p>
+        @else
+            @php $prestasiSemuaWali = $prestasiNonAkademikWali->flatten(1)->sortByDesc('tanggal')->values(); @endphp
+
+            <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5 md:p-6 text-slate-100 mb-4">
+                <h6 class="font-bold text-slate-100 mb-3"><i class="fa-solid fa-plus mr-1.5 text-blue-400"></i> Tambah Prestasi</h6>
+                <form method="POST" action="{{ route('guru.wali-kelas.prestasi.store') }}" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    @csrf
+                    <div class="md:col-span-2">
+                        <label class="mb-1 block text-sm font-medium text-slate-400">Siswa</label>
+                        @include('kesiswaan.partials.siswa-search', ['name' => 'siswa_id', 'siswas' => $siswaWali])
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="mb-1 block text-sm font-medium text-slate-400">Nama Prestasi</label>
+                        <input type="text" name="nama_prestasi" required placeholder="mis. Juara 1 Lomba Lari 100m" class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500">
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-400">Tingkat</label>
+                        <select name="tingkat" required class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+                            <option value="Sekolah">Sekolah</option>
+                            <option value="Kecamatan">Kecamatan</option>
+                            <option value="Kabupaten/Kota">Kabupaten/Kota</option>
+                            <option value="Provinsi">Provinsi</option>
+                            <option value="Nasional">Nasional</option>
+                            <option value="Internasional">Internasional</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-400">Peringkat <span class="font-normal">(opsional)</span></label>
+                        <input type="text" name="peringkat" placeholder="mis. Juara 1, Harapan 2" class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500">
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-400">Tanggal</label>
+                        <input type="date" name="tanggal" required value="{{ now()->toDateString() }}" class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-400">Penyelenggara <span class="font-normal">(opsional)</span></label>
+                        <input type="text" name="penyelenggara" placeholder="mis. Dinas Pendidikan Kota Malang" class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="mb-1 block text-sm font-medium text-slate-400">Keterangan <span class="font-normal">(opsional)</span></label>
+                        <textarea name="keterangan" rows="2" class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100"></textarea>
+                    </div>
+                    <div class="md:col-span-2 flex justify-end">
+                        <button type="submit" class="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-500">Simpan Prestasi</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 text-slate-100">
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[720px] text-left text-sm">
+                        <thead class="bg-slate-900 border-b border-slate-700/60 text-xs text-slate-400">
+                            <tr>
+                                <th class="px-4 py-3">Tanggal</th>
+                                <th class="px-4 py-3">Siswa</th>
+                                <th class="px-4 py-3">Prestasi</th>
+                                <th class="px-4 py-3">Tingkat</th>
+                                <th class="px-4 py-3">Peringkat</th>
+                                <th class="px-4 py-3 text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-700/60">
+                            @forelse($prestasiSemuaWali as $p)
+                                <tr>
+                                    <td class="px-4 py-3 text-slate-300 whitespace-nowrap">{{ $p->tanggal->translatedFormat('d M Y') }}</td>
+                                    <td class="px-4 py-3 font-semibold text-slate-100">{{ $p->siswa->nama ?? '-' }}</td>
+                                    <td class="px-4 py-3 text-slate-300">{{ $p->nama_prestasi }}</td>
+                                    <td class="px-4 py-3 text-slate-400">{{ $p->tingkat }}</td>
+                                    <td class="px-4 py-3 text-slate-400">{{ $p->peringkat ?: '-' }}</td>
+                                    <td class="px-4 py-3 text-right">
+                                        <form method="POST" action="{{ route('guru.wali-kelas.prestasi.destroy', $p) }}" onsubmit="return confirm('Hapus prestasi ini?')" class="inline">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="text-rose-400 hover:text-rose-300 text-sm font-semibold">Hapus</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="6" class="px-4 py-8 text-center text-slate-400">Belum ada prestasi non-akademik tercatat.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         @endif
     </div>
     <div id="pane-wali-chat" class="pane-content hidden-pane fade-transition" x-data="{...kelasXData('wk-pesan:{{ $guru->id }}', @js($kelasWaliList->pluck('id'))), pilih: null}">

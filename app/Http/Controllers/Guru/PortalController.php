@@ -24,6 +24,7 @@ use App\Models\PanggilanOrtu;
 use App\Models\Pelanggaran;
 use App\Models\PesanWaliKelas;
 use App\Models\Presensi;
+use App\Models\PrestasiNonAkademik;
 use App\Models\RaporFinal;
 use App\Models\RujukanBk;
 use App\Models\Siswa;
@@ -197,6 +198,7 @@ class PortalController extends Controller
             ? CatatanWaliKelas::whereIn('siswa_id', $siswaWali->pluck('id'))->where('tahun_ajaran_id', $tahunAjaranAktifId)->get()->keyBy('siswa_id')
             : collect();
         $pesanWaliKelasWali = PesanWaliKelas::whereIn('siswa_id', $siswaWali->pluck('id'))->latest()->get()->groupBy('siswa_id');
+        $prestasiNonAkademikWali = PrestasiNonAkademik::whereIn('siswa_id', $siswaWali->pluck('id'))->latest('tanggal')->get()->groupBy('siswa_id');
         $rujukanBkSaya = RujukanBk::with('siswa')->where('dirujuk_oleh', $guru->id)->latest()->limit(10)->get();
         $logPerubahanNilaiBinaan = $tahunAjaranAktif
             ? LogPerubahanNilai::whereHas('nilaiLm', fn ($q) => $q->whereIn('siswa_id', $siswaBinaan->pluck('id'))->where('tahun_ajaran_id', $tahunAjaranAktifId))
@@ -267,8 +269,8 @@ class PortalController extends Controller
             'kelasBinaan', 'siswaBinaan', 'rerataBinaan', 'peringkatBinaan',
             'tahunAjaranAktif', 'mapelBinaan', 'tujuanPembelajarans',
             'nilaiLmBinaan', 'nilaiSasBinaan', 'catatanKompetensiBinaan', 'nilaiPklUkkBinaan',
-            'matrixPerKelas', 'raporFinalBinaan', 'logPerubahanNilaiBinaan', 'siswaWali', 'catatanWaliKelasWali', 'pesanWaliKelasWali', 'siswaBinaanLengkap', 'rujukanBkSaya',
-            'kelasWaliList', 'rekapPresensiWali', 'rekapHarianWali', 'tanggalPresensiTerbaruWali', 'tanggalPresensiDipilih', 'jadwalHariPresensiDipilih', 'presensiHariDipilihWali',
+            'matrixPerKelas', 'raporFinalBinaan', 'logPerubahanNilaiBinaan', 'siswaWali', 'catatanWaliKelasWali', 'pesanWaliKelasWali', 'prestasiNonAkademikWali', 'siswaBinaanLengkap', 'rujukanBkSaya',
+            'kelasWaliList', 'rekapPresensiWali', 'rekapHarianWali', 'tanggalPresensiTerbaruWali', 'tanggalPresensiDipilih', 'jadwalHariPresensiDipilih', 'presensiHariDipilihWali', 'presensiWali',
             'siswaPeringatanMingguan', 'ambangAlpaMingguan',
             'jadwalGuruMapel', 'jadwalHariIni', 'jurnalHariIniIds', 'namaHariIni',
             'kalenderJurnal', 'namaBulanTerpilih', 'bulanSebelumnya', 'bulanBerikutnya', 'offsetAwalKalender'

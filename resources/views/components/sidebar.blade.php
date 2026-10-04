@@ -36,6 +36,7 @@
             <a href="{{ route('admin.mata-pelajaran.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-book w-6 text-center mr-2"></i> <span>Mata Pelajaran</span></a>
             <a href="{{ route('admin.rombel.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-people-roof w-6 text-center mr-2"></i> <span>Plotting Rombel</span></a>
             <a href="{{ route('admin.master-pelanggaran.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-triangle-exclamation w-6 text-center mr-2"></i> <span>Katalog Pelanggaran</span></a>
+            <a href="{{ route('admin.ekstrakurikuler.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-people-group w-6 text-center mr-2"></i> <span>Ekstrakurikuler</span></a>
             <a href="{{ route('admin.kategori-pengumuman.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-tags w-6 text-center mr-2"></i> <span>Kategori Pengumuman</span></a>
             <a href="{{ route('admin.kategori-kasus.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-folder-tree w-6 text-center mr-2"></i> <span>Kategori Kasus BK</span></a>
             <a href="{{ route('admin.import.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-file-import w-6 text-center mr-2"></i> <span>Import Data</span></a>
@@ -108,6 +109,7 @@
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-wali-dashboard', this)"><i class="fa-solid fa-users w-6 text-center mr-2"></i> <span>Dashboard Kelas</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-wali-presensi', this)"><i class="fa-solid fa-calendar-check w-6 text-center mr-2"></i> <span>Rekap Presensi Mapel</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-wali-catatan', this)"><i class="fa-solid fa-pen-clip w-6 text-center mr-2"></i> <span>Catatan Wali Kelas</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-wali-prestasi', this)"><i class="fa-solid fa-trophy w-6 text-center mr-2"></i> <span>Prestasi Non-Akademik</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-wali-chat', this)"><i class="fa-solid fa-comments w-6 text-center mr-2"></i> <span>Komunikasi Ortu</span></a>
         @endif
 
@@ -136,6 +138,11 @@
             @unless($tatibRendered)
                 @include('components.sidebar-tatib')
             @endunless
+        @endif
+
+        @if(in_array('pembina_ekskul', $roles))
+            <div class="px-3 py-2 text-slate-400 small font-bold uppercase tracking-wider mt-2">Pembina Ekskul</div>
+            <a href="{{ route('guru.ekskul.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-people-group w-6 text-center mr-2"></i> <span>Nilai Ekstrakurikuler</span></a>
         @endif
     </div>
 

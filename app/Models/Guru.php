@@ -31,4 +31,9 @@ class Guru extends Authenticatable
     {
         return $this->belongsToMany(Kelas::class, 'guru_bk_kelas');
     }
+
+    public function ekstrakurikulerBinaan()
+    {
+        return $this->hasMany(Ekstrakurikuler::class, 'guru_id');
+    }
 }
