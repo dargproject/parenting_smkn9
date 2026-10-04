@@ -38,6 +38,8 @@ class KepsekController extends Controller
             'stats' => $this->dashboardStats(),
             'trendKehadiran' => $this->trendKehadiran(),
             'distribusiPelanggaran' => $this->distribusiPelanggaran(),
+            'distribusiPasal' => $this->distribusiPasal(),
+            'totalSiswaTerlibatPasal' => Pelanggaran::whereNotNull('master_pelanggaran_id')->distinct('siswa_id')->count('siswa_id'),
             'jurusanList' => Kelas::query()->select('jurusan')->distinct()->orderBy('jurusan')->pluck('jurusan'),
             'jurusanFilter' => $request->query('jurusan', 'all'),
             'akademikPerKelas' => $this->akademikPerKelas($request->query('jurusan', 'all')),
@@ -177,12 +179,52 @@ class KepsekController extends Controller
         });
     }
 
+    /**
+     * Persentase dihitung dari jumlah SISWA UNIK yang terkena tiap kategori, dibagi total siswa aktif --
+     * bukan dari share jumlah insiden pelanggaran. Ini supaya angkanya realistis (tidak selalu terlihat
+     * "penuh"/besar) dan tidak bias ke siswa yang berulang kali melanggar kategori yang sama.
+     */
     private function distribusiPelanggaran()
     {
-        return Pelanggaran::selectRaw('kategori, COUNT(*) as total')
+        $totalSiswa = Siswa::where('status_aktif', true)->count();
+
+        return Pelanggaran::selectRaw('kategori, COUNT(DISTINCT siswa_id) as total_siswa')
             ->groupBy('kategori')
-            ->orderByDesc('total')
+            ->orderByDesc('total_siswa')
+            ->get()
+            ->map(fn ($row) => [
+                'kategori' => $row->kategori,
+                'total_siswa' => $row->total_siswa,
+                'persen' => $totalSiswa > 0 ? round($row->total_siswa / $totalSiswa * 100, 1) : 0,
+            ]);
+    }
+
+    /**
+     * Persentase di sini dari total siswa yang PERNAH MELANGGAR (bukan dari total siswa sekolah) --
+     * jadi menunjukkan komposisi Pasal apa yang paling sering terjadi di antara siswa yang bermasalah,
+     * bukan seberapa luas menyebar di seluruh siswa (itu peran chart "Distribusi Kategori Pelanggaran").
+     */
+    private function distribusiPasal()
+    {
+        $pelanggaranDenganPasal = Pelanggaran::whereNotNull('master_pelanggaran_id')
+            ->with('masterPelanggaran.pasal')
             ->get();
+
+        $totalSiswaMelanggar = $pelanggaranDenganPasal->pluck('siswa_id')->unique()->count();
+
+        return $pelanggaranDenganPasal
+            ->groupBy(fn ($p) => $p->masterPelanggaran?->pasal?->nama ?? 'Lainnya')
+            ->map(function ($group, $nama) use ($totalSiswaMelanggar) {
+                $totalSiswaPasal = $group->pluck('siswa_id')->unique()->count();
+
+                return [
+                    'pasal' => $nama,
+                    'total_siswa' => $totalSiswaPasal,
+                    'persen' => $totalSiswaMelanggar > 0 ? round($totalSiswaPasal / $totalSiswaMelanggar * 100, 1) : 0,
+                ];
+            })
+            ->sortByDesc('total_siswa')
+            ->values();
     }
 
     private function akademikPerKelas(string $jurusan)
@@ -217,13 +259,25 @@ class KepsekController extends Controller
         ];
     }
 
+    /**
+     * 8 minggu terakhir (termasuk minggu berjalan), diisi 0 untuk minggu tanpa pelanggaran --
+     * supaya garis tren tidak melompati minggu kosong seolah-olah berurutan langsung.
+     * Label berupa rentang tanggal (mis. "22-28 Sep") agar mudah dibaca, bukan nomor minggu mentah.
+     */
     private function trendPelanggaranMingguan()
     {
-        return Pelanggaran::selectRaw("strftime('%Y-%W', tanggal) as minggu, COUNT(*) as total")
-            ->groupBy('minggu')
-            ->orderBy('minggu')
-            ->limit(8)
-            ->get();
+        return collect(range(7, 0))->map(function ($i) {
+            $mulai = now()->subWeeks($i)->startOfWeek(Carbon::MONDAY);
+            $selesai = $mulai->copy()->endOfWeek(Carbon::SUNDAY);
+
+            $total = Pelanggaran::whereBetween('tanggal', [$mulai->toDateString(), $selesai->toDateString()])->count();
+
+            $label = $mulai->isSameMonth($selesai)
+                ? $mulai->translatedFormat('d').'-'.$selesai->translatedFormat('d M')
+                : $mulai->translatedFormat('d M').' - '.$selesai->translatedFormat('d M');
+
+            return ['minggu' => $label, 'total' => $total];
+        });
     }
 
     private function leaderboardPelanggaran()

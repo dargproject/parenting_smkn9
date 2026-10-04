@@ -136,22 +136,60 @@
                         <p class="text-slate-400 text-sm">Belum ada data pelanggaran.</p>
                     </div>
                 @else
+                    <p class="text-xs text-slate-500 mb-2">Persentase dihitung dari siswa yang pernah tercatat pada kategori ini, bukan dari jumlah insiden.</p>
                     <div id="chartDistribusiPelanggaran"></div>
                     <script>
                         document.addEventListener('DOMContentLoaded', function () {
                             registerChart(new ApexCharts(document.querySelector('#chartDistribusiPelanggaran'), {
-                                chart: { type: 'bar', height: 250, toolbar: { show: false }, fontFamily: 'inherit' },
-                                series: [{ name: 'Jumlah', data: @json($distribusiPelanggaran->pluck('total')) }],
-                                xaxis: { categories: @json($distribusiPelanggaran->pluck('kategori')) },
-                                plotOptions: { bar: { borderRadius: 6, horizontal: true, barHeight: '55%' } },
-                                colors: ['#f43f5e'],
-                                dataLabels: { enabled: false },
-                                grid: { strokeDashArray: 4 },
+                                chart: { type: 'donut', height: 260, fontFamily: 'inherit' },
+                                series: @json($distribusiPelanggaran->pluck('persen')),
+                                labels: @json($distribusiPelanggaran->pluck('kategori')),
+                                colors: ['#f43f5e', '#f59e0b', '#3b82f6', '#10b981', '#a855f7', '#64748b'],
+                                legend: { position: 'bottom' },
+                                dataLabels: {
+                                    enabled: true,
+                                    formatter: function (val, opts) { return opts.w.config.series[opts.seriesIndex] + '%'; },
+                                },
+                                tooltip: { y: { formatter: function (val) { return val + '% siswa'; } } },
                             }));
                         });
                     </script>
                 @endif
             </div>
+        </div>
+    </div>
+
+    <div class="lg:col-span-12">
+        <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5 md:p-6 h-full flex flex-col">
+            <h5 class="text-lg font-bold mb-4 text-slate-100">Distribusi per Pasal (Jenis Masalah)</h5>
+            @if($distribusiPasal->isEmpty())
+                <div class="flex-1 flex items-center justify-center min-h-[200px] bg-slate-900/50 rounded-xl border border-slate-700/30">
+                    <p class="text-slate-400 text-sm">Belum ada data pelanggaran.</p>
+                </div>
+            @else
+                <p class="text-xs text-slate-500 mb-2">Persen dari siswa yang pernah melanggar (bukan dari seluruh siswa sekolah) -- menunjukkan Pasal apa yang paling dominan di antara siswa bermasalah.</p>
+                <div id="chartDistribusiPasal"></div>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        registerChart(new ApexCharts(document.querySelector('#chartDistribusiPasal'), {
+                            chart: { type: 'radialBar', height: 320, fontFamily: 'inherit' },
+                            series: @json($distribusiPasal->pluck('persen')),
+                            labels: @json($distribusiPasal->pluck('pasal')),
+                            colors: ['#f43f5e', '#f59e0b', '#3b82f6', '#10b981', '#a855f7', '#64748b'],
+                            plotOptions: {
+                                radialBar: {
+                                    dataLabels: {
+                                        name: { fontSize: '13px' },
+                                        value: { fontSize: '13px', formatter: (val) => val + '%' },
+                                        total: { show: true, label: 'Siswa Terlibat', formatter: () => @json($totalSiswaTerlibatPasal) },
+                                    },
+                                },
+                            },
+                            legend: { show: true, position: 'bottom' },
+                        }));
+                    });
+                </script>
+            @endif
         </div>
     </div>
 </div>
@@ -240,26 +278,27 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div class="rounded-xl border border-slate-700/60 bg-slate-800/80 p-4 md:p-5">
             <h6 class="font-bold text-slate-100 mb-3">Tren Pelanggaran Mingguan</h6>
-            @if($trendPelanggaranMingguan->isEmpty())
-                <div class="flex items-center justify-center min-h-[160px] bg-slate-900/50 rounded-xl border border-slate-700/30">
-                    <p class="text-slate-400 text-sm">Belum ada data pelanggaran.</p>
-                </div>
-            @else
-                <div id="chartTrenPelanggaranMingguan"></div>
-                <script>
-                    document.addEventListener('DOMContentLoaded', function () {
-                        registerChart(new ApexCharts(document.querySelector('#chartTrenPelanggaranMingguan'), {
-                            chart: { type: 'bar', height: 200, toolbar: { show: false }, fontFamily: 'inherit' },
-                            series: [{ name: 'Pelanggaran', data: @json($trendPelanggaranMingguan->pluck('total')) }],
-                            xaxis: { categories: @json($trendPelanggaranMingguan->pluck('minggu')->map(fn ($m) => substr($m, 2))) },
-                            plotOptions: { bar: { borderRadius: 6, columnWidth: '45%' } },
-                            colors: ['#f43f5e'],
-                            dataLabels: { enabled: false },
-                            grid: { strokeDashArray: 4 },
-                        }));
-                    });
-                </script>
-            @endif
+            <div id="chartTrenPelanggaranMingguan"></div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    registerChart(new ApexCharts(document.querySelector('#chartTrenPelanggaranMingguan'), {
+                        chart: { type: 'area', height: 200, toolbar: { show: false }, fontFamily: 'inherit' },
+                        series: [{ name: 'Pelanggaran', data: @json($trendPelanggaranMingguan->pluck('total')) }],
+                        xaxis: { categories: @json($trendPelanggaranMingguan->pluck('minggu')) },
+                        colors: ['#f43f5e'],
+                        stroke: { curve: 'smooth', width: 2 },
+                        fill: { type: 'gradient', gradient: { opacityFrom: 0.45, opacityTo: 0 } },
+                        markers: { size: 4 },
+                        dataLabels: {
+                            enabled: true,
+                            offsetY: -8,
+                            style: { colors: ['#f43f5e'] },
+                            background: { enabled: true, foreColor: '#fff', borderRadius: 4, padding: 3 },
+                        },
+                        grid: { strokeDashArray: 4 },
+                    }));
+                });
+            </script>
         </div>
         <div class="rounded-xl border border-slate-700/60 bg-slate-800/80 p-4 md:p-5">
             <h6 class="font-bold text-slate-100 mb-3">Leaderboard Poin Pelanggaran</h6>
