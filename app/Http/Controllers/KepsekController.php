@@ -260,24 +260,34 @@ class KepsekController extends Controller
     }
 
     /**
-     * 8 minggu terakhir (termasuk minggu berjalan), diisi 0 untuk minggu tanpa pelanggaran --
-     * supaya garis tren tidak melompati minggu kosong seolah-olah berurutan langsung.
-     * Label berupa rentang tanggal (mis. "22-28 Sep") agar mudah dibaca, bukan nomor minggu mentah.
+     * Dipecah per minggu DALAM BULAN BERJALAN saja (bukan rolling 8 minggu lintas bulan) --
+     * minggu pertama/terakhir bisa terpotong di awal/akhir bulan. Diisi 0 untuk minggu tanpa
+     * pelanggaran supaya garis tren tidak melompati minggu kosong seolah-olah berurutan langsung.
      */
     private function trendPelanggaranMingguan()
     {
-        return collect(range(7, 0))->map(function ($i) {
-            $mulai = now()->subWeeks($i)->startOfWeek(Carbon::MONDAY);
-            $selesai = $mulai->copy()->endOfWeek(Carbon::SUNDAY);
+        $awalBulan = now()->startOfMonth();
+        $akhirBulan = now()->endOfMonth();
+
+        $minggu = collect();
+        $kursor = $awalBulan->copy();
+
+        while ($kursor->lte($akhirBulan)) {
+            $mulai = $kursor->copy();
+            $selesai = $kursor->copy()->endOfWeek(Carbon::SUNDAY)->min($akhirBulan);
 
             $total = Pelanggaran::whereBetween('tanggal', [$mulai->toDateString(), $selesai->toDateString()])->count();
 
-            $label = $mulai->isSameMonth($selesai)
-                ? $mulai->translatedFormat('d').'-'.$selesai->translatedFormat('d M')
-                : $mulai->translatedFormat('d M').' - '.$selesai->translatedFormat('d M');
+            $label = $mulai->isSameDay($selesai)
+                ? $mulai->translatedFormat('d M')
+                : $mulai->translatedFormat('d').'-'.$selesai->translatedFormat('d M');
 
-            return ['minggu' => $label, 'total' => $total];
-        });
+            $minggu->push(['minggu' => $label, 'total' => $total]);
+
+            $kursor = $selesai->copy()->addDay();
+        }
+
+        return $minggu;
     }
 
     private function leaderboardPelanggaran()

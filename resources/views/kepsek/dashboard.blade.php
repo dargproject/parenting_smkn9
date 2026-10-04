@@ -277,7 +277,7 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div class="rounded-xl border border-slate-700/60 bg-slate-800/80 p-4 md:p-5">
-            <h6 class="font-bold text-slate-100 mb-3">Tren Pelanggaran Mingguan</h6>
+            <h6 class="font-bold text-slate-100 mb-3">Tren Pelanggaran Mingguan ({{ now()->translatedFormat('F Y') }})</h6>
             <div id="chartTrenPelanggaranMingguan"></div>
             <script>
                 document.addEventListener('DOMContentLoaded', function () {
