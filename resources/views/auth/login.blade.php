@@ -18,11 +18,17 @@
       <div class="mx-auto flex w-full max-w-md flex-1 flex-col justify-center">
         <div>
           <div class="mb-5 sm:mb-8 text-center lg:text-left">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-600 text-white mb-6">
-                <i class="fa-solid fa-graduation-cap text-3xl"></i>
-            </div>
+            @if(setting('logo_sekolah'))
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white overflow-hidden mb-6 border border-slate-200 dark:border-slate-700">
+                    <img src="{{ asset('storage/'.setting('logo_sekolah')) }}" alt="Logo Sekolah" class="h-full w-full object-contain p-1.5">
+                </div>
+            @else
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-600 text-white mb-6">
+                    <i class="fa-solid fa-graduation-cap text-3xl"></i>
+                </div>
+            @endif
             <h1 class="text-2xl sm:text-3xl mb-2 font-bold text-slate-800 dark:text-white/90">
-              SIM Sekolah
+              {{ setting('nama_sekolah', 'SIM Sekolah') }}
             </h1>
             <p class="text-sm text-slate-500 dark:text-slate-400">
               Sistem Informasi Akademik & Kesiswaan
@@ -105,9 +111,9 @@
           Sistem Informasi Manajemen terpadu untuk memantau akademik, presensi, dan kedisiplinan siswa secara real-time.
         </p>
         
-        <!-- Decorative Grid/Image from template -->
-        <div class="mt-12 relative w-full max-w-lg">
-            <img src="{{ asset('assets/img/grid-image/image-01.png') }}" alt="Dashboard Preview" class="w-full h-auto rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700/60 opacity-90 dark:opacity-70 transform rotate-2 hover:rotate-0 transition-transform duration-500" onerror="this.style.display='none'">
+        <!-- Decorative Grid/Image -->
+        <div class="mt-12 flex w-full max-w-lg h-72 items-center justify-center">
+            <img src="{{ setting('gambar_login') ? asset('storage/'.setting('gambar_login')) : asset('assets/img/grid-image/image-01.png') }}" alt="Dashboard Preview" class="max-h-72 max-w-full w-auto h-auto object-contain rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700/60 opacity-90 dark:opacity-70 transform rotate-2 hover:rotate-0 transition-transform duration-500" onerror="this.style.display='none'">
         </div>
       </div>
       

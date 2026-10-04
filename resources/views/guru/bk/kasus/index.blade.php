@@ -70,12 +70,12 @@
                         <td class="px-4 py-3 text-slate-300">{{ $kasus->judul }}</td>
                         <td class="px-4 py-3 text-slate-400">{{ $kasus->kategoriKasus->nama_kategori ?? $kasus->kategori }}</td>
                         <td class="px-4 py-3 text-center">
-                            @php $prioritasBadge = ['rendah' => 'bg-slate-500/10 text-slate-300', 'sedang' => 'bg-amber-500/10 text-amber-400', 'tinggi' => 'bg-rose-500/10 text-rose-400'][$kasus->prioritas] ?? 'bg-slate-500/10 text-slate-300'; @endphp
-                            <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $prioritasBadge }}">{{ ucfirst($kasus->prioritas) }}</span>
+                            @php $prioritasTone = ['rendah' => 'slate', 'sedang' => 'amber', 'tinggi' => 'rose'][$kasus->prioritas] ?? 'slate'; @endphp
+                            <x-status-badge :tone="$prioritasTone">{{ ucfirst($kasus->prioritas) }}</x-status-badge>
                         </td>
                         <td class="px-4 py-3 text-center">
-                            @php $statusBadge = ['antrean' => 'bg-rose-500/10 text-rose-400', 'proses' => 'bg-blue-500/10 text-blue-400', 'selesai' => 'bg-emerald-500/10 text-emerald-400'][$kasus->status]; @endphp
-                            <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $statusBadge }}">{{ ucfirst($kasus->status) }}</span>
+                            @php $statusTone = ['antrean' => 'rose', 'proses' => 'blue', 'selesai' => 'emerald'][$kasus->status] ?? 'slate'; @endphp
+                            <x-status-badge :tone="$statusTone">{{ ucfirst($kasus->status) }}</x-status-badge>
                         </td>
                         <td class="px-4 py-3 text-slate-400">{{ optional($kasus->tanggal_mulai)->translatedFormat('d M Y') ?? '-' }}</td>
                         <td class="px-4 py-3 text-right">

@@ -20,9 +20,9 @@
                 <div class="flex flex-wrap gap-2">
                     @foreach($kelasData['mapel'] as $mp)
                         @php $lengkap = $mp['total'] > 0 && $mp['submitted'] >= $mp['total']; @endphp
-                        <span class="rounded-full px-3 py-1 text-xs font-semibold {{ $lengkap ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400' }}">
+                        <x-status-badge :tone="$lengkap ? 'emerald' : 'amber'">
                             {{ $mp['mapel']->nama_mapel }}: {{ $mp['submitted'] }}/{{ $mp['total'] }} siswa dinilai
-                        </span>
+                        </x-status-badge>
                     @endforeach
                 </div>
 

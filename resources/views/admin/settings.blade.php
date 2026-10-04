@@ -45,6 +45,15 @@
                 <input id="logo_sekolah" name="logo_sekolah" type="file" accept="image/*" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm dark:border-slate-600 dark:text-slate-100">
                 @error('logo_sekolah')<p class="mt-1 text-xs text-rose-500">{{ $message }}</p>@enderror
             </div>
+            <div class="md:col-span-2">
+                <label for="gambar_login" class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Gambar Dekoratif Halaman Login</label>
+                @if(!empty($settings['gambar_login']))
+                    <img src="{{ asset('storage/' . $settings['gambar_login']) }}" alt="Gambar login" class="mb-3 h-28 w-auto max-w-xs rounded-lg object-contain border border-slate-200 dark:border-slate-700">
+                @endif
+                <input id="gambar_login" name="gambar_login" type="file" accept="image/*" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm dark:border-slate-600 dark:text-slate-100">
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Ukuran gambar menyesuaikan otomatis di halaman login, apapun rasio aslinya. Kosongkan untuk pakai gambar bawaan.</p>
+                @error('gambar_login')<p class="mt-1 text-xs text-rose-500">{{ $message }}</p>@enderror
+            </div>
         </div>
         <div class="flex justify-end">
             <button type="submit" class="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-500">Simpan Pengaturan</button>

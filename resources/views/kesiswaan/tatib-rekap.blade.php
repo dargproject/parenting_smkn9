@@ -61,7 +61,7 @@
                     @php
                         $poin = (int) ($siswa->total_poin ?? 0);
                         $statusLabel = $rekapRows[$i]['status'];
-                        $statusClass = match ($statusLabel) { 'Aman' => 'bg-emerald-500/10 text-emerald-400', 'SP 1' => 'bg-amber-500/10 text-amber-400', default => 'bg-rose-500/10 text-rose-400' };
+                        $statusTone = match ($statusLabel) { 'Aman' => 'emerald', 'SP 1' => 'amber', default => 'rose' };
                     @endphp
                     <tr x-show="terlihat.has({{ $siswa->id }})">
                         <td class="px-5 py-3 font-semibold text-slate-100">{{ $siswa->nama }}</td>
@@ -69,7 +69,7 @@
                         <td class="px-5 py-3 text-slate-400">{{ $siswa->kelas->nama_kelas ?? '-' }}</td>
                         <td class="px-5 py-3 text-center font-bold text-blue-400">{{ $poin }}</td>
                         <td class="px-5 py-3 text-center">
-                            <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $statusClass }}">{{ $statusLabel }}</span>
+                            <x-status-badge :tone="$statusTone">{{ $statusLabel }}</x-status-badge>
                         </td>
                     </tr>
                 @empty

@@ -59,18 +59,18 @@
             <tbody class="divide-y divide-slate-700/60">
                 @forelse($records as $record)
                     @php
-                        $badge = match($record->status) {
-                            'diproses' => 'bg-amber-500/10 text-amber-400',
-                            'ditunda' => 'bg-blue-500/10 text-blue-400',
-                            'dibatalkan' => 'bg-rose-500/10 text-rose-400',
-                            default => 'bg-slate-700/40 text-slate-400',
+                        $tone = match($record->status) {
+                            'diproses' => 'amber',
+                            'ditunda' => 'blue',
+                            'dibatalkan' => 'rose',
+                            default => 'slate',
                         };
                     @endphp
                     <tr>
                         <td class="px-4 py-3 text-slate-300 whitespace-nowrap">{{ $record->tanggal_kunjungan->translatedFormat('d M Y') }}</td>
                         <td class="px-4 py-3 font-semibold text-slate-100">{{ $record->kasusBk->siswa->nama ?? '-' }}<span class="block text-slate-400 font-normal" style="font-size: 10px;">NIS {{ $record->kasusBk->siswa->nis ?? '-' }}</span></td>
                         <td class="px-4 py-3 text-slate-400">{{ $record->kasusBk->siswa->kelas->nama_kelas ?? '-' }}</td>
-                        <td class="px-4 py-3"><span class="rounded-full px-2.5 py-1 text-xs font-bold {{ $badge }}">{{ ucfirst($record->status) }}</span></td>
+                        <td class="px-4 py-3"><x-status-badge :tone="$tone">{{ ucfirst($record->status) }}</x-status-badge></td>
                         <td class="px-4 py-3 text-slate-300 max-w-xs truncate">{{ $record->kasusBk->deskripsi ?? '-' }}</td>
                         <td class="px-4 py-3 text-right">
                             <a href="{{ route('guru.bk.kunjungan-rumah.show', $record) }}" class="text-blue-400 hover:text-blue-300 text-sm font-semibold">Detail</a>

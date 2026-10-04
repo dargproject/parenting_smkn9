@@ -18,6 +18,7 @@ class UpdateSettingRequest extends FormRequest
             'npsn' => ['nullable', 'string', 'max:50'],
             'alamat_sekolah' => ['nullable', 'string', 'max:2000'],
             'logo_sekolah' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
+            'gambar_login' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'nama_kepsek' => ['nullable', 'string', 'max:255'],
             'nip_kepsek' => ['nullable', 'string', 'max:50'],
             'bobot_lm' => ['required', 'numeric', 'min:0', 'max:100'],

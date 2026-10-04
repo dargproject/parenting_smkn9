@@ -7,8 +7,12 @@
 @endphp
 <nav id="sidebar-wrapper" class="fixed inset-y-0 left-0 z-[9999] w-64 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out bg-slate-800/80 border-r border-slate-700/60 flex flex-col flex-shrink-0 text-slate-100">
     <div class="sidebar-heading border-b border-slate-700/60 border-slate-700/60 d-flex items-center gap-2 py-4">
-        <i class="fa-solid fa-graduation-cap text-info fs-3"></i>
-        <span class="fs-5 font-bold tracking-tight">SI SMK Negeri 9</span>
+        @if(setting('logo_sekolah'))
+            <img src="{{ asset('storage/'.setting('logo_sekolah')) }}" alt="Logo Sekolah" class="h-8 w-8 rounded object-contain">
+        @else
+            <i class="fa-solid fa-graduation-cap text-info fs-3"></i>
+        @endif
+        <span class="fs-5 font-bold tracking-tight">{{ setting('nama_sekolah', 'SI SMK Negeri 9') }}</span>
     </div>
 
     <!-- User summary inside sidebar -->
@@ -69,16 +73,34 @@
             <a href="{{ route('guru.bk.dashboard') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-chart-pie w-6 text-center mr-2"></i> <span>Dashboard BK</span></a>
             <a href="{{ route('guru.bk.rujukan.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-inbox w-6 text-center mr-2"></i> <span>Rujukan Masuk</span></a>
             <a href="{{ route('guru.bk.kasus.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-folder-open w-6 text-center mr-2"></i> <span>Kasus BK</span></a>
-            <a href="{{ route('guru.bk.individu.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-user w-6 text-center mr-2"></i> <span>Konseling Individu</span></a>
-            <a href="{{ route('guru.bk.kelompok.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-people-group w-6 text-center mr-2"></i> <span>Konseling Kelompok</span></a>
-            <a href="{{ route('guru.bk.kunjungan-rumah.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-house w-6 text-center mr-2"></i> <span>Kunjungan Rumah</span></a>
-            <a href="{{ route('guru.bk.alih-tangan.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-right-left w-6 text-center mr-2"></i> <span>Alih Tangan Kasus</span></a>
-            <a href="{{ route('guru.bk.konferensi.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-people-roof w-6 text-center mr-2"></i> <span>Konferensi Kasus</span></a>
-            <a href="{{ route('guru.bk.pengunduran-diri.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-person-walking-arrow-right w-6 text-center mr-2"></i> <span>Pengunduran Diri</span></a>
-            <a href="{{ route('guru.bk.asesmen.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-file-circle-check w-6 text-center mr-2"></i> <span>Asesmen BK (AKPD, dll.)</span></a>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-bk-asesmen', this)"><i class="fa-solid fa-clipboard-question w-6 text-center mr-2"></i> <span>Asesmen Psikologis</span></a>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-bk-kanban', this)"><i class="fa-solid fa-list-check w-6 text-center mr-2"></i> <span>Kanban Tindak Lanjut</span></a>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-bk-riwayat', this)"><i class="fa-solid fa-address-card w-6 text-center mr-2"></i> <span>Jejak Rekam Siswa</span></a>
+
+            <div x-data="{ openLayanan: false }">
+                <button type="button" @click="openLayanan = !openLayanan" class="flex items-center w-full px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors">
+                    <i class="fa-solid fa-hand-holding-heart w-6 text-center mr-2"></i> <span>Layanan Penanganan</span>
+                    <i class="fa-solid fa-chevron-down ml-auto text-xs transition-transform" :class="{ 'rotate-180': openLayanan }"></i>
+                </button>
+                <div x-show="openLayanan" style="display: none">
+                    <a href="{{ route('guru.bk.individu.index') }}" class="flex items-center pl-12 pr-4 py-2.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors text-sm"><span>Konseling Individu</span></a>
+                    <a href="{{ route('guru.bk.kelompok.index') }}" class="flex items-center pl-12 pr-4 py-2.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors text-sm"><span>Konseling Kelompok</span></a>
+                    <a href="{{ route('guru.bk.kunjungan-rumah.index') }}" class="flex items-center pl-12 pr-4 py-2.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors text-sm"><span>Kunjungan Rumah</span></a>
+                    <a href="{{ route('guru.bk.alih-tangan.index') }}" class="flex items-center pl-12 pr-4 py-2.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors text-sm"><span>Alih Tangan Kasus</span></a>
+                    <a href="{{ route('guru.bk.konferensi.index') }}" class="flex items-center pl-12 pr-4 py-2.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors text-sm"><span>Konferensi Kasus</span></a>
+                    <a href="{{ route('guru.bk.pengunduran-diri.index') }}" class="flex items-center pl-12 pr-4 py-2.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors text-sm"><span>Pengunduran Diri</span></a>
+                </div>
+            </div>
+
+            <div x-data="{ openAsesmen: false }">
+                <button type="button" @click="openAsesmen = !openAsesmen" class="flex items-center w-full px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors">
+                    <i class="fa-solid fa-file-circle-check w-6 text-center mr-2"></i> <span>Asesmen & Lainnya</span>
+                    <i class="fa-solid fa-chevron-down ml-auto text-xs transition-transform" :class="{ 'rotate-180': openAsesmen }"></i>
+                </button>
+                <div x-show="openAsesmen" style="display: none">
+                    <a href="{{ route('guru.bk.asesmen.index') }}" class="flex items-center pl-12 pr-4 py-2.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors text-sm"><span>Asesmen BK (AKPD, dll.)</span></a>
+                    <a href="#" class="flex items-center pl-12 pr-4 py-2.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors text-sm" onclick="gotoPane('pane-bk-asesmen', this)"><span>Asesmen Psikologis</span></a>
+                    <a href="#" class="flex items-center pl-12 pr-4 py-2.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors text-sm" onclick="gotoPane('pane-bk-kanban', this)"><span>Kanban Tindak Lanjut</span></a>
+                    <a href="#" class="flex items-center pl-12 pr-4 py-2.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors text-sm" onclick="gotoPane('pane-bk-riwayat', this)"><span>Jejak Rekam Siswa</span></a>
+                </div>
+            </div>
         @endif
 
         @if(in_array('wali_kelas', $roles))

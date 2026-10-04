@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Portal Orang Tua | SMKN 9 MALANG</title>
+    <title>Portal Orang Tua | {{ setting('nama_sekolah', 'SMKN 9 MALANG') }}</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -22,8 +22,12 @@
     <header class="border-b border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
         <div class="mx-auto flex max-w-4xl items-center justify-between px-4 py-4">
             <div class="flex items-center gap-2">
-                <i class="fa-solid fa-graduation-cap text-xl text-blue-600 dark:text-blue-400"></i>
-                <span class="font-bold text-slate-900 dark:text-white">Portal Orang Tua &mdash; SMKN 9 Malang</span>
+                @if(setting('logo_sekolah'))
+                    <img src="{{ asset('storage/'.setting('logo_sekolah')) }}" alt="Logo Sekolah" class="h-7 w-7 rounded object-contain">
+                @else
+                    <i class="fa-solid fa-graduation-cap text-xl text-blue-600 dark:text-blue-400"></i>
+                @endif
+                <span class="font-bold text-slate-900 dark:text-white">Portal Orang Tua &mdash; {{ setting('nama_sekolah', 'SMKN 9 Malang') }}</span>
             </div>
             <div class="flex items-center gap-3">
                 <button @click="darkMode = !darkMode" class="rounded-full p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700">

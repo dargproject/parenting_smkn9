@@ -41,6 +41,23 @@ class PanggilanOrtuManajemenTest extends TestCase
         return Guru::whereHas('roles', fn ($q) => $q->where('name', 'waka_kesiswaan'))->firstOrFail();
     }
 
+    public function test_portal_waka_kesiswaan_menampilkan_badge_status_panggilan_tanpa_error(): void
+    {
+        $waka = $this->wakaKesiswaan();
+        PanggilanOrtu::create([
+            'siswa_id' => Siswa::firstOrFail()->id,
+            'tanggal' => now()->toDateString(),
+            'waktu' => '09:00',
+            'alasan' => 'Uji tampilan badge.',
+            'status' => 'Menunggu Konfirmasi',
+            'pemanggil_id' => $waka->id,
+        ]);
+
+        $this->sebagai($waka)->get(route('guru.portal'))
+            ->assertOk()
+            ->assertSee('Menunggu Konfirmasi');
+    }
+
     public function test_pembuat_panggilan_dapat_mengedit_panggilannya_sendiri(): void
     {
         $guruBk = $this->guruBk();
@@ -65,6 +82,48 @@ class PanggilanOrtuManajemenTest extends TestCase
             'alasan' => 'Alasan sudah diperbarui.',
             'ruang' => 'Ruang BK Baru',
         ]);
+    }
+
+    public function test_reschedule_setelah_status_hadir_otomatis_kembali_ke_menunggu_konfirmasi(): void
+    {
+        $guruBk = $this->guruBk();
+        $panggilan = PanggilanOrtu::create([
+            'siswa_id' => Siswa::firstOrFail()->id,
+            'tanggal' => '2026-10-03',
+            'waktu' => '09:00',
+            'alasan' => 'Alasan awal.',
+            'status' => 'Hadir / Mediasi Selesai',
+            'pemanggil_id' => $guruBk->id,
+        ]);
+
+        $this->sebagai($guruBk)->put(route('panggilan-ortu.update', $panggilan), [
+            'tanggal' => '2026-10-10',
+            'waktu' => '09:00',
+            'alasan' => 'Alasan awal.',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('panggilan_ortus', ['id' => $panggilan->id, 'status' => 'Menunggu Konfirmasi']);
+    }
+
+    public function test_edit_tanpa_mengubah_jadwal_tidak_mereset_status_hadir(): void
+    {
+        $guruBk = $this->guruBk();
+        $panggilan = PanggilanOrtu::create([
+            'siswa_id' => Siswa::firstOrFail()->id,
+            'tanggal' => '2026-10-03',
+            'waktu' => '09:00',
+            'alasan' => 'Alasan awal.',
+            'status' => 'Hadir / Mediasi Selesai',
+            'pemanggil_id' => $guruBk->id,
+        ]);
+
+        $this->sebagai($guruBk)->put(route('panggilan-ortu.update', $panggilan), [
+            'tanggal' => '2026-10-03',
+            'waktu' => '09:00',
+            'alasan' => 'Alasan diperjelas, jadwal tetap sama.',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('panggilan_ortus', ['id' => $panggilan->id, 'status' => 'Hadir / Mediasi Selesai']);
     }
 
     public function test_bukan_pembuat_tidak_bisa_mengedit_atau_menghapus_panggilan_orang_lain(): void

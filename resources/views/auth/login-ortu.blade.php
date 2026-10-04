@@ -4,9 +4,15 @@
 <div class="mx-auto max-w-sm">
     <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
         <div class="mb-6 text-center">
-            <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white">
-                <i class="fa-solid fa-user-group text-2xl"></i>
-            </div>
+            @if(setting('logo_sekolah'))
+                <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white overflow-hidden border border-slate-200 dark:border-slate-700">
+                    <img src="{{ asset('storage/'.setting('logo_sekolah')) }}" alt="Logo Sekolah" class="h-full w-full object-contain p-1">
+                </div>
+            @else
+                <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white">
+                    <i class="fa-solid fa-user-group text-2xl"></i>
+                </div>
+            @endif
             <h1 class="text-xl font-bold text-slate-900 dark:text-white">Portal Orang Tua</h1>
             <p class="text-sm text-slate-500 dark:text-slate-400">Pantau perkembangan nilai putra/putri Anda</p>
         </div>

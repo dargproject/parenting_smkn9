@@ -126,11 +126,11 @@
                             <td class="text-center font-bold text-primary font-monospace">{{ $avg }}</td>
                             <td>
                                 @if($jumlahMapelDenganNilai === 0)
-                                    <span class="badge bg-secondary-subtle text-slate-400 badge-pill-custom">Belum Ada Nilai</span>
+                                    <x-status-badge tone="slate">Belum Ada Nilai</x-status-badge>
                                 @elseif($isTuntas)
-                                    <span class="badge bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 badge-pill-custom">Tuntas Rapor</span>
+                                    <x-status-badge tone="emerald">Tuntas Rapor</x-status-badge>
                                 @else
-                                    <span class="badge bg-rose-500/10 text-rose-400 border border-rose-500/20 badge-pill-custom">Belum Tuntas</span>
+                                    <x-status-badge tone="rose">Belum Tuntas</x-status-badge>
                                 @endif
                             </td>
                         </tr>

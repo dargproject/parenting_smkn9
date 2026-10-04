@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
 use App\Models\PanggilanOrtu;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -20,9 +21,22 @@ class PanggilanOrtuController extends Controller
             'alasan' => 'required|string',
         ]);
 
+        $jadwalBerubah = $data['tanggal'] !== Carbon::parse($panggilanOrtu->tanggal)->toDateString()
+            || $data['waktu'] !== Carbon::parse($panggilanOrtu->waktu)->format('H:i');
+
+        $statusDikembalikan = $jadwalBerubah && str_contains($panggilanOrtu->status, 'Hadir');
+        if ($statusDikembalikan) {
+            $data['status'] = 'Menunggu Konfirmasi';
+        }
+
         $panggilanOrtu->update($data);
 
-        return back()->with('success', 'Panggilan orang tua berhasil diperbarui.');
+        $pesan = 'Panggilan orang tua berhasil diperbarui.';
+        if ($statusDikembalikan) {
+            $pesan .= ' Status dikembalikan ke "Menunggu Konfirmasi" karena jadwal diubah.';
+        }
+
+        return back()->with('success', $pesan);
     }
 
     public function updateStatus(Request $request, PanggilanOrtu $panggilanOrtu)

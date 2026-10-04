@@ -18,8 +18,8 @@
                 id="sidebar-toggler" title="Tampilkan / sembunyikan menu">
                 <i class="fa-solid fa-bars-staggered"></i>
             </button>
-            <span class="navbar-brand-custom text-info hidden sm:inline-block" id="top-title-brand">SMKN 9 Malang</span>
-            <span class="navbar-brand-custom text-info sm:hidden" id="top-title-brand">SMKN 9</span>
+            <span class="navbar-brand-custom text-info hidden sm:inline-block">{{ setting('nama_sekolah', 'SMKN 9 Malang') }}</span>
+            <span class="navbar-brand-custom text-info sm:hidden">{{ setting('nama_sekolah', 'SMKN 9') }}</span>
         </div>
 
         <!-- User Info & Notifications -->

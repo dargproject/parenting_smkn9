@@ -36,7 +36,7 @@
                     <div>
                         <div class="flex justify-between items-center mb-2">
                             <h6 class="font-bold m-0 text-slate-100">{{ $kelas->nama_kelas }}</h6>
-                            <span class="badge bg-amber-500/10 text-amber-400 border border-amber-500/20 badge-pill-custom">Menunggu Validasi</span>
+                            <x-status-badge tone="amber">Menunggu Validasi</x-status-badge>
                         </div>
                         <p class="text-slate-400 small m-0 mb-3">Wali Kelas: {{ $kelas->waliKelas->nama ?? '-' }}</p>
                     </div>

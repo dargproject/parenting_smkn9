@@ -40,10 +40,10 @@
                                 <td class="px-3 py-3 font-semibold text-slate-100">{{ $siswa->nama }}</td>
                                 <td class="px-3 py-3 text-slate-400">{{ $siswa->kelas->nama_kelas ?? '-' }}</td>
                                 <td class="px-3 py-3 text-center">
-                                    <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $lengkap ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400' }}">{{ $lengkap ? 'Lengkap' : 'Belum Lengkap' }}</span>
+                                    <x-status-badge :tone="$lengkap ? 'emerald' : 'amber'">{{ $lengkap ? 'Lengkap' : 'Belum Lengkap' }}</x-status-badge>
                                 </td>
                                 <td class="px-3 py-3 text-center">
-                                    <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $sudahFinal ? 'bg-blue-500/10 text-blue-400' : 'bg-slate-500/10 text-slate-400' }}">{{ $sudahFinal ? 'Dirilis' : 'Draft' }}</span>
+                                    <x-status-badge :tone="$sudahFinal ? 'blue' : 'slate'">{{ $sudahFinal ? 'Dirilis' : 'Draft' }}</x-status-badge>
                                 </td>
                                 <td class="px-3 py-3 text-right">
                                     @if($sudahFinal)

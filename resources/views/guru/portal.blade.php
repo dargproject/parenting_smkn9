@@ -518,10 +518,10 @@
                 @if($rujukanBkSaya->isNotEmpty())
                     <div class="mt-3 flex flex-col gap-1.5">
                         @foreach($rujukanBkSaya as $r)
-                            @php $badge = match($r->status) { 'diterima' => 'bg-emerald-500/10 text-emerald-400', 'ditolak' => 'bg-rose-500/10 text-rose-400', default => 'bg-amber-500/10 text-amber-400' }; @endphp
+                            @php $tone = match($r->status) { 'diterima' => 'emerald', 'ditolak' => 'rose', default => 'amber' }; @endphp
                             <div class="flex items-center justify-between text-xs rounded-lg bg-slate-900/50 px-3 py-1.5">
                                 <span class="text-slate-300">{{ $r->siswa->nama ?? '-' }} &middot; {{ $r->kategori }}</span>
-                                <span class="rounded-full px-2 py-0.5 font-bold {{ $badge }}">{{ ucfirst($r->status) }}</span>
+                                <x-status-badge :tone="$tone">{{ ucfirst($r->status) }}</x-status-badge>
                             </div>
                         @endforeach
                     </div>

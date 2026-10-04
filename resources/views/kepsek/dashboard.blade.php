@@ -195,9 +195,9 @@
                         <td class="px-5 py-4 text-center font-bold text-blue-400">{{ $row['rata_rata'] ?? '-' }}</td>
                         <td class="px-5 py-4 text-center">
                             @if($row['persen_tuntas'] !== null)
-                                <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $row['persen_tuntas'] >= 75 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400' }}">{{ $row['persen_tuntas'] }}% Tuntas</span>
+                                <x-status-badge :tone="$row['persen_tuntas'] >= 75 ? 'emerald' : 'amber'">{{ $row['persen_tuntas'] }}% Tuntas</x-status-badge>
                             @else
-                                <span class="rounded-full px-2.5 py-1 text-xs font-semibold bg-slate-500/10 text-slate-400">Belum ada nilai</span>
+                                <x-status-badge tone="slate">Belum ada nilai</x-status-badge>
                             @endif
                         </td>
                     </tr>

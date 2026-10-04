@@ -70,7 +70,7 @@
                                 <td class="px-5 py-3 text-slate-400">{{ $item->jenisPelanggaran->nama ?? '-' }}</td>
                                 <td class="px-5 py-3 text-center font-bold text-blue-400">{{ $item->jenisPelanggaran->poin ?? '-' }}</td>
                                 <td class="px-5 py-3 text-center">
-                                    <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $item->is_active ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-500/10 text-slate-400' }}">{{ $item->is_active ? 'Aktif' : 'Nonaktif' }}</span>
+                                    <x-status-badge :tone="$item->is_active ? 'emerald' : 'slate'">{{ $item->is_active ? 'Aktif' : 'Nonaktif' }}</x-status-badge>
                                 </td>
                             </tr>
                         @endforeach

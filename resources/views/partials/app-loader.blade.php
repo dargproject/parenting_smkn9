@@ -43,7 +43,13 @@
         background: #2563eb;
         display: flex; align-items: center; justify-content: center;
         color: #fff; font-size: 22px;
+        overflow: hidden;
         animation: app-loader-pulse 1.2s ease-in-out infinite;
+    }
+    #app-loader .app-loader-icon img {
+        width: 100%; height: 100%;
+        object-fit: contain;
+        padding: 6px;
     }
     @keyframes app-loader-pulse {
         0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37, 99, 235, .55); }
@@ -60,7 +66,13 @@
 <div id="app-loader">
     <div class="app-loader-bar"></div>
     <div class="app-loader-card">
-        <div class="app-loader-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+        <div class="app-loader-icon">
+            @if(setting('logo_sekolah'))
+                <img src="{{ asset('storage/'.setting('logo_sekolah')) }}" alt="Logo Sekolah">
+            @else
+                <i class="fa-solid fa-graduation-cap"></i>
+            @endif
+        </div>
         <p class="app-loader-text" id="app-loader-text">Memuat...</p>
     </div>
 </div>

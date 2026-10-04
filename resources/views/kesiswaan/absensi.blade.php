@@ -22,9 +22,9 @@
                             <td class="px-2 py-2 text-center font-bold text-rose-400 fs-5">{{ $siswa->alpa_count }}</td>
                             <td class="px-2 py-2">
                                 @if($siswa->alpa_count >= 5)
-                                    <span class="badge bg-rose-500/10 text-rose-400 border border-rose-500/20 badge-pill-custom">SP 1 (Panggilan Ortu)</span>
+                                    <x-status-badge tone="rose">SP 1 (Panggilan Ortu)</x-status-badge>
                                 @else
-                                    <span class="badge bg-amber-500/10 text-amber-400 border border-amber-500/20 badge-pill-custom">Teguran Keras</span>
+                                    <x-status-badge tone="amber">Teguran Keras</x-status-badge>
                                 @endif
                             </td>
                             <td class="px-2 py-2 text-end">

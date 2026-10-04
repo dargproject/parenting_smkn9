@@ -64,8 +64,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 text-slate-100" id="kesiswaan-summons-grid">
         @foreach($panggilanOrtus as $panggilan)
             @php
-                $statusClass = 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
-                if (str_contains($panggilan->status, 'Hadir')) $statusClass = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+                $tone = str_contains($panggilan->status, 'Hadir') ? 'emerald' : 'amber';
             @endphp
             <div class="col-span-1">
                 <div class="card p-3 border-0 rounded-xl shadow-sm bg-slate-800/80 border-l border-slate-700/60 border-4 border-warning">
@@ -74,7 +73,7 @@
                             <h6 class="font-bold text-slate-100 mb-1">Mediasi: Wali dari {{ $panggilan->siswa->nama ?? '-' }}</h6>
                             <span class="text-slate-400 small">{{ $panggilan->siswa->kelas->nama_kelas ?? '-' }}</span>
                         </div>
-                        <span class="badge {{ $statusClass }} badge-pill-custom">{{ $panggilan->status }}</span>
+                        <x-status-badge :tone="$tone">{{ $panggilan->status }}</x-status-badge>
                     </div>
                     <p class="small text-slate-400 m-0 mb-3"><i class="fa-regular fa-clock mr-1"></i> {{ \Carbon\Carbon::parse($panggilan->tanggal)->translatedFormat('l, d F Y') }} Pukul {{ \Carbon\Carbon::parse($panggilan->waktu)->format('H:i') }} WIB</p>
                     <div class="flex gap-2 mb-2">

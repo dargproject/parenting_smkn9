@@ -32,6 +32,16 @@ class SettingController extends Controller
             unset($data['logo_sekolah']);
         }
 
+        if ($request->hasFile('gambar_login')) {
+            $oldGambar = setting('gambar_login');
+            if ($oldGambar) {
+                Storage::disk('public')->delete($oldGambar);
+            }
+            $data['gambar_login'] = $request->file('gambar_login')->store('settings', 'public');
+        } else {
+            unset($data['gambar_login']);
+        }
+
         foreach ($data as $key => $value) {
             Setting::updateOrCreate(['key' => $key], ['value' => $value]);
         }

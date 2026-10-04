@@ -29,9 +29,9 @@
                             <td><span class="badge bg-secondary">{{ $jadwal->ruang }}</span></td>
                             <td class="text-center">
                                 @if($jurnalHariIniIds->contains($jadwal->id))
-                                    <span class="badge bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Jurnal Terisi</span>
+                                    <x-status-badge tone="emerald">Jurnal Terisi</x-status-badge>
                                 @else
-                                    <span class="badge bg-amber-500/10 text-amber-400 border border-amber-500/20">Belum di-Jurnal</span>
+                                    <x-status-badge tone="amber">Belum di-Jurnal</x-status-badge>
                                 @endif
                             </td>
                         </tr>

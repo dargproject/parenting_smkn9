@@ -37,7 +37,7 @@
                             <div class="rounded-xl bg-slate-50 px-4 py-2.5 dark:bg-slate-900/60 text-sm">
                                 <p class="m-0 text-slate-800 dark:text-slate-100">{{ \Illuminate\Support\Carbon::parse($panggilan->tanggal)->translatedFormat('d M Y') }}, {{ $panggilan->waktu }}{{ $panggilan->ruang ? ' · '.$panggilan->ruang : '' }}</p>
                                 <p class="m-0 text-slate-500 dark:text-slate-400">{{ $panggilan->alasan }}</p>
-                                <span class="mt-1 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">{{ $panggilan->status }}</span>
+                                <x-status-badge tone="amber" light class="mt-1 inline-block">{{ $panggilan->status }}</x-status-badge>
                             </div>
                         @endforeach
                     </div>
@@ -51,7 +51,7 @@
                         @foreach($bkKunjunganRumah as $kunjungan)
                             <div class="rounded-xl bg-slate-50 px-4 py-2.5 dark:bg-slate-900/60 text-sm flex items-center justify-between">
                                 <span class="text-slate-800 dark:text-slate-100">{{ $kunjungan->tanggal_kunjungan->translatedFormat('d M Y') }}</span>
-                                <span class="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-500/10 dark:text-blue-400">{{ ucfirst($kunjungan->status) }}</span>
+                                <x-status-badge tone="blue" light>{{ ucfirst($kunjungan->status) }}</x-status-badge>
                             </div>
                         @endforeach
                     </div>
@@ -76,10 +76,10 @@
                     <p class="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1.5">Hasil Asesmen</p>
                     <div class="flex flex-wrap gap-2">
                         @if($bkGayaBelajar)
-                            <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">Gaya Belajar: {{ $bkGayaBelajar->hasil ?? '-' }}</span>
+                            <x-status-badge tone="emerald" light>Gaya Belajar: {{ $bkGayaBelajar->hasil ?? '-' }}</x-status-badge>
                         @endif
                         @if($bkPeminatan)
-                            <span class="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700 dark:bg-purple-500/10 dark:text-purple-400">Bakat Minat: {{ implode(', ', array_filter([$bkPeminatan->pilihan1, $bkPeminatan->pilihan2, $bkPeminatan->pilihan3])) ?: '-' }}</span>
+                            <x-status-badge tone="purple" light>Bakat Minat: {{ implode(', ', array_filter([$bkPeminatan->pilihan1, $bkPeminatan->pilihan2, $bkPeminatan->pilihan3])) ?: '-' }}</x-status-badge>
                         @endif
                     </div>
                 </div>
@@ -135,8 +135,8 @@
                         class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:border-blue-400 transition-colors dark:border-slate-700 dark:bg-slate-800">
                         <p class="font-semibold text-slate-900 dark:text-white">{{ $r['mapel']->nama_mapel }}</p>
                         <div class="mt-2 flex items-center">
-                            <span
-                                class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $r['status'] === 'tuntas' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : ($r['status'] === 'remedial' ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400') }}">{{ $r['status'] === 'remedial' ? 'Belum Tuntas' : ucfirst($r['status']) }}</span>
+                            @php $tone = $r['status'] === 'tuntas' ? 'emerald' : ($r['status'] === 'remedial' ? 'rose' : 'slate'); @endphp
+                            <x-status-badge :tone="$tone" light>{{ $r['status'] === 'remedial' ? 'Belum Tuntas' : ucfirst($r['status']) }}</x-status-badge>
                         </div>
                     </a>
                 @empty

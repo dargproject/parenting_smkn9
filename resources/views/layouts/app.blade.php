@@ -9,7 +9,7 @@
     />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>
-      Dashboard | SMKN 9 MALANG
+      Dashboard | {{ setting('nama_sekolah', 'SMKN 9 MALANG') }}
     </title>
 
     <!-- Bootstrap 5 CSS (Restored for existing functionality) -->
