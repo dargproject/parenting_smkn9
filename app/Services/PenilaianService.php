@@ -11,16 +11,6 @@ use Illuminate\Support\Collection;
 
 class PenilaianService
 {
-    public function bobotLm(): float
-    {
-        return ((float) setting('bobot_lm', 60)) / 100;
-    }
-
-    public function bobotSas(): float
-    {
-        return ((float) setting('bobot_sas', 40)) / 100;
-    }
-
     public function kktpThreshold(): int
     {
         return (int) setting('kktp_threshold', 75);
@@ -87,8 +77,10 @@ class PenilaianService
     }
 
     /**
-     * Nilai akhir disinkronkan langsung dengan nilai SAS dari tabel nilai_sas,
-     * atau menggunakan rata-rata LM jika nilai SAS belum tersedia.
+     * Nilai akhir (Sumatif) diambil dari tabel nilai_sas, yang otomatis disinkronkan
+     * dari rata-rata nilai formatif (LM) setiap kali guru mapel menyimpan nilai LM --
+     * tidak ada input SAS manual terpisah. Fallback ke rata-rata LM langsung bila baris
+     * nilai_sas belum pernah tersinkron (mis. belum pernah menyimpan nilai LM sama sekali).
      */
     public function nilaiAkhir(?float $rataLm, ?float $sas): ?float
     {

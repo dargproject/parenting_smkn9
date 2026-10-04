@@ -1,7 +1,7 @@
 <div id="pane-guru-wali-log" class="pane-content hidden-pane fade-transition space-y-4" x-data="{ kelas: 'semua', cari: '' }">
     <div>
         <h4 class="font-bold text-slate-100 mb-1 text-xl">Log Perubahan Nilai</h4>
-        <p class="text-slate-400 text-sm">Riwayat setiap perubahan nilai N (Nilai Sumatif Lingkup Materi maupun hasil remedial) untuk siswa di kelas binaan Anda &mdash; kapan diubah, dari berapa ke berapa, dan oleh guru mana.</p>
+        <p class="text-slate-400 text-sm">Riwayat setiap perubahan nilai N (Nilai Formatif Lingkup Materi maupun hasil remedial) untuk siswa di kelas binaan Anda &mdash; kapan diubah, dari berapa ke berapa, dan oleh guru mana.</p>
     </div>
 
     @if($logPerubahanNilaiBinaan->isEmpty())

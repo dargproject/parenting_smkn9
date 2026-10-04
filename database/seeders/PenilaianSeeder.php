@@ -22,8 +22,6 @@ class PenilaianSeeder extends Seeder
 {
     public function run(): void
     {
-        Setting::updateOrCreate(['key' => 'bobot_lm'], ['value' => 60]);
-        Setting::updateOrCreate(['key' => 'bobot_sas'], ['value' => 40]);
         Setting::updateOrCreate(['key' => 'kktp_threshold'], ['value' => 75]);
         Setting::updateOrCreate(['key' => 'kktp_margin'], ['value' => 10]);
         Setting::updateOrCreate(['key' => 'alpa_mingguan_threshold'], ['value' => 3]);

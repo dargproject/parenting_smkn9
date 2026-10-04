@@ -18,8 +18,6 @@
                 ['name' => 'npsn', 'label' => 'NPSN', 'type' => 'text'],
                 ['name' => 'nama_kepsek', 'label' => 'Nama Kepala Sekolah', 'type' => 'text'],
                 ['name' => 'nip_kepsek', 'label' => 'NIP Kepala Sekolah', 'type' => 'text'],
-                ['name' => 'bobot_lm', 'label' => 'Bobot Sumatif LM (%)', 'type' => 'number'],
-                ['name' => 'bobot_sas', 'label' => 'Bobot SAS (%)', 'type' => 'number'],
                 ['name' => 'kktp_threshold', 'label' => 'Ambang KKTP', 'type' => 'number'],
                 ['name' => 'kktp_margin', 'label' => 'Toleransi "Cukup" di bawah KKTP (poin)', 'type' => 'number'],
                 ['name' => 'alpa_mingguan_threshold', 'label' => 'Ambang Peringatan Alpa Mingguan (hari)', 'type' => 'number'],

@@ -1,7 +1,7 @@
 <div id="pane-guru-mapel-penilaian" class="pane-content hidden-pane fade-transition space-y-6">
     <div>
-        <h4 class="font-bold text-slate-100 mb-1 text-xl">Input Nilai Sumatif</h4>
-        <p class="text-slate-400 text-sm">Pilih kelas dan mata pelajaran yang Anda ampu, lalu input nilai Sumatif Lingkup Materi. Nilai SAS dihitung otomatis dari rata-rata.</p>
+        <h4 class="font-bold text-slate-100 mb-1 text-xl">Input Nilai Formatif</h4>
+        <p class="text-slate-400 text-sm">Pilih kelas dan mata pelajaran yang Anda ampu, lalu input nilai Formatif per Tujuan Pembelajaran. Nilai Akhir (Sumatif) dihitung otomatis dari rata-ratanya.</p>
     </div>
 
     @if(!$tahunAjaranAktif)
@@ -92,8 +92,8 @@
                 <form method="POST" action="{{ route('guru.penilaian.nilai-lm.store') }}">
                     @csrf
                     <input type="hidden" name="mata_pelajaran_id" value="{{ $mapel->id }}">
-                    <h6 class="font-bold text-slate-100 mb-1 text-sm"><span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-xs text-white mr-1">2</span> Nilai Sumatif Lingkup Materi</h6>
-                    <p class="text-xs text-slate-400 mb-3">Isi nilai tiap N. Kolom remedial (di bawah KKTP {{ $kktpLangkah2 }}) atau pengayaan (sudah tuntas) otomatis muncul begitu nilai diisi.</p>
+                    <h6 class="font-bold text-slate-100 mb-1 text-sm"><span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-xs text-white mr-1">2</span> Nilai Formatif per Tujuan Pembelajaran</h6>
+                    <p class="text-xs text-slate-400 mb-3">Isi nilai tiap N. Kolom remedial (di bawah KKTP {{ $kktpLangkah2 }}) atau pengayaan (sudah tuntas) otomatis muncul begitu nilai diisi. Nilai Akhir (Sumatif) mata pelajaran ini akan dihitung otomatis dari rata-rata nilai formatif begitu disimpan.</p>
                     <div class="flex flex-col gap-3">
                         @foreach($siswaKelas as $siswa)
                             @php
@@ -151,7 +151,7 @@
                 @else
                 <div class="rounded-xl border border-dashed border-slate-600 p-4 text-sm text-slate-400">
                     <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-600 text-xs text-white mr-1">2</span>
-                    Input nilai sumatif ({{ $siswaKelas->count() }} siswa) akan tersedia setelah Anda menambahkan N pada langkah 1.
+                    Input nilai formatif ({{ $siswaKelas->count() }} siswa) akan tersedia setelah Anda menambahkan N pada langkah 1.
                 </div>
                 @endif
 

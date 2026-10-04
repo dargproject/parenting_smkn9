@@ -33,13 +33,13 @@
         @endif
 
         {{-- <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-            <h3 class="font-bold text-slate-900 dark:text-white mb-3">Rincian Nilai Sumatif Lingkup Materi</h3>
+            <h3 class="font-bold text-slate-900 dark:text-white mb-3">Rincian Nilai Formatif Lingkup Materi</h3>
             <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
                 <table class="w-full min-w-[480px] text-left text-sm">
                     <thead
                         class="bg-slate-50 border-b border-slate-200 text-xs text-slate-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-400">
                         <tr>
-                            <th class="px-4 py-2.5">Nilai Sumatif (N)</th>
+                            <th class="px-4 py-2.5">Nilai Formatif (N)</th>
                             <th class="px-4 py-2.5 text-center w-36">Nilai</th>
                         </tr>
                     </thead>

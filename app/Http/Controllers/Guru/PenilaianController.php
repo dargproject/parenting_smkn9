@@ -195,34 +195,7 @@ class PenilaianController extends Controller
             }
         });
 
-        return redirect()->route('guru.portal')->with('success', 'Nilai Sumatif Lingkup Materi berhasil disimpan; nilai SAS dihitung otomatis dari rata-rata.');
-    }
-
-    public function storeNilaiSas(Request $request)
-    {
-        $data = $request->validate([
-            'mata_pelajaran_id' => 'required|exists:mata_pelajarans,id',
-            'nilai_sas' => 'required|array',
-            'nilai_sas.*' => 'nullable|integer|min:0|max:100',
-        ]);
-
-        $this->pastikanMapelMilikGuru($data['mata_pelajaran_id']);
-        $tahunAjaranId = $this->tahunAjaranAktifId();
-
-        DB::transaction(function () use ($data, $tahunAjaranId) {
-            foreach ($data['nilai_sas'] as $siswaId => $nilai) {
-                if ($nilai === null || $nilai === '') {
-                    continue;
-                }
-
-                NilaiSas::updateOrCreate(
-                    ['siswa_id' => $siswaId, 'mata_pelajaran_id' => $data['mata_pelajaran_id'], 'tahun_ajaran_id' => $tahunAjaranId],
-                    ['nilai' => $nilai, 'guru_id' => Auth::id()]
-                );
-            }
-        });
-
-        return redirect()->route('guru.portal')->with('success', 'Nilai Sumatif Akhir Semester berhasil disimpan.');
+        return redirect()->route('guru.portal')->with('success', 'Nilai Formatif berhasil disimpan; Nilai Akhir Sumatif diperbarui otomatis dari rata-ratanya.');
     }
 
     public function storeCatatanKompetensi(Request $request)
@@ -408,7 +381,7 @@ class PenilaianController extends Controller
         }
 
         if ($belumLengkap) {
-            return back()->with('error', 'Nilai SAS belum lengkap untuk: '.implode(', ', $belumLengkap).'. Rapor siswa lain tetap dirilis.');
+            return back()->with('error', 'Nilai belum lengkap untuk: '.implode(', ', $belumLengkap).'. Rapor siswa lain tetap dirilis.');
         }
 
         return redirect()->route('guru.portal')->with('success', 'Rapor berhasil dirilis.');

@@ -106,7 +106,6 @@ Route::middleware('role:guru_mapel')->prefix('guru/penilaian')->name('guru.penil
     Route::put('/tujuan-pembelajaran/{tujuanPembelajaran}', [PenilaianController::class, 'updateTujuanPembelajaran'])->name('tp.update');
     Route::delete('/tujuan-pembelajaran/{tujuanPembelajaran}', [PenilaianController::class, 'destroyTujuanPembelajaran'])->name('tp.destroy');
     Route::post('/nilai-lm', [PenilaianController::class, 'storeNilaiLm'])->name('nilai-lm.store');
-    Route::post('/nilai-sas', [PenilaianController::class, 'storeNilaiSas'])->name('nilai-sas.store');
     Route::post('/catatan-kompetensi', [PenilaianController::class, 'storeCatatanKompetensi'])->name('catatan-kompetensi.store');
     Route::post('/nilai-pkl-ukk', [PenilaianController::class, 'storeNilaiPklUkk'])->name('nilai-pkl-ukk.store');
 });

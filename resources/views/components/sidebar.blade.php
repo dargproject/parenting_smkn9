@@ -129,7 +129,7 @@
 
         @if(in_array('guru_mapel', $roles))
             <div class="px-3 py-2 text-slate-400 small font-bold uppercase tracking-wider mt-2">Guru Mapel</div>
-            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-guru-mapel-penilaian', this)"><i class="fa-solid fa-square-poll-vertical w-6 text-center mr-2"></i> <span>Input Nilai Sumatif</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-guru-mapel-penilaian', this)"><i class="fa-solid fa-square-poll-vertical w-6 text-center mr-2"></i> <span>Input Nilai Formatif</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-guru-mapel-dashboard', this)"><i class="fa-solid fa-book-open w-6 text-center mr-2"></i> <span>Jurnal & Presensi</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-guru-mapel-riwayat', this)"><i class="fa-solid fa-calendar-days w-6 text-center mr-2"></i> <span>Riwayat Jurnal</span></a>
 

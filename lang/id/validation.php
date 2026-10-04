@@ -120,8 +120,6 @@ return [
         'nama_kepsek' => 'Nama kepala sekolah',
         'nip_kepsek' => 'NIP kepala sekolah',
         'logo_sekolah' => 'Logo sekolah',
-        'bobot_lm' => 'Bobot LM',
-        'bobot_sas' => 'Bobot SAS',
         'kktp_threshold' => 'Ambang KKTP',
         'tahun_ajaran_aktif_id' => 'Tahun ajaran aktif',
         'semester_aktif' => 'Semester aktif',

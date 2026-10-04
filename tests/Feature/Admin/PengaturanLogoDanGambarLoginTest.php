@@ -41,8 +41,6 @@ class PengaturanLogoDanGambarLoginTest extends TestCase
     {
         return [
             'nama_sekolah' => 'SMKN 9 Malang',
-            'bobot_lm' => 60,
-            'bobot_sas' => 40,
             'kktp_threshold' => 75,
             'kktp_margin' => 5,
             'alpa_mingguan_threshold' => 3,

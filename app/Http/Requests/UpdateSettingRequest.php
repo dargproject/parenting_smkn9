@@ -21,20 +21,9 @@ class UpdateSettingRequest extends FormRequest
             'gambar_login' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'nama_kepsek' => ['nullable', 'string', 'max:255'],
             'nip_kepsek' => ['nullable', 'string', 'max:50'],
-            'bobot_lm' => ['required', 'numeric', 'min:0', 'max:100'],
-            'bobot_sas' => ['required', 'numeric', 'min:0', 'max:100'],
             'kktp_threshold' => ['required', 'integer', 'min:0', 'max:100'],
             'kktp_margin' => ['required', 'integer', 'min:0', 'max:50'],
             'alpa_mingguan_threshold' => ['required', 'integer', 'min:1', 'max:6'],
         ];
-    }
-
-    public function withValidator($validator): void
-    {
-        $validator->after(function ($validator) {
-            if ($this->filled('bobot_lm') && $this->filled('bobot_sas') && (float) $this->bobot_lm + (float) $this->bobot_sas !== 100.0) {
-                $validator->errors()->add('bobot_sas', 'Total bobot LM dan SAS harus 100%.');
-            }
-        });
     }
 }
