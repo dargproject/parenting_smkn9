@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Guru;
 use App\Models\Kelas;
+use App\Models\OrangTua;
 use App\Models\PrestasiNonAkademik;
 use App\Models\Siswa;
 use Database\Seeders\DatabaseSeeder;
@@ -90,6 +91,25 @@ class PrestasiNonAkademikTest extends TestCase
         ])->assertSessionHasErrors('siswa_id');
 
         $this->assertDatabaseMissing('prestasi_non_akademiks', ['siswa_id' => $siswaLuar->id]);
+    }
+
+    public function test_prestasi_non_akademik_tampil_di_dashboard_orangtua(): void
+    {
+        $orangTua = OrangTua::with('siswa')->firstOrFail();
+
+        PrestasiNonAkademik::create([
+            'siswa_id' => $orangTua->siswa_id,
+            'nama_prestasi' => 'Juara 1 Lomba Pidato',
+            'tingkat' => 'Provinsi',
+            'peringkat' => 'Juara 1',
+            'tanggal' => now()->toDateString(),
+            'penyelenggara' => 'Dinas Pendidikan Provinsi',
+        ]);
+
+        $this->actingAs($orangTua, 'orangtua')->get(route('ortu.dashboard'))
+            ->assertOk()
+            ->assertSee('Juara 1 Lomba Pidato')
+            ->assertSee('Provinsi');
     }
 
     public function test_role_selain_wali_kelas_ditolak_mencatat_prestasi(): void

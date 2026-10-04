@@ -15,6 +15,7 @@ use App\Models\NilaiSas;
 use App\Models\PanggilanOrtu;
 use App\Models\Peminatan;
 use App\Models\PesanWaliKelas;
+use App\Models\PrestasiNonAkademik;
 use App\Models\RaporFinal;
 use App\Models\TahunAjaran;
 use App\Services\PenilaianService;
@@ -27,18 +28,20 @@ class DashboardController extends Controller
         $orangTua = Auth::guard('orangtua')->user();
         $siswa = $orangTua->siswa;
         [$riwayat, $tahunAjaranAktif] = $this->pilihTahunAjaran($siswa);
+        $tahunAjaranAktifSistem = TahunAjaran::where('is_active', true)->first();
 
         $pesanWaliKelas = PesanWaliKelas::where('siswa_id', $siswa->id)->with('guru')->latest()->get();
         PesanWaliKelas::where('siswa_id', $siswa->id)->whereNull('dibaca_at')->update(['dibaca_at' => now()]);
 
         $infoBk = $this->infoBk($siswa);
+        $prestasiNonAkademik = PrestasiNonAkademik::where('siswa_id', $siswa->id)->latest('tanggal')->get();
 
         $raporFinal = $tahunAjaranAktif
             ? RaporFinal::where(['siswa_id' => $siswa->id, 'tahun_ajaran_id' => $tahunAjaranAktif->id])->first()
             : null;
 
         if (! $raporFinal || $raporFinal->status !== 'final') {
-            return view('ortu.dashboard', ['siswa' => $siswa, 'dirilis' => false, 'ringkasan' => collect(), 'riwayat' => $riwayat, 'tahunAjaranTerpilih' => $tahunAjaranAktif, 'pesanWaliKelas' => $pesanWaliKelas] + $infoBk);
+            return view('ortu.dashboard', ['siswa' => $siswa, 'dirilis' => false, 'ringkasan' => collect(), 'riwayat' => $riwayat, 'tahunAjaranTerpilih' => $tahunAjaranAktif, 'tahunAjaranAktifSistem' => $tahunAjaranAktifSistem, 'pesanWaliKelas' => $pesanWaliKelas, 'prestasiNonAkademik' => $prestasiNonAkademik] + $infoBk);
         }
 
         // Mapel diambil dari nilai yang tersimpan pada semester tsb, bukan kelas siswa saat ini (siswa bisa sudah naik kelas).
@@ -69,8 +72,10 @@ class DashboardController extends Controller
             'ringkasan' => $ringkasan,
             'riwayat' => $riwayat,
             'tahunAjaranTerpilih' => $tahunAjaranAktif,
+            'tahunAjaranAktifSistem' => $tahunAjaranAktifSistem,
             'perluPerhatian' => $ringkasan->filter(fn ($r) => $r['status'] === 'remedial'),
             'pesanWaliKelas' => $pesanWaliKelas,
+            'prestasiNonAkademik' => $prestasiNonAkademik,
         ] + $infoBk);
     }
 
@@ -139,13 +144,21 @@ class DashboardController extends Controller
         ]);
     }
 
-    /** Mengembalikan [daftar semester yang rapornya sudah dirilis, semester yang dipilih (default: aktif)]. */
+    /**
+     * Mengembalikan [daftar semester yang rapornya sudah dirilis, semester yang dipilih (default: aktif)].
+     *
+     * Permintaan eksplisit via ?ta= dicari dulu di riwayat (rapor dirilis), lalu di SEMUA tahun ajaran
+     * (mis. semester berjalan yang belum ada rapornya) -- supaya tidak diam-diam dialihkan ke semester
+     * aktif begitu saja ketika semester yang diminta memang ada tapi belum punya rapor final.
+     */
     private function pilihTahunAjaran($siswa): array
     {
         $riwayat = TahunAjaran::whereIn('id', RaporFinal::where('siswa_id', $siswa->id)->where('status', 'final')->pluck('tahun_ajaran_id'))
             ->orderByDesc('id')->get();
 
-        $dipilih = $riwayat->firstWhere('id', (int) request('ta')) ?? TahunAjaran::where('is_active', true)->first();
+        $taDiminta = request('ta');
+        $dipilih = $taDiminta ? ($riwayat->firstWhere('id', (int) $taDiminta) ?? TahunAjaran::find($taDiminta)) : null;
+        $dipilih ??= TahunAjaran::where('is_active', true)->first();
 
         return [$riwayat, $dipilih];
     }

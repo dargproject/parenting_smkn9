@@ -23,6 +23,27 @@
             </div>
         @endif
 
+        @if($prestasiNonAkademik->isNotEmpty())
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+                <p class="font-semibold text-slate-900 dark:text-white mb-3"><i class="fa-solid fa-trophy text-amber-500 mr-2"></i>Prestasi Non-Akademik</p>
+                <div class="flex flex-col gap-2">
+                    @foreach($prestasiNonAkademik as $prestasi)
+                        <div class="rounded-xl bg-slate-50 px-4 py-2.5 dark:bg-slate-900/60">
+                            <div class="flex items-start justify-between gap-2">
+                                <p class="m-0 font-semibold text-slate-800 dark:text-slate-100">{{ $prestasi->nama_prestasi }}</p>
+                                <x-status-badge tone="amber" light class="whitespace-nowrap">{{ $prestasi->tingkat }}</x-status-badge>
+                            </div>
+                            <p class="m-0 text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                {{ $prestasi->tanggal->translatedFormat('d M Y') }}
+                                @if($prestasi->peringkat) &middot; {{ $prestasi->peringkat }} @endif
+                                @if($prestasi->penyelenggara) &middot; {{ $prestasi->penyelenggara }} @endif
+                            </p>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
             <p class="font-semibold text-slate-900 dark:text-white mb-1"><i class="fa-solid fa-hand-holding-heart text-emerald-500 mr-2"></i>Bimbingan Konseling</p>
             <p class="text-xs text-slate-400 dark:text-slate-500 mb-3">Hanya informasi yang dibagikan guru BK yang tampil di sini -- isi konseling tetap rahasia.</p>
@@ -94,12 +115,12 @@
             <i class="fa-solid fa-house-user text-blue-500"></i> Lengkapi Data Keluarga
         </a>
 
-        @if($riwayat->isNotEmpty())
+        @if($riwayat->isNotEmpty() || $tahunAjaranAktifSistem)
             <form method="GET" class="flex items-center gap-2 text-sm">
                 <label class="text-slate-500 dark:text-slate-400">Semester:</label>
                 <select name="ta" onchange="this.form.submit()" class="rounded-lg border border-slate-300 bg-transparent px-3 py-1.5 text-sm text-slate-800 dark:border-slate-600 dark:text-white">
-                    @if(!$riwayat->contains('id', $tahunAjaranTerpilih?->id))
-                        <option value="{{ $tahunAjaranTerpilih?->id }}" selected>{{ $tahunAjaranTerpilih?->nama ?? 'Semester aktif' }} (berjalan)</option>
+                    @if($tahunAjaranAktifSistem && !$riwayat->contains('id', $tahunAjaranAktifSistem->id))
+                        <option value="{{ $tahunAjaranAktifSistem->id }}" @selected($tahunAjaranTerpilih?->id === $tahunAjaranAktifSistem->id)>{{ $tahunAjaranAktifSistem->nama }} (berjalan)</option>
                     @endif
                     @foreach($riwayat as $ta)
                         <option value="{{ $ta->id }}" @selected($tahunAjaranTerpilih?->id === $ta->id)>{{ $ta->nama }}</option>

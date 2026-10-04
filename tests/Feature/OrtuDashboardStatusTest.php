@@ -88,4 +88,38 @@ class OrtuDashboardStatusTest extends TestCase
         // Pastikan nama mapel ditampilkan di halaman detail
         $detailResponse->assertSee($mapel->nama_mapel);
     }
+
+    public function test_semester_aktif_tanpa_rapor_tetap_bisa_dipilih_dan_tidak_hilang_dari_dropdown(): void
+    {
+        $ganjil = TahunAjaran::where('is_active', true)->first();
+        $orangTua = OrangTua::with('siswa')->firstOrFail();
+        $siswa = $orangTua->siswa;
+
+        RaporFinal::updateOrCreate(
+            ['siswa_id' => $siswa->id, 'tahun_ajaran_id' => $ganjil->id],
+            ['status' => 'final', 'tanggal_final' => now()]
+        );
+
+        $genap = TahunAjaran::create(['kode' => '2026/2027-genap-uji', 'nama' => '2026/2027 Genap (Uji)', 'semester' => 'genap', 'is_active' => false]);
+
+        // Genap belum punya rapor dirilis, tapi harus tetap bisa diakses langsung via ?ta=, bukan diam-diam dialihkan ke Ganjil.
+        $this->actingAs($orangTua, 'orangtua')->get(route('ortu.dashboard', ['ta' => $genap->id]))
+            ->assertOk()
+            ->assertSee('Rapor semester ini belum dirilis')
+            ->assertSee($ganjil->nama);
+
+        // Genap jadi semester aktif di sistem; buka dashboard tanpa ?ta= harus default ke Genap dan tetap menampilkan Ganjil di dropdown.
+        TahunAjaran::query()->update(['is_active' => false]);
+        $genap->update(['is_active' => true]);
+
+        $this->actingAs($orangTua, 'orangtua')->get(route('ortu.dashboard'))
+            ->assertOk()
+            ->assertSee('(berjalan)')
+            ->assertSee($ganjil->nama);
+
+        // Pindah ke Ganjil (dari riwayat) -- Genap (semester aktif sistem) harus tetap ada di dropdown, tidak hilang.
+        $this->actingAs($orangTua, 'orangtua')->get(route('ortu.dashboard', ['ta' => $ganjil->id]))
+            ->assertOk()
+            ->assertSee($genap->nama);
+    }
 }
