@@ -949,6 +949,7 @@
     <!-- GURU MATA PELAJARAN (GURU MAPEL) VIEWS -->
     <!-- ========================================== -->
     @include('guru.penilaian.mapel-input')
+    @include('guru.jadwal.sebaran-saya')
     @include('guru.jurnal.form')
     @include('guru.jurnal.riwayat')
 @endif

@@ -32,6 +32,7 @@ use App\Http\Controllers\Guru\Bk\RujukanBkController;
 use App\Http\Controllers\Guru\Bk\SiswaProfilController;
 use App\Http\Controllers\Guru\Bk\SosiometriController;
 use App\Http\Controllers\Guru\BkController;
+use App\Http\Controllers\Guru\JadwalMengajarController;
 use App\Http\Controllers\Guru\JurnalController;
 use App\Http\Controllers\Guru\KesiswaanController;
 use App\Http\Controllers\Guru\KurikulumController;
@@ -114,6 +115,12 @@ Route::middleware('role:guru_mapel')->prefix('guru/penilaian')->name('guru.penil
 });
 
 Route::middleware('role:guru_mapel')->post('/guru/jurnal', [JurnalController::class, 'store'])->name('guru.jurnal.store');
+
+Route::middleware('role:guru_mapel')->prefix('guru/jadwal-mengajar')->name('guru.jadwal-mengajar.')->group(function () {
+    Route::post('/', [JadwalMengajarController::class, 'store'])->name('store');
+    Route::put('/{jadwalPelajaran}', [JadwalMengajarController::class, 'update'])->name('update');
+    Route::delete('/{jadwalPelajaran}', [JadwalMengajarController::class, 'destroy'])->name('destroy');
+});
 
 Route::middleware('role:guru_bk')->post('/guru/bk/asesmen', [BkController::class, 'storeAsesmen'])->name('guru.bk.asesmen.store');
 
