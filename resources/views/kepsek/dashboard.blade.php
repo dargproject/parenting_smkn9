@@ -192,6 +192,57 @@
             @endif
         </div>
     </div>
+
+    <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5 md:p-6 text-slate-100">
+        <div class="flex items-center justify-between gap-3 mb-1">
+            <h5 class="text-lg font-bold m-0 text-slate-100">Monitoring Jurnal Guru Hari Ini</h5>
+            <span class="text-xs text-slate-500">{{ now()->translatedFormat('l, d F Y') }}</span>
+        </div>
+        <p class="text-slate-400 text-xs mb-4">Presensi siswa dicatat bersamaan dengan jurnal mengajar -- "Terlambat" berarti jam pelajaran sudah selesai tapi presensi siswanya belum tercatat sama sekali.</p>
+        @if($monitoringJurnalHariIni->isEmpty())
+            <div class="flex items-center justify-center min-h-[120px] bg-slate-900/50 rounded-xl border border-slate-700/30">
+                <p class="text-slate-400 text-sm">Tidak ada jadwal pelajaran hari ini.</p>
+            </div>
+        @else
+            @php
+                $totalTerisi = $monitoringJurnalHariIni->where('status', 'terisi')->count();
+                $totalTerlambat = $monitoringJurnalHariIni->where('status', 'terlambat')->count();
+            @endphp
+            <div class="flex items-center gap-4 mb-3 text-sm">
+                <span class="text-emerald-400 font-semibold">{{ $totalTerisi }} sudah isi</span>
+                <span class="text-rose-400 font-semibold">{{ $totalTerlambat }} terlambat</span>
+                <span class="text-slate-400">dari {{ $monitoringJurnalHariIni->count() }} jadwal hari ini</span>
+            </div>
+            <div class="overflow-x-auto max-h-96 overflow-y-auto rounded-xl border border-slate-700/60">
+                <table class="w-full min-w-[640px] text-left text-sm">
+                    <thead class="bg-slate-900 border-b border-slate-700/60 text-xs text-slate-400 sticky top-0">
+                        <tr>
+                            <th class="px-3 py-2">Jam</th>
+                            <th class="px-3 py-2">Guru</th>
+                            <th class="px-3 py-2">Kelas</th>
+                            <th class="px-3 py-2">Mapel</th>
+                            <th class="px-3 py-2 text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-700/60">
+                        @foreach($monitoringJurnalHariIni as $row)
+                            @php
+                                $tone = match($row['status']) { 'terisi' => 'emerald', 'terlambat' => 'rose', default => 'slate' };
+                                $label = match($row['status']) { 'terisi' => 'Sudah Isi', 'terlambat' => 'Terlambat', default => 'Belum Waktunya' };
+                            @endphp
+                            <tr>
+                                <td class="px-3 py-2 text-slate-300 whitespace-nowrap">{{ substr($row['jadwal']->jam_mulai, 0, 5) }}-{{ substr($row['jadwal']->jam_selesai, 0, 5) }}</td>
+                                <td class="px-3 py-2 font-semibold text-slate-100">{{ $row['jadwal']->guru->nama ?? '-' }}</td>
+                                <td class="px-3 py-2 text-slate-400">{{ $row['jadwal']->kelas->nama_kelas ?? '-' }}</td>
+                                <td class="px-3 py-2 text-slate-400">{{ $row['jadwal']->mataPelajaran->nama_mapel ?? '-' }}</td>
+                                <td class="px-3 py-2 text-center"><x-status-badge :tone="$tone">{{ $label }}</x-status-badge></td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </div>
 </div>
 
 <!-- ============================================ -->

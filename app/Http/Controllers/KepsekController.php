@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\JadwalPelajaran;
+use App\Models\JurnalMengajar;
 use App\Models\KasusBk;
 use App\Models\KategoriPengumuman;
 use App\Models\Kelas;
@@ -40,6 +42,7 @@ class KepsekController extends Controller
             'distribusiPelanggaran' => $this->distribusiPelanggaran(),
             'distribusiPasal' => $this->distribusiPasal(),
             'totalSiswaTerlibatPasal' => Pelanggaran::whereNotNull('master_pelanggaran_id')->distinct('siswa_id')->count('siswa_id'),
+            'monitoringJurnalHariIni' => $this->monitoringJurnalHariIni(),
             'jurusanList' => Kelas::query()->select('jurusan')->distinct()->orderBy('jurusan')->pluck('jurusan'),
             'jurusanFilter' => $request->query('jurusan', 'all'),
             'akademikPerKelas' => $this->akademikPerKelas($request->query('jurusan', 'all')),
@@ -225,6 +228,37 @@ class KepsekController extends Controller
             })
             ->sortByDesc('total_siswa')
             ->values();
+    }
+
+    /**
+     * Status pengisian Jurnal Mengajar untuk tiap jadwal HARI INI. Presensi siswa dicatat bersamaan
+     * dengan jurnal (lihat JurnalController::store), jadi "belum isi" = presensi siswa untuk jam itu
+     * belum ada sama sekali -- bukan sekadar kelalaian administratif. Status "terlambat" hanya berlaku
+     * untuk jam pelajaran yang sudah lewat tapi jurnalnya belum diisi; yang belum waktunya selesai masih netral.
+     */
+    private function monitoringJurnalHariIni()
+    {
+        $namaHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'][now()->dayOfWeek];
+        $taAktifId = TahunAjaran::where('is_active', true)->value('id');
+        $sekarang = now()->format('H:i:s');
+
+        $jadwalHariIni = JadwalPelajaran::with(['guru', 'kelas', 'mataPelajaran'])
+            ->where('hari', $namaHari)
+            ->when($taAktifId, fn ($q) => $q->where('tahun_ajaran_id', $taAktifId))
+            ->orderBy('jam_mulai')
+            ->get();
+
+        $sudahIsiIds = JurnalMengajar::whereIn('jadwal_pelajaran_id', $jadwalHariIni->pluck('id'))
+            ->whereDate('tanggal', now()->toDateString())
+            ->pluck('jadwal_pelajaran_id');
+
+        return $jadwalHariIni->map(function ($jadwal) use ($sudahIsiIds, $sekarang) {
+            $status = $sudahIsiIds->contains($jadwal->id)
+                ? 'terisi'
+                : ($sekarang > $jadwal->jam_selesai ? 'terlambat' : 'belum_waktunya');
+
+            return ['jadwal' => $jadwal, 'status' => $status];
+        });
     }
 
     private function akademikPerKelas(string $jurusan)
