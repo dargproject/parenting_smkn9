@@ -74,6 +74,7 @@
             <a href="{{ route('guru.bk.dashboard') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-chart-pie w-6 text-center mr-2"></i> <span>Dashboard BK</span></a>
             <a href="{{ route('guru.bk.rujukan.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-inbox w-6 text-center mr-2"></i> <span>Rujukan Masuk</span></a>
             <a href="{{ route('guru.bk.kasus.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-folder-open w-6 text-center mr-2"></i> <span>Kasus BK</span></a>
+            <a href="{{ route('guru.bk.rekap-presensi.index') }}" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors"><i class="fa-solid fa-table-cells w-6 text-center mr-2"></i> <span>Rekap Presensi Siswa</span></a>
 
             <div x-data="{ openLayanan: false }">
                 <button type="button" @click="openLayanan = !openLayanan" class="flex items-center w-full px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors">

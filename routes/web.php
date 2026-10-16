@@ -28,6 +28,7 @@ use App\Http\Controllers\Guru\Bk\KunjunganRumahController;
 use App\Http\Controllers\Guru\Bk\PanggilanOrtuBkController;
 use App\Http\Controllers\Guru\Bk\PeminatanController;
 use App\Http\Controllers\Guru\Bk\PengunduranDiriController;
+use App\Http\Controllers\Guru\Bk\RekapPresensiController;
 use App\Http\Controllers\Guru\Bk\RujukanBkController;
 use App\Http\Controllers\Guru\Bk\SiswaProfilController;
 use App\Http\Controllers\Guru\Bk\SosiometriController;
@@ -127,6 +128,7 @@ Route::middleware('role:guru_bk')->post('/guru/bk/asesmen', [BkController::class
 Route::middleware('role:guru_bk')->prefix('guru/bk')->name('guru.bk.')->group(function () {
     Route::get('/', [App\Http\Controllers\Guru\Bk\DashboardController::class, 'index'])->name('dashboard');
     Route::get('/riwayat-siswa/{siswa}', [JejakRekamController::class, 'show'])->name('riwayat-siswa');
+    Route::get('/rekap-presensi', [RekapPresensiController::class, 'index'])->name('rekap-presensi.index');
     Route::get('/kasus', [KasusBkController::class, 'index'])->name('kasus.index');
     Route::post('/kasus', [KasusBkController::class, 'store'])->name('kasus.store');
     Route::get('/kasus/{kasusBk}', [KasusBkController::class, 'show'])->name('kasus.show');
