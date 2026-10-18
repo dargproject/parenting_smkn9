@@ -132,6 +132,7 @@
                         <th>Kelas</th>
                         <th>Jam</th>
                         <th>Foto Mengajar</th>
+                        <th class="text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -149,9 +150,16 @@
                                     <span class="badge bg-secondary-subtle text-slate-400 py-1 px-2.5">Tidak ada foto</span>
                                 @endif
                             </td>
+                            <td class="text-center whitespace-nowrap">
+                                <button type="button" onclick="bukaJurnalTanggal('{{ \Carbon\Carbon::parse($jurnal->tanggal)->toDateString() }}', {{ $jurnal->jadwal_pelajaran_id }})" class="btn btn-outline-primary btn-xs py-0.5 px-2 me-1" style="font-size: 11px;" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                                <form method="POST" action="{{ route('guru.jurnal.destroy', $jurnal) }}" onsubmit="return confirm('Hapus jurnal tanggal {{ \Carbon\Carbon::parse($jurnal->tanggal)->format('d-m-Y') }} ini beserta presensi siswanya? Tindakan ini tidak bisa dibatalkan.')" class="d-inline">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="btn btn-outline-danger btn-xs py-0.5 px-2" style="font-size: 11px;" title="Hapus"><i class="fa-solid fa-trash"></i></button>
+                                </form>
+                            </td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="text-center text-slate-400 small py-3">Belum ada riwayat pengisian jurnal mengajar.</td></tr>
+                        <tr><td colspan="6" class="text-center text-slate-400 small py-3">Belum ada riwayat pengisian jurnal mengajar.</td></tr>
                     @endforelse
                 </tbody>
             </table>

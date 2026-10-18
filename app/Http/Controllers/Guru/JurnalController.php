@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class JurnalController extends Controller
 {
@@ -65,5 +66,26 @@ class JurnalController extends Controller
         });
 
         return redirect()->route('guru.portal')->with('success', 'Jurnal mengajar dan presensi berhasil disimpan.');
+    }
+
+    public function destroy(JurnalMengajar $jurnal)
+    {
+        abort_unless($jurnal->guru_id === Auth::id(), 403, 'Jurnal ini bukan milik Anda.');
+
+        DB::transaction(function () use ($jurnal) {
+            // Presensi dibuat bersamaan dengan jurnal (lihat store()), terikat lewat jadwal_pelajaran_id + tanggal
+            // yang sama -- jadi ikut dihapus supaya tidak menyisakan data kehadiran "yatim" tanpa jurnal.
+            Presensi::where('jadwal_pelajaran_id', $jurnal->jadwal_pelajaran_id)
+                ->where('tanggal', $jurnal->tanggal)
+                ->delete();
+
+            if ($jurnal->foto) {
+                Storage::disk('public')->delete($jurnal->foto);
+            }
+
+            $jurnal->delete();
+        });
+
+        return redirect()->route('guru.portal')->with('success', 'Jurnal mengajar dan presensi siswa pada tanggal tersebut berhasil dihapus.');
     }
 }

@@ -116,6 +116,7 @@ Route::middleware('role:guru_mapel')->prefix('guru/penilaian')->name('guru.penil
 });
 
 Route::middleware('role:guru_mapel')->post('/guru/jurnal', [JurnalController::class, 'store'])->name('guru.jurnal.store');
+Route::middleware('role:guru_mapel')->delete('/guru/jurnal/{jurnal}', [JurnalController::class, 'destroy'])->name('guru.jurnal.destroy');
 
 Route::middleware('role:guru_mapel')->prefix('guru/jadwal-mengajar')->name('guru.jadwal-mengajar.')->group(function () {
     Route::post('/', [JadwalMengajarController::class, 'store'])->name('store');
