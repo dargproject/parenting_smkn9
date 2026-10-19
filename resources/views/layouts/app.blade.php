@@ -12,6 +12,8 @@
       Dashboard | {{ setting('nama_sekolah', 'SMKN 9 MALANG') }}
     </title>
 
+    @include('partials.pwa-head', ['variant' => 'guru'])
+
     <!-- Bootstrap 5 CSS (Restored for existing functionality) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 

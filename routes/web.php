@@ -48,6 +48,7 @@ use App\Http\Controllers\OrangTua\DashboardController as OrangTuaDashboardContro
 use App\Http\Controllers\OrangTua\KeluargaController as OrangTuaKeluargaController;
 use App\Http\Controllers\OrangTuaAuthController;
 use App\Http\Controllers\ProfilController;
+use App\Http\Controllers\PwaManifestController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -57,6 +58,9 @@ Route::get('/', function () {
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+Route::get('/manifest-guru.webmanifest', [PwaManifestController::class, 'guru'])->name('pwa.manifest.guru');
+Route::get('/ortu/manifest-ortu.webmanifest', [PwaManifestController::class, 'ortu'])->name('pwa.manifest.ortu');
 
 Route::middleware('auth')->prefix('profil')->name('profil.')->group(function () {
     Route::put('/', [ProfilController::class, 'update'])->name('update');
