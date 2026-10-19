@@ -9,6 +9,12 @@ class OrangTuaAuthController extends Controller
 {
     public function showLoginForm()
     {
+        // PWA selalu buka ke /ortu/login (start_url). Kalau cookie "remember me"
+        // masih valid, jangan tampilkan form lagi -- langsung lanjut ke dashboard.
+        if (Auth::guard('orangtua')->check()) {
+            return redirect()->route('ortu.dashboard');
+        }
+
         return view('auth.login-ortu');
     }
 

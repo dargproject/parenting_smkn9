@@ -70,4 +70,28 @@ class RememberMeTest extends TestCase
 
         $this->assertNotNull($ortu->fresh()->remember_token);
     }
+
+    public function test_buka_halaman_login_guru_saat_masih_login_langsung_lanjut_ke_portal(): void
+    {
+        // Skenario PWA Android: start_url selalu /login, meski cookie remember masih valid.
+        $guru = Guru::whereHas('roles', fn ($q) => $q->where('name', 'guru_mapel'))->firstOrFail();
+
+        $this->actingAs($guru)->get(route('login'))->assertRedirect(route('guru.portal'));
+    }
+
+    public function test_buka_halaman_login_guru_tanpa_sesi_tetap_tampilkan_form(): void
+    {
+        $this->get(route('login'))->assertOk()->assertViewIs('auth.login');
+    }
+
+    public function test_buka_halaman_login_ortu_saat_masih_login_langsung_lanjut_ke_dashboard(): void
+    {
+        $siswa = Siswa::whereDoesntHave('orangTua')->firstOrFail();
+        $ortu = OrangTua::create([
+            'siswa_id' => $siswa->id, 'nama' => 'Ortu Login Uji',
+            'username' => 'ortu_login_uji', 'password' => bcrypt('password'), 'is_active' => true,
+        ]);
+
+        $this->actingAs($ortu, 'orangtua')->get(route('ortu.login'))->assertRedirect(route('ortu.dashboard'));
+    }
 }

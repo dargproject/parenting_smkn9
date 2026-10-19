@@ -10,6 +10,20 @@ class AuthController extends Controller
 {
     public function showLoginForm()
     {
+        // PWA selalu buka ke /login (start_url). Kalau cookie "remember me" masih
+        // valid, jangan tampilkan form lagi -- langsung lanjut ke portal.
+        if (Auth::check()) {
+            $user = Auth::user();
+            $roles = $user->roles->pluck('name')->toArray();
+
+            Session::put('roles', $roles);
+            Session::put('role', $roles[0] ?? '');
+            Session::put('guru_id', $user->id);
+            Session::put('guru_nama', $user->nama);
+
+            return $this->redirectByRole($roles);
+        }
+
         return view('auth.login');
     }
 
@@ -34,19 +48,24 @@ class AuthController extends Controller
             Session::put('guru_id', $user->id);
             Session::put('guru_nama', $user->nama);
 
-            // Jika memiliki role kepsek, arahkan ke dashboard kepsek
-            if (in_array('kepsek', $roles)) {
-                return redirect()->route('kepsek.dashboard');
-            } elseif (in_array('admin', $roles)) {
-                return redirect()->route('admin.dashboard');
-            } elseif (in_array('siswa', $roles)) {
-                return redirect()->route('siswa.portal');
-            }
-
-            return redirect()->route('guru.portal');
+            return $this->redirectByRole($roles);
         }
 
         return redirect()->route('login')->with('error', 'NIP/Username atau Password salah (Invalid Credentials).');
+    }
+
+    private function redirectByRole(array $roles)
+    {
+        // Jika memiliki role kepsek, arahkan ke dashboard kepsek
+        if (in_array('kepsek', $roles)) {
+            return redirect()->route('kepsek.dashboard');
+        } elseif (in_array('admin', $roles)) {
+            return redirect()->route('admin.dashboard');
+        } elseif (in_array('siswa', $roles)) {
+            return redirect()->route('siswa.portal');
+        }
+
+        return redirect()->route('guru.portal');
     }
 
     public function logout(Request $request)
