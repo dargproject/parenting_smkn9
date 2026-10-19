@@ -20,6 +20,7 @@ class Guru extends Authenticatable
 
     protected $hidden = [
         'password',
+        'remember_token',
     ];
 
     public function roles()

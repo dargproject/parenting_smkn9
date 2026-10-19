@@ -23,7 +23,7 @@ class AuthController extends Controller
         // Bersihkan session sebelumnya
         Session::flush();
 
-        if (Auth::attempt(['nip' => $request->nip, 'password' => $request->password])) {
+        if (Auth::attempt(['nip' => $request->nip, 'password' => $request->password], true)) {
             $user = Auth::user();
 
             // Muat relasi roles

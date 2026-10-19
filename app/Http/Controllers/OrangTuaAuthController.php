@@ -19,7 +19,7 @@ class OrangTuaAuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (Auth::guard('orangtua')->attempt(['username' => $request->username, 'password' => $request->password, 'is_active' => true])) {
+        if (Auth::guard('orangtua')->attempt(['username' => $request->username, 'password' => $request->password, 'is_active' => true], true)) {
             $request->session()->regenerate();
 
             return redirect()->route('ortu.dashboard');

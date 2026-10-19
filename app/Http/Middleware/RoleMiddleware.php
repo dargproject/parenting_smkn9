@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\Guru;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -18,6 +19,19 @@ class RoleMiddleware
      */
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
+        // Session kosong tapi cookie "remember me" sudah login-kan ulang guru-nya (mis. setelah
+        // sesi lama kedaluwarsa di PWA) -- bangun lagi data session role dari user yang aktif,
+        // supaya tidak dipaksa login manual selama cookie remember masih berlaku.
+        if (! Session::has('guru_id') && ! Session::has('role') && Auth::guard('web')->check()) {
+            $guru = Auth::guard('web')->user()->load('roles');
+            $roleNames = $guru->roles->pluck('name')->toArray();
+
+            Session::put('roles', $roleNames);
+            Session::put('role', $roleNames[0] ?? '');
+            Session::put('guru_id', $guru->id);
+            Session::put('guru_nama', $guru->nama);
+        }
+
         // Periksa apakah ada guru_id di session
         if (! Session::has('guru_id') && ! Session::has('role')) {
             return redirect()->route('login');
