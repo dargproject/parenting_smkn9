@@ -18,4 +18,15 @@
             navigator.serviceWorker.register('{{ $swPath }}', { scope: '{{ $swScope }}' }).catch(() => {});
         });
     }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        window.__pwaInstallPrompt = e;
+        window.dispatchEvent(new CustomEvent('pwa-installable'));
+    });
+
+    window.addEventListener('appinstalled', () => {
+        window.__pwaInstallPrompt = null;
+        window.dispatchEvent(new CustomEvent('pwa-installed'));
+    });
 </script>
