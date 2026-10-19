@@ -25,16 +25,10 @@
         <!-- User Info & Notifications -->
         <div class="d-flex items-center gap-3">
             <!-- Install App -->
-            <button
-                x-data="{ show: !!window.__pwaInstallPrompt }"
-                x-init="window.addEventListener('pwa-installable', () => show = true); window.addEventListener('pwa-installed', () => show = false)"
-                x-show="show"
-                @click="window.__pwaInstallPrompt?.prompt(); window.__pwaInstallPrompt?.userChoice.then(() => { window.__pwaInstallPrompt = null; show = false; })"
-                class="btn btn-sm rounded-circle p-2 text-slate-400 hover:text-slate-100 transition-colors border-0"
-                style="display: none; background: transparent;"
-                title="Pasang aplikasi ke perangkat">
-                <i class="fa-solid fa-circle-down fs-5"></i>
-            </button>
+            @include('partials.pwa-install-button', [
+                'buttonClass' => 'btn btn-sm rounded-circle p-2 text-slate-400 hover:text-slate-100 transition-colors border-0 bg-transparent',
+                'iconClass' => 'fa-solid fa-circle-down fs-5',
+            ])
 
             <!-- Theme Toggle -->
             <button @click="darkMode = !darkMode" class="btn btn-sm rounded-circle p-2 text-slate-400 hover:text-slate-100 transition-colors border-0" style="background: transparent;">

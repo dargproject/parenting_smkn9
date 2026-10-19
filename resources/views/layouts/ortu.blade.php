@@ -32,16 +32,9 @@
                 <span class="font-bold text-slate-900 dark:text-white">Portal Orang Tua &mdash; {{ setting('nama_sekolah', 'SMKN 9 Malang') }}</span>
             </div>
             <div class="flex items-center gap-3">
-                <button
-                    x-data="{ show: !!window.__pwaInstallPrompt }"
-                    x-init="window.addEventListener('pwa-installable', () => show = true); window.addEventListener('pwa-installed', () => show = false)"
-                    x-show="show"
-                    style="display: none;"
-                    @click="window.__pwaInstallPrompt?.prompt(); window.__pwaInstallPrompt?.userChoice.then(() => { window.__pwaInstallPrompt = null; show = false; })"
-                    class="rounded-full p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700"
-                    title="Pasang aplikasi ke perangkat">
-                    <i class="fa-solid fa-circle-down"></i>
-                </button>
+                @include('partials.pwa-install-button', [
+                    'buttonClass' => 'rounded-full p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700',
+                ])
                 <button @click="darkMode = !darkMode" class="rounded-full p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700">
                     <i class="fa-solid fa-moon" x-show="!darkMode"></i>
                     <i class="fa-solid fa-sun" x-show="darkMode" style="display: none;"></i>

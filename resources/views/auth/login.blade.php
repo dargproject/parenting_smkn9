@@ -9,16 +9,10 @@
       
       <!-- Theme Toggle (Optional for Login) -->
       <div class="absolute top-6 right-6 z-50 flex items-center gap-1">
-        <button
-            x-data="{ show: !!window.__pwaInstallPrompt }"
-            x-init="window.addEventListener('pwa-installable', () => show = true); window.addEventListener('pwa-installed', () => show = false)"
-            x-show="show"
-            style="display: none;"
-            @click="window.__pwaInstallPrompt?.prompt(); window.__pwaInstallPrompt?.userChoice.then(() => { window.__pwaInstallPrompt = null; show = false; })"
-            class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-100 transition-colors"
-            title="Pasang aplikasi ke perangkat">
-            <i class="fa-solid fa-circle-down text-xl"></i>
-        </button>
+        @include('partials.pwa-install-button', [
+            'buttonClass' => 'p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-100 transition-colors',
+            'iconClass' => 'fa-solid fa-circle-down text-xl',
+        ])
         <button @click="darkMode = !darkMode" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-100 transition-colors">
             <i class="fa-solid fa-sun text-xl" x-show="darkMode" style="display: none;"></i>
             <i class="fa-solid fa-moon text-xl" x-show="!darkMode"></i>
