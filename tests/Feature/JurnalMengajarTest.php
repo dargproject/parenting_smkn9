@@ -123,6 +123,28 @@ class JurnalMengajarTest extends TestCase
         $this->assertSame(1, JurnalMengajar::where('jadwal_pelajaran_id', $jadwal->id)->where('tanggal', now()->toDateString())->count());
     }
 
+    public function test_foto_jurnal_berukuran_besar_otomatis_dikecilkan_di_server(): void
+    {
+        Storage::fake('public');
+        $guru = $this->guruMapel();
+        ['jadwal' => $jadwal, 'siswa' => $siswa] = $this->buatJurnalDenganPresensi($guru);
+
+        $this->sebagai($guru)->post(route('guru.jurnal.store'), [
+            'jadwal_pelajaran_id' => $jadwal->id,
+            'tanggal' => now()->toDateString(),
+            'materi' => 'Materi dengan foto besar',
+            'foto' => UploadedFile::fake()->image('besar.jpg', 3000, 2000),
+            'kehadiran' => [$siswa->id => ['status' => 'H', 'keterangan' => '']],
+        ])->assertRedirect(route('guru.portal'));
+
+        $path = JurnalMengajar::where('jadwal_pelajaran_id', $jadwal->id)->where('tanggal', now()->toDateString())->value('foto');
+        $this->assertNotNull($path);
+
+        [$lebar, $tinggi] = getimagesize(Storage::disk('public')->path($path));
+        $this->assertLessThanOrEqual(1600, $lebar);
+        $this->assertLessThanOrEqual(1600, $tinggi);
+    }
+
     public function test_role_lain_ditolak_menghapus_jurnal(): void
     {
         $guru = $this->guruMapel();
