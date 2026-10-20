@@ -943,6 +943,13 @@
             // Charts initialized while their pane was hidden render at zero width;
             // nudge ApexCharts to recompute its size now that the pane is visible.
             window.dispatchEvent(new Event('resize'));
+
+            // Di mobile, sidebar menimpa konten sebagai overlay -- tutup otomatis
+            // setelah menu dipilih supaya tidak perlu tap di luar sidebar lagi.
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar-wrapper')?.classList.add('-translate-x-full');
+                document.getElementById('sidebar-overlay')?.classList.add('hidden');
+            }
         }
     </script>
   </body>
