@@ -13,13 +13,17 @@
         <form method="POST" action="{{ route('guru.kurikulum.kelas-mapel.store') }}" class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
             @csrf
             <div>
-                <label class="mb-1.5 block text-sm font-medium text-slate-400">Kelas</label>
-                <select name="kelas_id" required class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
-                    <option value="">Pilih kelas...</option>
-                    @foreach($kelasList->sortBy('nama_kelas', SORT_NATURAL) as $k)
-                        <option value="{{ $k->id }}">{{ $k->nama_kelas }}</option>
-                    @endforeach
-                </select>
+                <label class="mb-1.5 block text-sm font-medium text-slate-400">Kelas <span class="font-normal">(boleh pilih lebih dari satu)</span></label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-1 max-h-44 overflow-y-auto rounded-lg border border-slate-600 bg-slate-900 p-2">
+                    @forelse($kelasList->sortBy('nama_kelas', SORT_NATURAL) as $k)
+                        <label class="flex items-center gap-2 rounded px-2 py-1 text-sm text-slate-100 hover:bg-slate-700/30 cursor-pointer">
+                            <input type="checkbox" name="kelas_id[]" value="{{ $k->id }}" class="h-4 w-4">
+                            <span>{{ $k->nama_kelas }}</span>
+                        </label>
+                    @empty
+                        <p class="text-sm text-slate-400 p-2">Belum ada kelas. Tambahkan di Admin &rarr; Kelas.</p>
+                    @endforelse
+                </div>
                 <label class="mt-3 mb-1.5 block text-sm font-medium text-slate-400">Guru Pengampu</label>
                 <select name="guru_id" required class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
                     <option value="">Pilih guru pengampu...</option>

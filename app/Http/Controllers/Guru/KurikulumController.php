@@ -59,7 +59,8 @@ class KurikulumController extends Controller
     public function storeKelasMapel(Request $request)
     {
         $data = $request->validate([
-            'kelas_id' => 'required|exists:kelas,id',
+            'kelas_id' => 'required|array|min:1',
+            'kelas_id.*' => 'exists:kelas,id',
             'mata_pelajaran_id' => 'required|array|min:1',
             'mata_pelajaran_id.*' => 'exists:mata_pelajarans,id',
             'guru_id' => 'required|exists:gurus,id',
@@ -68,22 +69,27 @@ class KurikulumController extends Controller
         $guruRole = Role::where('name', 'guru_mapel')->value('id');
 
         DB::transaction(function () use ($data, $guruRole) {
-            foreach ($data['mata_pelajaran_id'] as $mapelId) {
-                $guruId = $data['guru_id'];
+            $guruId = $data['guru_id'];
 
-                KelasMataPelajaran::updateOrCreate(
-                    ['kelas_id' => $data['kelas_id'], 'mata_pelajaran_id' => $mapelId],
-                    ['guru_id' => $guruId]
-                );
+            foreach ($data['kelas_id'] as $kelasId) {
+                foreach ($data['mata_pelajaran_id'] as $mapelId) {
+                    KelasMataPelajaran::updateOrCreate(
+                        ['kelas_id' => $kelasId, 'mata_pelajaran_id' => $mapelId],
+                        ['guru_id' => $guruId]
+                    );
 
-                JadwalPelajaran::where('kelas_id', $data['kelas_id'])->where('mata_pelajaran_id', $mapelId)->update(['guru_id' => $guruId]);
-                if ($guruId && $guruRole) {
-                    Guru::find($guruId)?->roles()->syncWithoutDetaching([$guruRole]);
+                    JadwalPelajaran::where('kelas_id', $kelasId)->where('mata_pelajaran_id', $mapelId)->update(['guru_id' => $guruId]);
                 }
+            }
+
+            if ($guruId && $guruRole) {
+                Guru::find($guruId)?->roles()->syncWithoutDetaching([$guruRole]);
             }
         });
 
-        return redirect()->route('guru.portal')->with('success', count($data['mata_pelajaran_id']).' mata pelajaran berhasil ditetapkan untuk kelas tersebut.');
+        $jumlah = count($data['kelas_id']) * count($data['mata_pelajaran_id']);
+
+        return redirect()->route('guru.portal')->with('success', "{$jumlah} penetapan mapel berhasil disimpan untuk ".count($data['kelas_id']).' kelas.');
     }
 
     public function updateKelasMapel(Request $request, KelasMataPelajaran $kelasMataPelajaran)
