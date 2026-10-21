@@ -45,6 +45,33 @@
         @endif
 
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <div class="flex items-start justify-between gap-2 mb-1">
+                <p class="font-semibold text-slate-900 dark:text-white m-0"><i class="fa-solid fa-scale-balanced text-blue-500 mr-2"></i>Catatan Kedisiplinan</p>
+                <x-status-badge :tone="$statusSanksi['tone']" light class="whitespace-nowrap">{{ $statusSanksi['label'] }}</x-status-badge>
+            </div>
+            <p class="text-xs text-slate-400 dark:text-slate-500 mb-3">{{ $poinBersih }} poin pelanggaran pada semester {{ $tahunAjaranTerpilih->nama ?? 'ini' }}.</p>
+
+            @if($pelanggaranSiswa->isNotEmpty())
+                <div class="flex flex-col gap-2 max-h-72 overflow-y-auto">
+                    @foreach($pelanggaranSiswa as $p)
+                        <div class="rounded-xl bg-slate-50 px-4 py-2.5 dark:bg-slate-900/60">
+                            <div class="flex items-start justify-between gap-2">
+                                <p class="m-0 font-semibold text-slate-800 dark:text-slate-100">{{ $p->judul }}</p>
+                                <span class="whitespace-nowrap text-xs font-bold text-rose-500 dark:text-rose-400">{{ $p->poin }} poin</span>
+                            </div>
+                            <p class="m-0 text-xs text-slate-500 dark:text-slate-400 mt-1">{{ \Carbon\Carbon::parse($p->tanggal)->translatedFormat('d M Y') }}</p>
+                            @if($p->tindakan)
+                                <p class="m-0 text-xs text-slate-600 dark:text-slate-300 mt-1.5"><i class="fa-solid fa-clipboard-check mr-1"></i>Tindakan: {{ $p->tindakan }}</p>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <p class="text-sm text-slate-500 dark:text-slate-400 m-0">Tidak ada pelanggaran tercatat pada semester ini.</p>
+            @endif
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
             <p class="font-semibold text-slate-900 dark:text-white mb-1"><i class="fa-solid fa-hand-holding-heart text-emerald-500 mr-2"></i>Bimbingan Konseling</p>
             <p class="text-xs text-slate-400 dark:text-slate-500 mb-3">Hanya informasi yang dibagikan guru BK yang tampil di sini -- isi konseling tetap rahasia.</p>
 

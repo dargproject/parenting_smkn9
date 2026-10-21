@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Guru;
 
+use App\Http\Controllers\Concerns\KompresFoto;
 use App\Http\Controllers\Controller;
 use App\Models\AsesmenBk;
 use App\Models\CatatanAkademikSiswa;
@@ -22,6 +23,7 @@ use App\Models\NilaiPklUkk;
 use App\Models\NilaiSas;
 use App\Models\PanggilanOrtu;
 use App\Models\Pelanggaran;
+use App\Models\PenguranganPoin;
 use App\Models\PesanWaliKelas;
 use App\Models\Presensi;
 use App\Models\PrestasiNonAkademik;
@@ -31,6 +33,7 @@ use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use App\Models\TujuanPembelajaran;
 use App\Services\PenilaianService;
+use App\Services\SanksiService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -38,6 +41,8 @@ use Illuminate\Support\Facades\Session;
 
 class PortalController extends Controller
 {
+    use KompresFoto;
+
     private const NAMA_HARI = [0 => 'Minggu', 1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu'];
 
     public function index(PenilaianService $penilaian)
@@ -74,11 +79,19 @@ class PortalController extends Controller
         // Data untuk menu Waka Kesiswaan
         $masterPelanggarans = MasterPelanggaran::with(['pasal', 'jenisPelanggaran'])->orderBy('pasal_id')->orderBy('nama_pelanggaran')->get();
         $masterPelanggaranAktif = $masterPelanggarans->where('is_active', true)->values();
+        $penguranganPoinTerbaru = PenguranganPoin::with(['siswa', 'diberikanOleh'])->latest('tanggal')->limit(20)->get();
 
+        // Poin bersih = poin pelanggaran dikurangi poin yang sudah dihapus lewat kegiatan
+        // positif, dibatasi tahun ajaran aktif (poin otomatis "reset" tiap tahun ajaran baru
+        // karena data lama tetap ada tapi tidak ikut terhitung).
+        $tahunAjaranAktifIdUntukPoin = TahunAjaran::where('is_active', true)->value('id');
         $rekapPoin = Siswa::with('kelas')
-            ->withSum('pelanggarans as total_poin', 'poin')
-            ->orderByDesc('total_poin')
-            ->get();
+            ->withSum(['pelanggarans as poin_pelanggaran' => fn ($q) => $q->where('tahun_ajaran_id', $tahunAjaranAktifIdUntukPoin)], 'poin')
+            ->withSum(['penguranganPoins as poin_dikurangi' => fn ($q) => $q->where('tahun_ajaran_id', $tahunAjaranAktifIdUntukPoin)], 'poin')
+            ->get()
+            ->each(fn ($s) => $s->total_poin = max(0, (int) $s->poin_pelanggaran - (int) $s->poin_dikurangi))
+            ->sortByDesc('total_poin')
+            ->values();
 
         $absensiBermasalah = Siswa::with('kelas')
             ->withCount(['presensis as alpa_count' => fn ($q) => $q->where('status', 'A')])
@@ -200,6 +213,7 @@ class PortalController extends Controller
         $pesanWaliKelasWali = PesanWaliKelas::whereIn('siswa_id', $siswaWali->pluck('id'))->latest()->get()->groupBy('siswa_id');
         $prestasiNonAkademikWali = PrestasiNonAkademik::whereIn('siswa_id', $siswaWali->pluck('id'))->latest('tanggal')->get()->groupBy('siswa_id');
         $rujukanBkSaya = RujukanBk::with('siswa')->where('dirujuk_oleh', $guru->id)->latest()->limit(10)->get();
+        $rekapPoinWali = $rekapPoin->whereIn('id', $siswaWali->pluck('id'))->values();
         $logPerubahanNilaiBinaan = $tahunAjaranAktif
             ? LogPerubahanNilai::whereHas('nilaiLm', fn ($q) => $q->whereIn('siswa_id', $siswaBinaan->pluck('id'))->where('tahun_ajaran_id', $tahunAjaranAktifId))
                 ->with(['nilaiLm.siswa.kelas', 'nilaiLm.tujuanPembelajaran.mataPelajaran', 'guru'])
@@ -265,11 +279,11 @@ class PortalController extends Controller
         return view('guru.portal', compact(
             'guru', 'siswas', 'kasusBks', 'kategoriKasusList', 'pelanggarans', 'panggilanOrtus',
             'jadwalPelajarans', 'mataPelajarans', 'kelasList', 'nilaiAkhirMap', 'logPerubahanNilaiSemua', 'kelasMapelBinaan', 'kelasMapelSemua', 'catatanAkademikMap', 'asesmenBkMap',
-            'masterPelanggarans', 'masterPelanggaranAktif', 'rekapPoin', 'absensiBermasalah',
+            'masterPelanggarans', 'masterPelanggaranAktif', 'rekapPoin', 'absensiBermasalah', 'penguranganPoinTerbaru',
             'kelasBinaan', 'siswaBinaan', 'rerataBinaan', 'peringkatBinaan',
             'tahunAjaranAktif', 'mapelBinaan', 'tujuanPembelajarans',
             'nilaiLmBinaan', 'nilaiSasBinaan', 'catatanKompetensiBinaan', 'nilaiPklUkkBinaan',
-            'matrixPerKelas', 'raporFinalBinaan', 'logPerubahanNilaiBinaan', 'siswaWali', 'catatanWaliKelasWali', 'pesanWaliKelasWali', 'prestasiNonAkademikWali', 'siswaBinaanLengkap', 'rujukanBkSaya',
+            'matrixPerKelas', 'raporFinalBinaan', 'logPerubahanNilaiBinaan', 'siswaWali', 'catatanWaliKelasWali', 'pesanWaliKelasWali', 'prestasiNonAkademikWali', 'siswaBinaanLengkap', 'rujukanBkSaya', 'rekapPoinWali',
             'kelasWaliList', 'rekapPresensiWali', 'rekapHarianWali', 'tanggalPresensiTerbaruWali', 'tanggalPresensiDipilih', 'jadwalHariPresensiDipilih', 'presensiHariDipilihWali', 'presensiWali',
             'siswaPeringatanMingguan', 'ambangAlpaMingguan',
             'jadwalGuruMapel', 'jadwalHariIni', 'jurnalHariIniIds', 'namaHariIni',
@@ -361,6 +375,9 @@ class PortalController extends Controller
             'master_pelanggaran_id' => 'required|exists:master_pelanggarans,id',
             'tanggal' => 'required|date',
             'keterangan' => 'required|string',
+            'foto' => 'nullable|image|max:2048',
+            'tindakan' => 'nullable|string|max:1000',
+            'foto_tindakan' => 'nullable|image|max:2048',
         ]);
 
         if (Pelanggaran::where('siswa_id', $data['siswa_id'])->where('master_pelanggaran_id', $data['master_pelanggaran_id'])->whereDate('tanggal', $data['tanggal'])->exists()) {
@@ -369,18 +386,94 @@ class PortalController extends Controller
 
         $master = MasterPelanggaran::with('jenisPelanggaran')->findOrFail($data['master_pelanggaran_id']);
 
+        $foto = null;
+        if ($request->hasFile('foto')) {
+            $foto = $request->file('foto')->store('pelanggaran-bukti', 'public');
+            $this->kecilkanFotoJikaBesar($foto);
+        }
+
+        $fotoTindakan = null;
+        if ($request->hasFile('foto_tindakan')) {
+            $fotoTindakan = $request->file('foto_tindakan')->store('pelanggaran-tindakan', 'public');
+            $this->kecilkanFotoJikaBesar($fotoTindakan);
+        }
+
+        $adaTindakan = filled($data['tindakan'] ?? null) || $fotoTindakan;
+
         Pelanggaran::create([
             'siswa_id' => $data['siswa_id'],
             'master_pelanggaran_id' => $master->id,
             'tanggal' => $data['tanggal'],
+            'tahun_ajaran_id' => TahunAjaran::where('is_active', true)->value('id'),
             'kategori' => $master->jenisPelanggaran->nama,
             'judul' => $master->nama_pelanggaran,
             'deskripsi' => $data['keterangan'],
             'poin' => $master->jenisPelanggaran->poin,
             'pelapor_id' => Auth::id(),
+            'foto' => $foto,
+            'tindakan' => $data['tindakan'] ?? null,
+            'foto_tindakan' => $fotoTindakan,
+            'ditindak_oleh' => $adaTindakan ? Auth::id() : null,
         ]);
 
         return redirect()->route('guru.portal')->with('success', 'Pelanggaran berhasil dicatat.');
+    }
+
+    /**
+     * Status sanksi siswa (harian + semester) -- dipakai form Catat Pelanggaran
+     * untuk menampilkan jenjang sanksi sesuai kebijakan sekolah.
+     */
+    public function getPoinSiswa(Siswa $siswa, SanksiService $sanksi)
+    {
+        $tahunAjaranId = TahunAjaran::where('is_active', true)->value('id');
+
+        $poinPelanggaran = (int) Pelanggaran::where('siswa_id', $siswa->id)->where('tahun_ajaran_id', $tahunAjaranId)->sum('poin');
+        $poinDikurangi = (int) PenguranganPoin::where('siswa_id', $siswa->id)->where('tahun_ajaran_id', $tahunAjaranId)->sum('poin');
+        $poinSemester = max(0, $poinPelanggaran - $poinDikurangi);
+
+        $poinHarian = (int) Pelanggaran::where('siswa_id', $siswa->id)->whereDate('tanggal', now()->toDateString())->sum('poin');
+
+        return response()->json([
+            'poin_semester' => $poinSemester,
+            'status_semester' => $sanksi->statusSemester($poinSemester),
+            'poin_harian' => $poinHarian,
+            'status_harian' => $sanksi->statusHarian($poinHarian),
+        ]);
+    }
+
+    /**
+     * Pengurangan poin karena kegiatan positif (petugas upacara, juara lomba, kegiatan
+     * sosial, dll), maksimal 1x per bulan per siswa. Hanya role tatib yang berwenang.
+     */
+    public function storePenguranganPoin(Request $request)
+    {
+        $data = $request->validate([
+            'siswa_id' => 'required|exists:siswas,id',
+            'kegiatan' => 'required|string|max:255',
+            'tanggal' => 'required|date|before_or_equal:today',
+            'keterangan' => 'nullable|string|max:1000',
+        ]);
+
+        $sudahAdaBulanIni = PenguranganPoin::where('siswa_id', $data['siswa_id'])
+            ->whereYear('tanggal', now()->year)
+            ->whereMonth('tanggal', now()->month)
+            ->exists();
+
+        if ($sudahAdaBulanIni) {
+            return back()->withInput()->with('error', 'Siswa ini sudah mendapat pengurangan poin bulan ini. Maksimal 1x per bulan.');
+        }
+
+        PenguranganPoin::create([
+            'siswa_id' => $data['siswa_id'],
+            'tahun_ajaran_id' => TahunAjaran::where('is_active', true)->value('id'),
+            'tanggal' => $data['tanggal'],
+            'kegiatan' => $data['kegiatan'],
+            'keterangan' => $data['keterangan'] ?? null,
+            'poin' => 3,
+            'diberikan_oleh' => Auth::id(),
+        ]);
+
+        return redirect()->route('guru.portal')->with('success', 'Pengurangan poin berhasil dicatat.');
     }
 
     public function storePanggilanOrtu(Request $request)

@@ -1,14 +1,10 @@
 @php
-    $rekapRows = $rekapPoin->map(function ($siswa) {
+    $sanksi = app(\App\Services\SanksiService::class);
+    $rekapRows = $rekapPoin->map(function ($siswa) use ($sanksi) {
         $poin = (int) ($siswa->total_poin ?? 0);
-        [$label, $kelasCss] = match (true) {
-            $poin >= 75 => ['Terancam DO', 'bg-rose-500/10 text-rose-400'],
-            $poin >= 50 => ['SP 2', 'bg-rose-500/10 text-rose-400'],
-            $poin >= 25 => ['SP 1', 'bg-amber-500/10 text-amber-400'],
-            default => ['Aman', 'bg-emerald-500/10 text-emerald-400'],
-        };
+        $status = $sanksi->statusSemester($poin);
 
-        return ['id' => $siswa->id, 'cari' => mb_strtolower($siswa->nama.' '.$siswa->nis), 'kelas' => (string) $siswa->kelas_id, 'status' => $label];
+        return ['id' => $siswa->id, 'cari' => mb_strtolower($siswa->nama.' '.$siswa->nis), 'kelas' => (string) $siswa->kelas_id, 'status' => $status['label']];
     })->values();
     $kelasRekap = $rekapPoin->pluck('kelas')->filter()->unique('id')->sortBy('nama_kelas', SORT_NATURAL)->values();
 @endphp
@@ -40,7 +36,7 @@
         </select>
         <select x-model="status" class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-1.5 text-sm text-slate-100">
             <option value="">Semua status</option>
-            <option>Aman</option><option>SP 1</option><option>SP 2</option><option>Terancam DO</option>
+            <option>Aman</option><option>Surat Peringatan 1</option><option>Surat Peringatan 2</option><option>Surat Peringatan 3</option><option>Dikembalikan ke Orang Tua</option>
         </select>
         <button type="button" x-show="filterAktif" style="display: none;" @click="reset()" class="rounded-lg border border-slate-600 px-3 py-1.5 text-sm text-slate-300 hover:border-blue-500">Reset</button>
     </div>
@@ -60,8 +56,9 @@
                 @forelse($rekapPoin as $i => $siswa)
                     @php
                         $poin = (int) ($siswa->total_poin ?? 0);
-                        $statusLabel = $rekapRows[$i]['status'];
-                        $statusTone = match ($statusLabel) { 'Aman' => 'emerald', 'SP 1' => 'amber', default => 'rose' };
+                        $status = $sanksi->statusSemester($poin);
+                        $statusLabel = $status['label'];
+                        $statusTone = $status['tone'];
                     @endphp
                     <tr x-show="terlihat.has({{ $siswa->id }})">
                         <td class="px-5 py-3 font-semibold text-slate-100">{{ $siswa->nama }}</td>

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class MasterPelanggaran extends Model
 {
-    protected $fillable = ['nama_pelanggaran', 'pasal_id', 'jenis_id', 'is_active'];
+    protected $fillable = ['nama_pelanggaran', 'tindakan_langsung', 'pasal_id', 'jenis_id', 'is_active'];
 
     public function pasal()
     {

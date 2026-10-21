@@ -677,6 +677,113 @@
             }, 3000);
         }
 
+        // Alpine factory dipakai x-camera-upload-field -- kelola pilih file/kamera +
+        // kompresi otomatis di browser sebelum foto dikirim ke server.
+        function fotoUploader() {
+            return {
+                fotoStatus: '',
+                kameraAktif: false,
+                kameraError: '',
+                kameraStream: null,
+                async kompresFoto(event, targetInput) {
+                    const file = event.target.files[0];
+                    if (!file || !file.type.startsWith('image/')) { this.fotoStatus = ''; return; }
+
+                    const ukuranAsliMb = (file.size / 1024 / 1024).toFixed(1);
+                    this.fotoStatus = 'Memproses foto...';
+                    let fileUntukDikirim = file;
+
+                    try {
+                        const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+                        const MAX_SISI = 1600;
+                        let { width, height } = bitmap;
+                        if (width > MAX_SISI || height > MAX_SISI) {
+                            const skala = MAX_SISI / Math.max(width, height);
+                            width = Math.round(width * skala);
+                            height = Math.round(height * skala);
+                        }
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        canvas.getContext('2d').drawImage(bitmap, 0, 0, width, height);
+                        bitmap.close();
+
+                        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.75));
+                        if (!blob) throw new Error('Gagal memproses foto');
+
+                        const namaFile = file.name.replace(/\.[^.]+$/, '') + '.jpg';
+                        fileUntukDikirim = new File([blob], namaFile, { type: 'image/jpeg' });
+
+                        this.fotoStatus = `Foto dikompres: ${ukuranAsliMb}MB → ${(blob.size / 1024).toFixed(0)}KB`;
+                    } catch (e) {
+                        // Kompresi gagal (browser lama / format tak didukung) -- biarkan file asli terkirim,
+                        // server tetap punya pengaman resize sendiri di sisi backend.
+                        this.fotoStatus = `Foto dipilih (tanpa kompresi otomatis): ${file.name}`;
+                    }
+
+                    const dt = new DataTransfer();
+                    dt.items.add(fileUntukDikirim);
+                    targetInput.files = dt.files;
+                },
+                async bukaKamera() {
+                    this.kameraError = '';
+                    this.kameraAktif = true;
+
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                        this.kameraError = 'Browser ini tidak mendukung akses kamera langsung. Gunakan tombol "Pilih File" sebagai gantinya.';
+                        return;
+                    }
+
+                    try {
+                        this.kameraStream = await navigator.mediaDevices.getUserMedia({
+                            video: { facingMode: { ideal: 'environment' } },
+                            audio: false,
+                        });
+                        this.$refs.videoKamera.srcObject = this.kameraStream;
+                    } catch (e) {
+                        this.kameraError = e.name === 'NotAllowedError'
+                            ? 'Izin kamera ditolak. Aktifkan izin kamera untuk situs ini di pengaturan browser, atau gunakan tombol "Pilih File".'
+                            : 'Kamera tidak dapat diakses. Gunakan tombol "Pilih File" sebagai gantinya.';
+                    }
+                },
+                tutupKamera() {
+                    if (this.kameraStream) {
+                        this.kameraStream.getTracks().forEach(track => track.stop());
+                        this.kameraStream = null;
+                    }
+                    this.kameraAktif = false;
+                },
+                async ambilFotoDariKamera() {
+                    const video = this.$refs.videoKamera;
+                    const MAX_SISI = 1600;
+                    let width = video.videoWidth;
+                    let height = video.videoHeight;
+                    if (width > MAX_SISI || height > MAX_SISI) {
+                        const skala = MAX_SISI / Math.max(width, height);
+                        width = Math.round(width * skala);
+                        height = Math.round(height * skala);
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    canvas.getContext('2d').drawImage(video, 0, 0, width, height);
+
+                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.75));
+                    if (!blob) { this.kameraError = 'Gagal mengambil foto, coba lagi.'; return; }
+
+                    const fileBaru = new File([blob], `kamera-${Date.now()}.jpg`, { type: 'image/jpeg' });
+                    const dt = new DataTransfer();
+                    dt.items.add(fileBaru);
+                    this.$refs.fotoFinal.files = dt.files;
+
+                    this.fotoStatus = `Foto dari kamera: ${(blob.size / 1024).toFixed(0)}KB`;
+                    this.tutupKamera();
+                },
+            };
+        }
+
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar-wrapper');
             const overlay = document.getElementById('sidebar-overlay');

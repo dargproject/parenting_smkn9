@@ -2,5 +2,6 @@
     ['name'=>'nama_pelanggaran','label'=>'Nama Pelanggaran','required'=>true,'wide'=>true],
     ['name'=>'pasal_id','label'=>'Pasal','type'=>'select','options'=>$pasals->pluck('nama','id'),'required'=>true],
     ['name'=>'jenis_id','label'=>'Jenis (menentukan poin otomatis)','type'=>'select','options'=>$jenisList->mapWithKeys(fn($j) => [$j->id => $j->nama.' — '.$j->poin.' poin']),'required'=>true],
+    ['name'=>'tindakan_langsung','label'=>'Tindakan Langsung (opsional, mis. "Disita" untuk barang terlarang)','type'=>'textarea','wide'=>true],
     ['name'=>'is_active','label'=>'Status Aktif','type'=>'checkbox'],
 ]])

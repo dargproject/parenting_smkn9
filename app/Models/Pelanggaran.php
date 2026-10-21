@@ -15,6 +15,11 @@ class Pelanggaran extends Model
         'deskripsi',
         'poin',
         'pelapor_id',
+        'foto',
+        'tahun_ajaran_id',
+        'tindakan',
+        'foto_tindakan',
+        'ditindak_oleh',
     ];
 
     public function siswa()
@@ -27,8 +32,18 @@ class Pelanggaran extends Model
         return $this->belongsTo(Guru::class, 'pelapor_id');
     }
 
+    public function ditindakOleh()
+    {
+        return $this->belongsTo(Guru::class, 'ditindak_oleh');
+    }
+
     public function masterPelanggaran()
     {
         return $this->belongsTo(MasterPelanggaran::class);
+    }
+
+    public function tahunAjaran()
+    {
+        return $this->belongsTo(TahunAjaran::class);
     }
 }

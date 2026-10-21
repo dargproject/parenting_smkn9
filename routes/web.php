@@ -85,6 +85,14 @@ Route::post('/guru/pelanggaran', [PortalController::class, 'storePelanggaran'])
     ->middleware('role:waka_kesiswaan,guru_mapel,tatib')
     ->name('guru.pelanggaran.store');
 
+Route::get('/guru/api/siswa-poin/{siswa}', [PortalController::class, 'getPoinSiswa'])
+    ->middleware('role:waka_kesiswaan,guru_mapel,tatib')
+    ->name('guru.api.siswa_poin');
+
+Route::post('/guru/tatib/pengurangan-poin', [PortalController::class, 'storePenguranganPoin'])
+    ->middleware('role:tatib')
+    ->name('guru.tatib.pengurangan-poin.store');
+
 Route::post('/guru/kesiswaan/petugas-tatib', [KesiswaanController::class, 'updatePetugasTatib'])
     ->middleware('role:waka_kesiswaan')
     ->name('guru.kesiswaan.petugas-tatib.update');

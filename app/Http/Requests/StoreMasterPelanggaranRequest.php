@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreMasterPelanggaranRequest extends FormRequest
 {
@@ -28,9 +29,10 @@ class StoreMasterPelanggaranRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama_pelanggaran' => ['required', 'string', 'max:255', \Illuminate\Validation\Rule::unique('master_pelanggarans', 'nama_pelanggaran')->where('pasal_id', $this->input('pasal_id'))->ignore($this->route('masterPelanggaran'))],
+            'nama_pelanggaran' => ['required', 'string', 'max:255', Rule::unique('master_pelanggarans', 'nama_pelanggaran')->where('pasal_id', $this->input('pasal_id'))->ignore($this->route('masterPelanggaran'))],
             'pasal_id' => 'required|exists:pasals,id',
             'jenis_id' => 'required|exists:jenis_pelanggarans,id',
+            'tindakan_langsung' => 'nullable|string|max:500',
             'is_active' => 'sometimes|boolean',
         ];
     }

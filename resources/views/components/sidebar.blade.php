@@ -112,6 +112,7 @@
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-wali-catatan', this)"><i class="fa-solid fa-pen-clip w-6 text-center mr-2"></i> <span>Catatan Wali Kelas</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-wali-prestasi', this)"><i class="fa-solid fa-trophy w-6 text-center mr-2"></i> <span>Prestasi Non-Akademik</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-wali-chat', this)"><i class="fa-solid fa-comments w-6 text-center mr-2"></i> <span>Komunikasi Ortu</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-wali-rekap-poin', this)"><i class="fa-solid fa-scale-balanced w-6 text-center mr-2"></i> <span>Rekap Poin Siswa</span></a>
         @endif
 
         @if(in_array('guru_wali', $roles))

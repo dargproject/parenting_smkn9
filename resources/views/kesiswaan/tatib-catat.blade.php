@@ -3,11 +3,23 @@
     <p class="text-slate-400 text-sm mb-4">Catat kejadian pelanggaran tata tertib yang dilakukan siswa.</p>
 
     <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5 md:p-6 max-w-2xl">
-        <form method="POST" action="{{ route('guru.pelanggaran.store') }}" class="space-y-4">
+        <form method="POST" action="{{ route('guru.pelanggaran.store') }}" enctype="multipart/form-data" class="space-y-4" x-data="{
+                f: { siswa_id: '{{ old('siswa_id', '') }}' },
+                statusSemester: null,
+                statusHarian: null,
+                cekStatus() {
+                    if (!this.f.siswa_id) { this.statusSemester = null; this.statusHarian = null; return; }
+                    fetch(`/guru/api/siswa-poin/${this.f.siswa_id}`).then(r => r.json()).then(d => {
+                        this.statusSemester = d.status_semester?.kode ? { ...d.status_semester, poin: d.poin_semester } : null;
+                        this.statusHarian = d.status_harian ? { ...d.status_harian, poin: d.poin_harian } : null;
+                    });
+                },
+                get tampilTindakan() { return !!this.statusSemester || !!this.statusHarian; }
+             }" x-effect="cekStatus()">
             @csrf
             <div>
                 <label class="mb-1.5 block text-sm font-medium text-slate-300">Siswa</label>
-                @include('kesiswaan.partials.siswa-search', ['name' => 'siswa_id', 'siswas' => $siswas])
+                @include('kesiswaan.partials.siswa-search', ['name' => 'siswa_id', 'siswas' => $siswas, 'bind' => 'f.siswa_id'])
                 @error('siswa_id')<p class="mt-1 text-xs text-rose-400">{{ $message }}</p>@enderror
             </div>
 
@@ -18,6 +30,7 @@
                     'pasal' => $mp->pasal->nama ?? '-',
                     'jenis' => $mp->jenisPelanggaran->nama ?? '-',
                     'poin' => $mp->jenisPelanggaran->poin ?? 0,
+                    'tindakanLangsung' => $mp->tindakan_langsung,
                 ])->values();
             @endphp
             <div x-data="{
@@ -31,9 +44,14 @@
                  }" class="relative">
                 <label class="mb-1.5 block text-sm font-medium text-slate-300">Jenis Pelanggaran</label>
                 <input type="hidden" name="master_pelanggaran_id" :value="pilihId">
-                <div x-show="terpilih" style="display: none;" class="flex items-center justify-between gap-2 rounded-lg border border-emerald-500/40 bg-slate-900 px-3 py-2 text-sm text-slate-100">
-                    <span><span x-text="terpilih?.nama"></span> <span class="text-xs text-slate-400" x-text="'· ' + terpilih?.jenis + ' · ' + terpilih?.poin + ' poin · ' + terpilih?.pasal"></span></span>
-                    <button type="button" @click="pilihId = ''" class="text-slate-400 hover:text-slate-100" title="Ganti jenis"><i class="fa-solid fa-xmark"></i></button>
+                <div x-show="terpilih" style="display: none;" class="rounded-lg border border-emerald-500/40 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+                    <div class="flex items-center justify-between gap-2">
+                        <span><span x-text="terpilih?.nama"></span> <span class="text-xs text-slate-400" x-text="'· ' + terpilih?.jenis + ' · ' + terpilih?.poin + ' poin · ' + terpilih?.pasal"></span></span>
+                        <button type="button" @click="pilihId = ''" class="text-slate-400 hover:text-slate-100" title="Ganti jenis"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <p x-show="terpilih?.tindakanLangsung" style="display: none;" class="mt-1.5 text-xs text-amber-400">
+                        <i class="fa-solid fa-bolt mr-1"></i> Tindakan langsung: <span x-text="terpilih?.tindakanLangsung"></span>
+                    </p>
                 </div>
                 <div x-show="!terpilih" class="space-y-2">
                     <div class="flex flex-col gap-2 sm:flex-row">
@@ -65,6 +83,40 @@
                 <label class="mb-1.5 block text-sm font-medium text-slate-300">Keterangan</label>
                 <textarea name="keterangan" rows="4" placeholder="Detail Kejadian" required class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500">{{ old('keterangan') }}</textarea>
                 @error('keterangan')<p class="mt-1 text-xs text-rose-400">{{ $message }}</p>@enderror
+            </div>
+
+            <div>
+                <x-camera-upload-field name="foto" label="Foto Bukti (opsional)" />
+            </div>
+
+            <div x-show="statusHarian" style="display: none;" class="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
+                <p class="text-sm font-semibold text-amber-400">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+                    <span x-text="statusHarian?.label"></span> &mdash; siswa ini sudah <span x-text="statusHarian?.poin"></span> poin pelanggaran <u>hari ini</u>.
+                </p>
+                <ul class="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-300">
+                    <template x-for="t in (statusHarian?.tindakan || [])" :key="t"><li x-text="t"></li></template>
+                </ul>
+            </div>
+
+            <div x-show="statusSemester" style="display: none;" class="rounded-lg border border-rose-500/30 bg-rose-500/5 p-4">
+                <p class="text-sm font-semibold text-rose-400">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+                    <span x-text="statusSemester?.label"></span> &mdash; siswa ini sudah <span x-text="statusSemester?.poin"></span> poin pelanggaran tahun ajaran ini.
+                </p>
+                <ul class="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-300">
+                    <template x-for="t in (statusSemester?.tindakan || [])" :key="t"><li x-text="t"></li></template>
+                </ul>
+            </div>
+
+            <div x-show="tampilTindakan" style="display: none;" class="rounded-lg border border-slate-600 bg-slate-900/60 p-4">
+                <p class="mb-3 text-sm text-slate-300">Catat tindakan yang benar-benar diberikan (opsional).</p>
+                <div class="mb-3">
+                    <label class="mb-1.5 block text-sm font-medium text-slate-300">Tindakan</label>
+                    <textarea name="tindakan" rows="2" placeholder="Contoh: Menulis istighfar 25 kali" class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500">{{ old('tindakan') }}</textarea>
+                    @error('tindakan')<p class="mt-1 text-xs text-rose-400">{{ $message }}</p>@enderror
+                </div>
+                <x-camera-upload-field name="foto_tindakan" label="Foto Hasil Tindakan (opsional)" />
             </div>
 
             <div class="flex justify-end">

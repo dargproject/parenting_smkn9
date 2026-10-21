@@ -46,6 +46,11 @@ class Siswa extends Authenticatable
         return $this->hasMany(Pelanggaran::class);
     }
 
+    public function penguranganPoins()
+    {
+        return $this->hasMany(PenguranganPoin::class);
+    }
+
     public function presensis()
     {
         return $this->hasMany(Presensi::class);

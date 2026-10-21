@@ -13,17 +13,20 @@ use App\Models\NilaiLm;
 use App\Models\NilaiPklUkk;
 use App\Models\NilaiSas;
 use App\Models\PanggilanOrtu;
+use App\Models\Pelanggaran;
 use App\Models\Peminatan;
+use App\Models\PenguranganPoin;
 use App\Models\PesanWaliKelas;
 use App\Models\PrestasiNonAkademik;
 use App\Models\RaporFinal;
 use App\Models\TahunAjaran;
 use App\Services\PenilaianService;
+use App\Services\SanksiService;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
-    public function index(PenilaianService $penilaian)
+    public function index(PenilaianService $penilaian, SanksiService $sanksi)
     {
         $orangTua = Auth::guard('orangtua')->user();
         $siswa = $orangTua->siswa;
@@ -36,12 +39,23 @@ class DashboardController extends Controller
         $infoBk = $this->infoBk($siswa);
         $prestasiNonAkademik = PrestasiNonAkademik::where('siswa_id', $siswa->id)->latest('tanggal')->get();
 
+        // Catatan kedisiplinan: dibatasi semester yang sedang dilihat (konsisten dengan rapor),
+        // tidak menunggu rapor dirilis -- orang tua berhak tahu ini kapan pun.
+        $pelanggaranSiswa = $tahunAjaranAktif
+            ? Pelanggaran::where('siswa_id', $siswa->id)->where('tahun_ajaran_id', $tahunAjaranAktif->id)->orderByDesc('tanggal')->get()
+            : collect();
+        $poinDikurangi = $tahunAjaranAktif
+            ? (int) PenguranganPoin::where('siswa_id', $siswa->id)->where('tahun_ajaran_id', $tahunAjaranAktif->id)->sum('poin')
+            : 0;
+        $poinBersih = max(0, (int) $pelanggaranSiswa->sum('poin') - $poinDikurangi);
+        $statusSanksi = $sanksi->statusSemester($poinBersih);
+
         $raporFinal = $tahunAjaranAktif
             ? RaporFinal::where(['siswa_id' => $siswa->id, 'tahun_ajaran_id' => $tahunAjaranAktif->id])->first()
             : null;
 
         if (! $raporFinal || $raporFinal->status !== 'final') {
-            return view('ortu.dashboard', ['siswa' => $siswa, 'dirilis' => false, 'ringkasan' => collect(), 'riwayat' => $riwayat, 'tahunAjaranTerpilih' => $tahunAjaranAktif, 'tahunAjaranAktifSistem' => $tahunAjaranAktifSistem, 'pesanWaliKelas' => $pesanWaliKelas, 'prestasiNonAkademik' => $prestasiNonAkademik] + $infoBk);
+            return view('ortu.dashboard', ['siswa' => $siswa, 'dirilis' => false, 'ringkasan' => collect(), 'riwayat' => $riwayat, 'tahunAjaranTerpilih' => $tahunAjaranAktif, 'tahunAjaranAktifSistem' => $tahunAjaranAktifSistem, 'pesanWaliKelas' => $pesanWaliKelas, 'prestasiNonAkademik' => $prestasiNonAkademik, 'pelanggaranSiswa' => $pelanggaranSiswa, 'poinBersih' => $poinBersih, 'statusSanksi' => $statusSanksi] + $infoBk);
         }
 
         // Mapel diambil dari nilai yang tersimpan pada semester tsb, bukan kelas siswa saat ini (siswa bisa sudah naik kelas).
@@ -76,6 +90,9 @@ class DashboardController extends Controller
             'perluPerhatian' => $ringkasan->filter(fn ($r) => $r['status'] === 'remedial'),
             'pesanWaliKelas' => $pesanWaliKelas,
             'prestasiNonAkademik' => $prestasiNonAkademik,
+            'pelanggaranSiswa' => $pelanggaranSiswa,
+            'poinBersih' => $poinBersih,
+            'statusSanksi' => $statusSanksi,
         ] + $infoBk);
     }
 

@@ -7,5 +7,8 @@
         <a href="#" class="flex items-center pl-12 pr-4 py-2.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors text-sm" onclick="gotoPane('pane-kesiswaan-jenis', this)"><span>Jenis Pelanggaran</span></a>
         <a href="#" class="flex items-center pl-12 pr-4 py-2.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors text-sm" onclick="gotoPane('pane-kesiswaan-catat', this)"><span>Catat Pelanggaran</span></a>
         <a href="#" class="flex items-center pl-12 pr-4 py-2.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors text-sm" onclick="gotoPane('pane-kesiswaan-rekap', this)"><span>Rekap Poin</span></a>
+        @if(in_array('tatib', $roles))
+            <a href="#" class="flex items-center pl-12 pr-4 py-2.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors text-sm" onclick="gotoPane('pane-kesiswaan-kurangi-poin', this)"><span>Kurangi Poin</span></a>
+        @endif
     </div>
 </div>

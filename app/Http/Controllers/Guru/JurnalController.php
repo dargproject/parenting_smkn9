@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Guru;
 
+use App\Http\Controllers\Concerns\KompresFoto;
 use App\Http\Controllers\Controller;
 use App\Models\JadwalPelajaran;
 use App\Models\JurnalMengajar;
@@ -16,6 +17,8 @@ use Illuminate\Support\Facades\Storage;
 
 class JurnalController extends Controller
 {
+    use KompresFoto;
+
     private const HARI = [0 => 'Minggu', 1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu'];
 
     public function store(Request $request)
@@ -67,43 +70,6 @@ class JurnalController extends Controller
         });
 
         return redirect()->route('guru.portal')->with('success', 'Jurnal mengajar dan presensi berhasil disimpan.');
-    }
-
-    /**
-     * Pengaman di server kalau kompresi di browser gagal/dilewati (browser lama,
-     * JS nonaktif) -- foto tetap diperkecil dimensinya supaya tidak boros storage.
-     */
-    private function kecilkanFotoJikaBesar(string $path): void
-    {
-        $fullPath = Storage::disk('public')->path($path);
-        $ukuran = @getimagesize($fullPath);
-
-        if (! $ukuran) {
-            return;
-        }
-
-        [$lebar, $tinggi] = $ukuran;
-        $maxSisi = 1600;
-
-        if ($lebar <= $maxSisi && $tinggi <= $maxSisi) {
-            return;
-        }
-
-        $sumber = @imagecreatefromstring(file_get_contents($fullPath));
-        if (! $sumber) {
-            return;
-        }
-
-        $skala = $maxSisi / max($lebar, $tinggi);
-        $lebarBaru = (int) round($lebar * $skala);
-        $tinggiBaru = (int) round($tinggi * $skala);
-
-        $tujuan = imagecreatetruecolor($lebarBaru, $tinggiBaru);
-        imagecopyresampled($tujuan, $sumber, 0, 0, 0, 0, $lebarBaru, $tinggiBaru, $lebar, $tinggi);
-        imagejpeg($tujuan, $fullPath, 75);
-
-        imagedestroy($sumber);
-        imagedestroy($tujuan);
     }
 
     public function destroy(JurnalMengajar $jurnal)

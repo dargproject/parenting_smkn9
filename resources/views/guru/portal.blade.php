@@ -34,6 +34,13 @@
     @include('kesiswaan.tatib-rekap')
 @endif
 
+@if($guru->roles->contains('name', 'tatib'))
+    <!-- ========================================== -->
+    <!-- TATIB (KHUSUS): KURANGI POIN -->
+    <!-- ========================================== -->
+    @include('kesiswaan.tatib-kurangi-poin')
+@endif
+
 @if($guru->roles->contains('name', 'guru_bk'))
     <!-- ========================================== -->
     <!-- BK (BIMBINGAN KONSELING) VIEWS -->
@@ -853,6 +860,7 @@
             </div>
         @endif
     </div>
+    @include('kesiswaan.wali-rekap-poin')
 @endif
 
 @if($guru->roles->contains('name', 'guru_wali'))
