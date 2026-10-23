@@ -35,7 +35,7 @@
                 $mapel = $jadwal->mataPelajaran;
                 $kelas = $jadwal->kelas;
                 $siswaKelas = $siswas->where('kelas_id', $kelas?->id)->values();
-                $tpMapel = $tujuanPembelajarans->where('mata_pelajaran_id', $mapel?->id)->values();
+                $tpMapel = $tujuanPembelajarans->where('mata_pelajaran_id', $mapel?->id)->where('kelas_id', $kelas?->id)->values();
             @endphp
             @continue(!$mapel || !$kelas)
 
@@ -80,6 +80,7 @@
                     <form method="POST" action="{{ route('guru.penilaian.tp.store') }}" class="flex flex-col sm:flex-row gap-2">
                         @csrf
                         <input type="hidden" name="mata_pelajaran_id" value="{{ $mapel->id }}">
+                        <input type="hidden" name="kelas_id" value="{{ $kelas->id }}">
                         <input type="text" name="kode" placeholder="Kode, mis. N1" class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 sm:w-40">
                         <input type="text" name="deskripsi" required placeholder="Deskripsi N, mis. Konfigurasi Router Mikrotik" class="flex-1 rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
                         <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500 whitespace-nowrap">+ Tambah N</button>
@@ -92,6 +93,7 @@
                 <form method="POST" action="{{ route('guru.penilaian.nilai-lm.store') }}">
                     @csrf
                     <input type="hidden" name="mata_pelajaran_id" value="{{ $mapel->id }}">
+                    <input type="hidden" name="kelas_id" value="{{ $kelas->id }}">
                     <h6 class="font-bold text-slate-100 mb-1 text-sm"><span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-xs text-white mr-1">2</span> Nilai Formatif per Tujuan Pembelajaran</h6>
                     <p class="text-xs text-slate-400 mb-3">Isi nilai tiap N. Kolom remedial (di bawah KKTP {{ $kktpLangkah2 }}) atau pengayaan (sudah tuntas) otomatis muncul begitu nilai diisi. Nilai Akhir (Sumatif) mata pelajaran ini akan dihitung otomatis dari rata-rata nilai formatif begitu disimpan.</p>
                     <div class="flex flex-col gap-3">

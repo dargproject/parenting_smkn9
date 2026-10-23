@@ -35,8 +35,8 @@ class PenilaianSeeder extends Seeder
             return;
         }
 
-        $tp1 = TujuanPembelajaran::create(['mata_pelajaran_id' => $mapelJaringan->id, 'tahun_ajaran_id' => $ta->id, 'kode' => 'N1', 'deskripsi' => 'Konfigurasi Router Mikrotik', 'urutan' => 1]);
-        $tp2 = TujuanPembelajaran::create(['mata_pelajaran_id' => $mapelJaringan->id, 'tahun_ajaran_id' => $ta->id, 'kode' => 'N2', 'deskripsi' => 'Instalasi Server Linux', 'urutan' => 2]);
+        $tp1 = TujuanPembelajaran::create(['mata_pelajaran_id' => $mapelJaringan->id, 'kelas_id' => $kelasXiTkj1->id, 'tahun_ajaran_id' => $ta->id, 'kode' => 'N1', 'deskripsi' => 'Konfigurasi Router Mikrotik', 'urutan' => 1]);
+        $tp2 = TujuanPembelajaran::create(['mata_pelajaran_id' => $mapelJaringan->id, 'kelas_id' => $kelasXiTkj1->id, 'tahun_ajaran_id' => $ta->id, 'kode' => 'N2', 'deskripsi' => 'Instalasi Server Linux', 'urutan' => 2]);
 
         $siswaXiTkj1 = Siswa::where('kelas_id', $kelasXiTkj1->id)->get();
 

@@ -45,26 +45,46 @@ class PenilaianController extends Controller
         return $mapel;
     }
 
+    /**
+     * Tujuan Pembelajaran (N) independen per kelas, jadi pengecekan kepemilikan guru harus
+     * tahu kelasnya juga -- bukan cuma mapelnya -- supaya guru tidak bisa mengubah N milik
+     * kelas lain hanya karena kebetulan mengampu mapel yang sama di kelas tsb.
+     */
+    private function pastikanMapelKelasMilikGuru(int $mataPelajaranId, int $kelasId): void
+    {
+        abort_unless(
+            KelasMataPelajaran::where('mata_pelajaran_id', $mataPelajaranId)
+                ->where('kelas_id', $kelasId)
+                ->where('guru_id', Auth::id())
+                ->exists(),
+            403,
+            'Anda bukan pengampu mata pelajaran ini di kelas tersebut.'
+        );
+    }
+
     public function storeTujuanPembelajaran(Request $request)
     {
         $tpUnik = fn (string $kolom) => Rule::unique('tujuan_pembelajarans', $kolom)
             ->where('mata_pelajaran_id', $request->input('mata_pelajaran_id'))
+            ->where('kelas_id', $request->input('kelas_id'))
             ->where('tahun_ajaran_id', $this->tahunAjaranAktifId());
 
         $data = $request->validate([
             'mata_pelajaran_id' => 'required|exists:mata_pelajarans,id',
+            'kelas_id' => 'required|exists:kelas,id',
             'kode' => ['nullable', 'string', 'max:20', $tpUnik('kode')],
             'deskripsi' => ['required', 'string', 'max:500', $tpUnik('deskripsi')],
             'urutan' => 'nullable|integer|min:0',
         ], [
-            'kode.unique' => 'Kode N tersebut sudah dipakai pada mapel ini.',
-            'deskripsi.unique' => 'Nilai (N) dengan deskripsi yang sama sudah ada pada mapel ini.',
+            'kode.unique' => 'Kode N tersebut sudah dipakai pada kelas & mapel ini.',
+            'deskripsi.unique' => 'Nilai (N) dengan deskripsi yang sama sudah ada pada kelas & mapel ini.',
         ]);
 
-        $this->pastikanMapelMilikGuru($data['mata_pelajaran_id']);
+        $this->pastikanMapelKelasMilikGuru($data['mata_pelajaran_id'], $data['kelas_id']);
         $tahunAjaranId = $this->tahunAjaranAktifId();
 
         $urutanBerikutnya = 1 + (int) TujuanPembelajaran::where('mata_pelajaran_id', $data['mata_pelajaran_id'])
+            ->where('kelas_id', $data['kelas_id'])
             ->where('tahun_ajaran_id', $tahunAjaranId)
             ->max('urutan');
 
@@ -78,10 +98,11 @@ class PenilaianController extends Controller
 
     public function updateTujuanPembelajaran(Request $request, TujuanPembelajaran $tujuanPembelajaran)
     {
-        $this->pastikanMapelMilikGuru($tujuanPembelajaran->mata_pelajaran_id);
+        $this->pastikanMapelKelasMilikGuru($tujuanPembelajaran->mata_pelajaran_id, $tujuanPembelajaran->kelas_id);
 
         $tpUnik = fn (string $kolom) => Rule::unique('tujuan_pembelajarans', $kolom)
             ->where('mata_pelajaran_id', $tujuanPembelajaran->mata_pelajaran_id)
+            ->where('kelas_id', $tujuanPembelajaran->kelas_id)
             ->where('tahun_ajaran_id', $tujuanPembelajaran->tahun_ajaran_id)
             ->ignore($tujuanPembelajaran->id);
 
@@ -89,8 +110,8 @@ class PenilaianController extends Controller
             'kode' => ['nullable', 'string', 'max:20', $tpUnik('kode')],
             'deskripsi' => ['required', 'string', 'max:500', $tpUnik('deskripsi')],
         ], [
-            'kode.unique' => 'Kode N tersebut sudah dipakai pada mapel ini.',
-            'deskripsi.unique' => 'Nilai (N) dengan deskripsi yang sama sudah ada pada mapel ini.',
+            'kode.unique' => 'Kode N tersebut sudah dipakai pada kelas & mapel ini.',
+            'deskripsi.unique' => 'Nilai (N) dengan deskripsi yang sama sudah ada pada kelas & mapel ini.',
         ]);
 
         $tujuanPembelajaran->update($data);
@@ -100,7 +121,7 @@ class PenilaianController extends Controller
 
     public function destroyTujuanPembelajaran(TujuanPembelajaran $tujuanPembelajaran)
     {
-        $this->pastikanMapelMilikGuru($tujuanPembelajaran->mata_pelajaran_id);
+        $this->pastikanMapelKelasMilikGuru($tujuanPembelajaran->mata_pelajaran_id, $tujuanPembelajaran->kelas_id);
 
         $tujuanPembelajaran->delete();
 
@@ -111,6 +132,7 @@ class PenilaianController extends Controller
     {
         $data = $request->validate([
             'mata_pelajaran_id' => 'required|exists:mata_pelajarans,id',
+            'kelas_id' => 'required|exists:kelas,id',
             'nilai' => 'required|array',
             'nilai.*.*' => 'nullable|integer|min:0|max:100',
             'remedial' => 'nullable|array',
@@ -120,10 +142,10 @@ class PenilaianController extends Controller
             'catatan_pengayaan.*.*' => 'nullable|string|max:500',
         ]);
 
-        $this->pastikanMapelMilikGuru($data['mata_pelajaran_id']);
+        $this->pastikanMapelKelasMilikGuru($data['mata_pelajaran_id'], $data['kelas_id']);
         $tahunAjaranId = $this->tahunAjaranAktifId();
 
-        $tpValid = TujuanPembelajaran::where('mata_pelajaran_id', $data['mata_pelajaran_id'])->where('tahun_ajaran_id', $tahunAjaranId)->pluck('id');
+        $tpValid = TujuanPembelajaran::where('mata_pelajaran_id', $data['mata_pelajaran_id'])->where('kelas_id', $data['kelas_id'])->where('tahun_ajaran_id', $tahunAjaranId)->pluck('id');
         $tpKiriman = collect($data['nilai'])->flatMap(fn ($perTp) => array_keys($perTp))->unique();
         if ($tpKiriman->diff($tpValid)->isNotEmpty()) {
             return back()->with('error', 'Sebagian kolom N bukan milik semester/tahun ajaran aktif. Muat ulang halaman lalu isi kembali.');
@@ -180,7 +202,7 @@ class PenilaianController extends Controller
                 }
             }
 
-            $tpIds = TujuanPembelajaran::where('mata_pelajaran_id', $data['mata_pelajaran_id'])->where('tahun_ajaran_id', $tahunAjaranId)->pluck('id');
+            $tpIds = TujuanPembelajaran::where('mata_pelajaran_id', $data['mata_pelajaran_id'])->where('kelas_id', $data['kelas_id'])->where('tahun_ajaran_id', $tahunAjaranId)->pluck('id');
             foreach (array_keys($data['nilai']) as $siswaId) {
                 $nilaiLmSiswa = NilaiLm::where('siswa_id', $siswaId)->whereIn('tujuan_pembelajaran_id', $tpIds)->get();
                 $rata = $penilaian->rataLm($nilaiLmSiswa);
