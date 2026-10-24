@@ -121,6 +121,7 @@
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-guru-wali-nilai-matrix', this)"><i class="fa-solid fa-table-cells w-6 text-center mr-2"></i> <span>Rekap Nilai Rombel</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-guru-wali-log', this)"><i class="fa-solid fa-clock-rotate-left w-6 text-center mr-2"></i> <span>Log Perubahan Nilai</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-guru-wali-rilis', this)"><i class="fa-solid fa-lock w-6 text-center mr-2"></i> <span>Finalisasi & Rilis Nilai</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-guru-wali-presensi', this)"><i class="fa-solid fa-calendar-xmark w-6 text-center mr-2"></i> <span>Rekap Presensi per Mapel</span></a>
         @endif
 
         @if(in_array('tatib', $roles))

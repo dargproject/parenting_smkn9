@@ -155,4 +155,42 @@ class JurnalMengajarTest extends TestCase
 
         $this->sebagai($guruBk)->delete(route('guru.jurnal.destroy', $jurnal))->assertRedirect(route('login'));
     }
+
+    public function test_rekap_presensi_jurnal_mengembalikan_daftar_siswa(): void
+    {
+        $guru = $this->guruMapel();
+        ['jurnal' => $jurnal, 'siswa' => $siswa] = $this->buatJurnalDenganPresensi($guru);
+
+        $response = $this->sebagai($guru)->getJson(route('guru.api.jurnal_presensi', $jurnal));
+
+        $response->assertOk();
+        $response->assertJson([
+            'materi' => 'Materi uji',
+            'siswa' => [
+                ['nama' => $siswa->nama, 'nis' => $siswa->nis, 'status' => 'H', 'keterangan' => null],
+            ],
+        ]);
+    }
+
+    public function test_rekap_presensi_jurnal_guru_lain_ditolak(): void
+    {
+        $guruA = $this->guruMapel();
+        $guruB = Guru::create(['nama' => 'Guru Lain Presensi Uji', 'nip' => '9996604', 'password' => bcrypt('password'), 'is_active' => true]);
+        $guruB->roles()->attach(Role::firstOrCreate(['name' => 'guru_mapel'])->id);
+
+        ['jurnal' => $jurnalB] = $this->buatJurnalDenganPresensi($guruB);
+
+        $this->sebagai($guruA)->getJson(route('guru.api.jurnal_presensi', $jurnalB))->assertStatus(403);
+    }
+
+    public function test_portal_guru_mapel_merender_riwayat_jurnal_dengan_filter(): void
+    {
+        $guru = $this->guruMapel();
+        $this->buatJurnalDenganPresensi($guru);
+
+        $this->sebagai($guru)->get(route('guru.portal'))
+            ->assertOk()
+            ->assertSee('Riwayat Jurnal Mengajar Anda')
+            ->assertSee('Rekap Presensi');
+    }
 }

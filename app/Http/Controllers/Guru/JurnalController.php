@@ -92,4 +92,34 @@ class JurnalController extends Controller
 
         return redirect()->route('guru.portal')->with('success', 'Jurnal mengajar dan presensi siswa pada tanggal tersebut berhasil dihapus.');
     }
+
+    /**
+     * Rekap presensi siswa untuk satu entri jurnal -- dipakai modal "Rekap Presensi" di
+     * Riwayat Jurnal, diambil on-demand (bukan dimuat semua di awal) supaya tabel riwayat
+     * yang sudah panjang tidak ikut berat.
+     */
+    public function presensi(JurnalMengajar $jurnal)
+    {
+        abort_unless($jurnal->guru_id === Auth::id(), 403, 'Jurnal ini bukan milik Anda.');
+
+        $siswa = Presensi::where('jadwal_pelajaran_id', $jurnal->jadwal_pelajaran_id)
+            ->where('tanggal', $jurnal->tanggal)
+            ->with('siswa')
+            ->get()
+            ->sortBy(fn ($p) => $p->siswa->nama ?? '')
+            ->values()
+            ->map(fn ($p) => [
+                'nama' => $p->siswa->nama ?? '-',
+                'nis' => $p->siswa->nis ?? '-',
+                'status' => $p->status,
+                'keterangan' => $p->keterangan,
+            ]);
+
+        return response()->json([
+            'tanggal' => Carbon::parse($jurnal->tanggal)->format('d-m-Y'),
+            'materi' => $jurnal->materi,
+            'kelas' => $jurnal->jadwalPelajaran->kelas->nama_kelas ?? '-',
+            'siswa' => $siswa,
+        ]);
+    }
 }

@@ -420,6 +420,68 @@ class PortalController extends Controller
     }
 
     /**
+     * Rekap Alpa per Mapel untuk Guru Wali: matrix siswa binaan x mapel, isi sel utama = jumlah
+     * Alpa pada rentang tanggal yang dipilih (ini yang dipakai untuk urutan & warna "perlu
+     * perhatian"). Sakit & Izin ikut dihitung dan disertakan sebagai detail (lengkap dengan
+     * keterangan yang diisi guru mapel saat presensi) supaya tetap kelihatan konteksnya --
+     * bukan berarti alpa, bisa jadi memang izin/sakit pada jam itu.
+     */
+    public function rekapAlpaBinaan(Request $request)
+    {
+        $guru = Auth::user();
+        $kelasBinaanIds = Kelas::where('guru_wali_id', $guru->id)->pluck('id');
+        $siswaBinaan = Siswa::whereIn('kelas_id', $kelasBinaanIds)->with('kelas')->orderBy('nama')->get();
+
+        $mulai = $request->query('mulai') ? Carbon::parse($request->query('mulai'))->toDateString() : now()->startOfMonth()->toDateString();
+        $selesai = $request->query('selesai') ? Carbon::parse($request->query('selesai'))->toDateString() : now()->toDateString();
+
+        $presensiTakHadir = Presensi::whereIn('siswa_id', $siswaBinaan->pluck('id'))
+            ->whereIn('status', ['S', 'I', 'A'])
+            ->whereBetween('tanggal', [$mulai, $selesai])
+            ->with('jadwalPelajaran.mataPelajaran')
+            ->orderBy('tanggal')
+            ->get();
+
+        $mapelIds = $presensiTakHadir->pluck('jadwalPelajaran.mata_pelajaran_id')->filter()->unique();
+        $mapelList = MataPelajaran::whereIn('id', $mapelIds)->orderBy('nama_mapel')->get(['id', 'nama_mapel']);
+
+        $siswaRows = $siswaBinaan->map(function ($s) use ($presensiTakHadir, $mapelList) {
+            $milik = $presensiTakHadir->where('siswa_id', $s->id);
+            $perMapel = [];
+            $totalAlpa = 0;
+            foreach ($mapelList as $m) {
+                $milikMapel = $milik->filter(fn ($p) => optional($p->jadwalPelajaran)->mata_pelajaran_id === $m->id)->values();
+                $alpa = $milikMapel->where('status', 'A')->count();
+                $totalAlpa += $alpa;
+
+                $perMapel[$m->id] = [
+                    'alpa' => $alpa,
+                    'sakit' => $milikMapel->where('status', 'S')->count(),
+                    'izin' => $milikMapel->where('status', 'I')->count(),
+                    'detail' => $milikMapel->map(fn ($p) => [
+                        'tanggal' => Carbon::parse($p->tanggal)->format('d-m-Y'),
+                        'status' => $p->status,
+                        'keterangan' => $p->keterangan,
+                    ])->values(),
+                ];
+            }
+
+            return [
+                'id' => $s->id,
+                'nama' => $s->nama,
+                'kelas' => $s->kelas->nama_kelas ?? '-',
+                'perMapel' => $perMapel,
+                'total' => $totalAlpa,
+            ];
+        })->sortByDesc('total')->values();
+
+        return response()->json([
+            'mapel' => $mapelList->map(fn ($m) => ['id' => $m->id, 'nama' => $m->nama_mapel])->values(),
+            'siswa' => $siswaRows,
+        ]);
+    }
+
+    /**
      * Status sanksi siswa (harian + semester) -- dipakai form Catat Pelanggaran
      * untuk menampilkan jenjang sanksi sesuai kebijakan sekolah.
      */

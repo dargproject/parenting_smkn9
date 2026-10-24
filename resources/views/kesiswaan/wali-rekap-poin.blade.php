@@ -71,7 +71,7 @@
     </div>
 
     <div x-show="rujukModal" style="display: none;" class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/50" @keydown.escape.window="rujukModal = false" @click.self="rujukModal = false">
-        <div class="w-full max-w-md rounded-2xl bg-slate-800 p-5 text-slate-100 shadow-xl">
+        <div class="solid-panel w-full max-w-md rounded-2xl p-5 text-slate-100 shadow-xl">
             <div class="mb-3 flex items-center justify-between">
                 <h3 class="text-base font-semibold">Rujuk ke BK &mdash; <span x-text="rujukSiswaNama"></span></h3>
                 <button type="button" @click="rujukModal = false" class="text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark"></i></button>

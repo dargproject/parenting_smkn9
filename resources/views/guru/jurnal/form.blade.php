@@ -120,8 +120,29 @@
         </form>
     </div>
 
-    <div class="card border-0 rounded-xl shadow-sm p-4 bg-slate-800/80 mb-4 text-slate-100">
+    @php
+        $myJournals = \App\Models\JurnalMengajar::with(['jadwalPelajaran.kelas'])->where('guru_id', $guru->id)->latest('tanggal')->get();
+        $riwayatRows = $myJournals->map(fn ($j) => [
+            'id' => $j->id,
+            'tanggalIso' => \Carbon\Carbon::parse($j->tanggal)->toDateString(),
+            'kelasId' => (string) ($j->jadwalPelajaran->kelas_id ?? ''),
+        ])->values();
+        $kelasRiwayat = $myJournals->pluck('jadwalPelajaran.kelas')->filter()->unique('id')->sortBy('nama_kelas', SORT_NATURAL)->values();
+    @endphp
+    <div class="card border-0 rounded-xl shadow-sm p-4 bg-slate-800/80 mb-4 text-slate-100" x-data="riwayatJurnal(@js($riwayatRows))" x-effect="hitung()" x-init="$watch('tanggal', () => hal = 1); $watch('kelasId', () => hal = 1)">
         <h6 class="font-bold text-slate-100 mb-3"><i class="fa-solid fa-book mr-1 text-info"></i> Riwayat Jurnal Mengajar Anda</h6>
+
+        <div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+            <input type="date" x-model="tanggal" class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-1.5 text-sm text-slate-100 sm:w-48">
+            <select x-model="kelasId" class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-1.5 text-sm text-slate-100 sm:w-48">
+                <option value="">Semua kelas</option>
+                @foreach($kelasRiwayat as $k)
+                    <option value="{{ $k->id }}">{{ $k->nama_kelas }}</option>
+                @endforeach
+            </select>
+            <button type="button" x-show="tanggal || kelasId" style="display: none;" @click="tanggal = ''; kelasId = ''" class="rounded-lg border border-slate-600 px-3 py-1.5 text-sm text-slate-300 hover:border-blue-500 sm:w-auto">Reset</button>
+        </div>
+
         <div class="overflow-x-auto">
             <table class="table table-hover table-striped align-middle table-sm" style="font-size: 13px;">
                 <thead class="bg-slate-900 border-b border-slate-700/60 text-xs">
@@ -135,19 +156,19 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @php $myJournals = \App\Models\JurnalMengajar::with(['jadwalPelajaran.kelas'])->where('guru_id', $guru->id)->latest('tanggal')->take(20)->get(); @endphp
                     @forelse($myJournals as $jurnal)
-                        <tr>
+                        <tr x-show="terlihat.has({{ $jurnal->id }})" style="display: none;">
                             <td class="font-monospace small">{{ \Carbon\Carbon::parse($jurnal->tanggal)->format('d-m-Y') }}</td>
                             <td class="font-bold">{{ $jurnal->materi }}</td>
                             <td>{{ $jurnal->jadwalPelajaran->kelas->nama_kelas ?? '-' }}</td>
                             <td>{{ $jurnal->jadwalPelajaran->jam_mulai ?? '-' }}</td>
-                            <td>
+                            <td class="whitespace-nowrap">
                                 @if($jurnal->foto)
                                     <a href="{{ \Illuminate\Support\Facades\Storage::url($jurnal->foto) }}" target="_blank" class="badge bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><i class="fa-solid fa-image"></i> Lihat foto</a>
                                 @else
                                     <span class="badge bg-secondary-subtle text-slate-400 py-1 px-2.5">Tidak ada foto</span>
                                 @endif
+                                <button type="button" @click="bukaRekapPresensi({{ $jurnal->id }})" class="btn btn-outline-info btn-xs py-0.5 px-2 ms-1" style="font-size: 11px;"><i class="fa-solid fa-users mr-1"></i>Rekap Presensi</button>
                             </td>
                             <td class="text-center whitespace-nowrap">
                                 <button type="button" onclick="bukaJurnalTanggal('{{ \Carbon\Carbon::parse($jurnal->tanggal)->toDateString() }}', {{ $jurnal->jadwal_pelajaran_id }})" class="btn btn-outline-primary btn-xs py-0.5 px-2 me-1" style="font-size: 11px;" title="Edit"><i class="fa-solid fa-pen"></i></button>
@@ -160,8 +181,57 @@
                     @empty
                         <tr><td colspan="6" class="text-center text-slate-400 small py-3">Belum ada riwayat pengisian jurnal mengajar.</td></tr>
                     @endforelse
+                    <tr x-show="{{ $myJournals->count() }} > 0 && total === 0" style="display: none;"><td colspan="6" class="text-center text-slate-400 small py-3">Tidak ada jurnal yang cocok dengan filter.</td></tr>
                 </tbody>
             </table>
+        </div>
+
+        <div class="mt-3 flex flex-col items-center justify-between gap-2 sm:flex-row" x-show="total > 0">
+            <p class="text-xs text-slate-400 m-0" x-text="'Menampilkan ' + ((hal - 1) * perHal + 1) + '–' + Math.min(hal * perHal, total) + ' dari ' + total + ' jurnal'"></p>
+            <div class="flex items-center gap-2">
+                <button type="button" @click="hal--" :disabled="hal <= 1" class="rounded-lg border border-slate-600 px-3 py-1 text-xs text-slate-300 disabled:opacity-40">&larr;</button>
+                <span class="text-xs text-slate-300" x-text="hal + ' / ' + maks"></span>
+                <button type="button" @click="hal++" :disabled="hal >= maks" class="rounded-lg border border-slate-600 px-3 py-1 text-xs text-slate-300 disabled:opacity-40">&rarr;</button>
+            </div>
+        </div>
+
+        <div x-show="presensiModal" style="display: none;" class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/50" @keydown.escape.window="presensiModal = false" @click.self="presensiModal = false">
+            <div class="solid-panel w-full max-w-lg rounded-2xl p-5 text-slate-100 shadow-xl max-h-[85vh] flex flex-col">
+                <div class="mb-3 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base font-semibold m-0">Rekap Presensi</h3>
+                        <p class="text-xs text-slate-400 m-0" x-show="presensiData" x-text="presensiData ? (presensiData.kelas + ' · ' + presensiData.tanggal + ' · ' + presensiData.materi) : ''"></p>
+                    </div>
+                    <button type="button" @click="presensiModal = false" class="text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="overflow-y-auto">
+                    <template x-if="presensiLoading">
+                        <p class="text-sm text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Memuat...</p>
+                    </template>
+                    <template x-if="!presensiLoading && presensiData">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-900 text-xs text-slate-400">
+                                <tr><th class="px-2 py-1.5">Nama Siswa</th><th class="px-2 py-1.5">NIS</th><th class="px-2 py-1.5 text-center">Status</th><th class="px-2 py-1.5">Keterangan</th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-700/60">
+                                <template x-for="s in presensiData.siswa" :key="s.nis">
+                                    <tr>
+                                        <td class="px-2 py-1.5 font-semibold" x-text="s.nama"></td>
+                                        <td class="px-2 py-1.5 text-slate-400" x-text="s.nis"></td>
+                                        <td class="px-2 py-1.5 text-center">
+                                            <span class="rounded-full px-2 py-0.5 text-xs font-bold"
+                                                :class="{ 'bg-emerald-500/10 text-emerald-400': s.status === 'H', 'bg-cyan-500/10 text-cyan-400': s.status === 'S', 'bg-amber-500/10 text-amber-400': s.status === 'I', 'bg-rose-500/10 text-rose-400': s.status === 'A' }"
+                                                x-text="s.status"></span>
+                                        </td>
+                                        <td class="px-2 py-1.5 text-slate-400" x-text="s.keterangan || '-'"></td>
+                                    </tr>
+                                </template>
+                                <tr x-show="!presensiData.siswa.length"><td colspan="4" class="px-2 py-3 text-center text-slate-400">Tidak ada data presensi.</td></tr>
+                            </tbody>
+                        </table>
+                    </template>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -220,6 +290,40 @@
                     });
                 } finally {
                     this.memuat = false;
+                }
+            },
+        };
+    }
+
+    function riwayatJurnal(rows) {
+        return {
+            rows,
+            tanggal: '',
+            kelasId: '',
+            hal: 1,
+            perHal: 15,
+            terlihat: new Set(),
+            total: 0,
+            presensiModal: false,
+            presensiLoading: false,
+            presensiData: null,
+            hitung() {
+                const hasil = this.rows.filter(r => (!this.tanggal || r.tanggalIso === this.tanggal) && (!this.kelasId || r.kelasId === String(this.kelasId)));
+                this.total = hasil.length;
+                const maks = Math.max(1, Math.ceil(hasil.length / this.perHal));
+                if (this.hal > maks) this.hal = maks;
+                this.terlihat = new Set(hasil.slice((this.hal - 1) * this.perHal, this.hal * this.perHal).map(r => r.id));
+            },
+            get maks() { return Math.max(1, Math.ceil(this.total / this.perHal)); },
+            async bukaRekapPresensi(jurnalId) {
+                this.presensiModal = true;
+                this.presensiLoading = true;
+                this.presensiData = null;
+                try {
+                    const res = await fetch(`/guru/api/jurnal/${jurnalId}/presensi`);
+                    this.presensiData = await res.json();
+                } finally {
+                    this.presensiLoading = false;
                 }
             },
         };

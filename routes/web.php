@@ -129,6 +129,7 @@ Route::middleware('role:guru_mapel')->prefix('guru/penilaian')->name('guru.penil
 
 Route::middleware('role:guru_mapel')->post('/guru/jurnal', [JurnalController::class, 'store'])->name('guru.jurnal.store');
 Route::middleware('role:guru_mapel')->delete('/guru/jurnal/{jurnal}', [JurnalController::class, 'destroy'])->name('guru.jurnal.destroy');
+Route::middleware('role:guru_mapel')->get('/guru/api/jurnal/{jurnal}/presensi', [JurnalController::class, 'presensi'])->name('guru.api.jurnal_presensi');
 
 Route::middleware('role:guru_mapel')->prefix('guru/jadwal-mengajar')->name('guru.jadwal-mengajar.')->group(function () {
     Route::post('/', [JadwalMengajarController::class, 'store'])->name('store');
@@ -270,6 +271,7 @@ Route::middleware('role:guru_wali')->prefix('guru/wali')->name('guru.wali.')->gr
     Route::post('/catatan-akademik', [PenilaianController::class, 'storeCatatanAkademik'])->name('catatan-akademik.store');
     Route::post('/rapor/rilis', [PenilaianController::class, 'rilisRapor'])->name('rapor.rilis');
     Route::post('/rapor/batalkan', [PenilaianController::class, 'batalkanRilis'])->name('rapor.batalkan');
+    Route::get('/rekap-alpa', [PortalController::class, 'rekapAlpaBinaan'])->name('rekap-alpa');
 });
 
 Route::middleware('role:pembina_ekskul')->prefix('guru/ekskul')->name('guru.ekskul.')->group(function () {

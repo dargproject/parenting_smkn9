@@ -82,7 +82,7 @@
                         <input type="hidden" name="mata_pelajaran_id" value="{{ $mapel->id }}">
                         <input type="hidden" name="kelas_id" value="{{ $kelas->id }}">
                         <input type="text" name="kode" placeholder="Kode, mis. N1" class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 sm:w-40">
-                        <input type="text" name="deskripsi" required placeholder="Deskripsi N, mis. Konfigurasi Router Mikrotik" class="flex-1 rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+                        <input type="text" name="deskripsi" required placeholder="Deskripsi N adalah Tujuan Pembelajaran (TP), mis. Konfigurasi Router Mikrotik" class="flex-1 rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
                         <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500 whitespace-nowrap">+ Tambah N</button>
                     </form>
                 </div>

@@ -950,6 +950,7 @@
     @include('guru.penilaian.wali-matrix')
     @include('guru.penilaian.wali-log')
     @include('guru.penilaian.wali-rilis')
+    @include('guru.penilaian.wali-presensi')
 @endif
 
 @if($guru->roles->contains('name', 'guru_mapel'))

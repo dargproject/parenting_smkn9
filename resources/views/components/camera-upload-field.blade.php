@@ -22,7 +22,7 @@
         class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/70"
         @keydown.escape.window="tutupKamera()"
     >
-        <div class="w-full max-w-md rounded-2xl bg-slate-800 p-4 text-slate-100 shadow-xl">
+        <div class="solid-panel w-full max-w-md rounded-2xl p-4 text-slate-100 shadow-xl">
             <div class="mb-3 flex items-center justify-between">
                 <h3 class="text-base font-semibold">Ambil Foto</h3>
                 <button type="button" @click="tutupKamera()" class="text-slate-400 hover:text-slate-200">
