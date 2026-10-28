@@ -43,6 +43,7 @@ use App\Http\Controllers\Guru\PenilaianController;
 use App\Http\Controllers\Guru\PesanWaliKelasController;
 use App\Http\Controllers\Guru\PortalController;
 use App\Http\Controllers\Guru\PrestasiNonAkademikController;
+use App\Http\Controllers\Guru\RaporParentingController;
 use App\Http\Controllers\KepsekController;
 use App\Http\Controllers\OrangTua\DashboardController as OrangTuaDashboardController;
 use App\Http\Controllers\OrangTua\KeluargaController as OrangTuaKeluargaController;
@@ -123,6 +124,8 @@ Route::middleware('role:guru_mapel')->prefix('guru/penilaian')->name('guru.penil
     Route::put('/tujuan-pembelajaran/{tujuanPembelajaran}', [PenilaianController::class, 'updateTujuanPembelajaran'])->name('tp.update');
     Route::delete('/tujuan-pembelajaran/{tujuanPembelajaran}', [PenilaianController::class, 'destroyTujuanPembelajaran'])->name('tp.destroy');
     Route::post('/nilai-lm', [PenilaianController::class, 'storeNilaiLm'])->name('nilai-lm.store');
+    Route::get('/nilai-lm/template', [PenilaianController::class, 'templateNilaiLm'])->name('nilai-lm.template');
+    Route::post('/nilai-lm/import', [PenilaianController::class, 'importNilaiLm'])->name('nilai-lm.import');
     Route::post('/catatan-kompetensi', [PenilaianController::class, 'storeCatatanKompetensi'])->name('catatan-kompetensi.store');
     Route::post('/nilai-pkl-ukk', [PenilaianController::class, 'storeNilaiPklUkk'])->name('nilai-pkl-ukk.store');
 });
@@ -266,6 +269,9 @@ Route::middleware('role:wali_kelas')->prefix('guru/wali-kelas/prestasi')->name('
     Route::put('/{prestasi}', [PrestasiNonAkademikController::class, 'update'])->name('update');
     Route::delete('/{prestasi}', [PrestasiNonAkademikController::class, 'destroy'])->name('destroy');
 });
+
+Route::middleware('role:wali_kelas,guru_wali')->get('/guru/rapor-parenting/{siswa}', [RaporParentingController::class, 'cetak'])->name('guru.rapor-parenting.cetak');
+Route::middleware('role:wali_kelas,guru_wali')->get('/guru/rapor-parenting/{siswa}/preview', [RaporParentingController::class, 'preview'])->name('guru.rapor-parenting.preview');
 
 Route::middleware('role:guru_wali')->prefix('guru/wali')->name('guru.wali.')->group(function () {
     Route::post('/catatan-akademik', [PenilaianController::class, 'storeCatatanAkademik'])->name('catatan-akademik.store');

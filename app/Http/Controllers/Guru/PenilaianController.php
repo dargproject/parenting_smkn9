@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
+use App\Imports\NilaiLmImport;
 use App\Models\CatatanAkademikSiswa;
 use App\Models\CatatanKompetensi;
 use App\Models\CatatanWaliKelas;
@@ -23,7 +24,9 @@ use App\Services\PenilaianService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PenilaianController extends Controller
 {
@@ -151,10 +154,25 @@ class PenilaianController extends Controller
             return back()->with('error', 'Sebagian kolom N bukan milik semester/tahun ajaran aktif. Muat ulang halaman lalu isi kembali.');
         }
 
+        $this->simpanNilaiLm(
+            $data['nilai'], $data['remedial'] ?? [], $data['pengayaan'] ?? [], $data['catatan_pengayaan'] ?? [],
+            $data['mata_pelajaran_id'], $data['kelas_id'], $tahunAjaranId, $penilaian
+        );
+
+        return redirect()->route('guru.portal')->with('success', 'Nilai Formatif berhasil disimpan; Nilai Akhir Sumatif diperbarui otomatis dari rata-ratanya.');
+    }
+
+    /**
+     * Logika inti penyimpanan Nilai LM, dipakai bersama oleh input manual (storeNilaiLm) dan
+     * import Excel/CSV (importNilaiLm) -- supaya aturan remedial/pengayaan & rekalkulasi NA
+     * Sumatif selalu konsisten dari kedua jalur, tidak ada logika yang didobel-tulis.
+     */
+    private function simpanNilaiLm(array $nilaiPerSiswaTp, array $remedial, array $pengayaan, array $catatanPengayaan, int $mataPelajaranId, int $kelasId, int $tahunAjaranId, PenilaianService $penilaian): void
+    {
         $kktp = $penilaian->kktpThreshold();
 
-        DB::transaction(function () use ($data, $tahunAjaranId, $penilaian, $kktp) {
-            foreach ($data['nilai'] as $siswaId => $perTp) {
+        DB::transaction(function () use ($nilaiPerSiswaTp, $remedial, $pengayaan, $catatanPengayaan, $mataPelajaranId, $kelasId, $tahunAjaranId, $penilaian, $kktp) {
+            foreach ($nilaiPerSiswaTp as $siswaId => $perTp) {
                 foreach ($perTp as $tujuanPembelajaranId => $nilai) {
                     if ($nilai === null || $nilai === '') {
                         continue;
@@ -178,7 +196,7 @@ class PenilaianController extends Controller
                     }
 
                     if ((int) $nilai < $kktp) {
-                        $baruRemedial = $data['remedial'][$siswaId][$tujuanPembelajaranId] ?? null;
+                        $baruRemedial = $remedial[$siswaId][$tujuanPembelajaranId] ?? null;
                         $baruRemedial = ($baruRemedial === null || $baruRemedial === '') ? null : (int) $baruRemedial;
                         $lamaRemedial = $nl->nilai_remedial;
                         if ($lamaRemedial !== $baruRemedial) {
@@ -192,18 +210,18 @@ class PenilaianController extends Controller
                         }
                         $nl->update(['nilai_remedial' => $baruRemedial, 'sudah_pengayaan' => false, 'catatan_pengayaan' => null]);
                     } else {
-                        $sudah = isset($data['pengayaan'][$siswaId][$tujuanPembelajaranId]);
+                        $sudah = isset($pengayaan[$siswaId][$tujuanPembelajaranId]);
                         $nl->update([
                             'nilai_remedial' => null,
                             'sudah_pengayaan' => $sudah,
-                            'catatan_pengayaan' => $sudah ? ($data['catatan_pengayaan'][$siswaId][$tujuanPembelajaranId] ?? null) : null,
+                            'catatan_pengayaan' => $sudah ? ($catatanPengayaan[$siswaId][$tujuanPembelajaranId] ?? null) : null,
                         ]);
                     }
                 }
             }
 
-            $tpIds = TujuanPembelajaran::where('mata_pelajaran_id', $data['mata_pelajaran_id'])->where('kelas_id', $data['kelas_id'])->where('tahun_ajaran_id', $tahunAjaranId)->pluck('id');
-            foreach (array_keys($data['nilai']) as $siswaId) {
+            $tpIds = TujuanPembelajaran::where('mata_pelajaran_id', $mataPelajaranId)->where('kelas_id', $kelasId)->where('tahun_ajaran_id', $tahunAjaranId)->pluck('id');
+            foreach (array_keys($nilaiPerSiswaTp) as $siswaId) {
                 $nilaiLmSiswa = NilaiLm::where('siswa_id', $siswaId)->whereIn('tujuan_pembelajaran_id', $tpIds)->get();
                 $rata = $penilaian->rataLm($nilaiLmSiswa);
                 if ($rata === null) {
@@ -211,13 +229,91 @@ class PenilaianController extends Controller
                 }
 
                 NilaiSas::updateOrCreate(
-                    ['siswa_id' => $siswaId, 'mata_pelajaran_id' => $data['mata_pelajaran_id'], 'tahun_ajaran_id' => $tahunAjaranId],
+                    ['siswa_id' => $siswaId, 'mata_pelajaran_id' => $mataPelajaranId, 'tahun_ajaran_id' => $tahunAjaranId],
                     ['nilai' => (int) round($rata), 'guru_id' => Auth::id()]
                 );
             }
         });
+    }
 
-        return redirect()->route('guru.portal')->with('success', 'Nilai Formatif berhasil disimpan; Nilai Akhir Sumatif diperbarui otomatis dari rata-ratanya.');
+    /**
+     * Template CSV untuk import nilai -- header = NIS, Nama, lalu satu kolom per N (pakai label
+     * yang sama dengan yang ditampilkan di form input manual: kode kalau diisi, atau "N<urutan>").
+     * Nilai yang sudah ada diisikan otomatis supaya guru tinggal mengedit yang perlu diubah saja.
+     */
+    public function templateNilaiLm(Request $request)
+    {
+        $data = $request->validate([
+            'mata_pelajaran_id' => 'required|exists:mata_pelajarans,id',
+            'kelas_id' => 'required|exists:kelas,id',
+        ]);
+
+        $this->pastikanMapelKelasMilikGuru($data['mata_pelajaran_id'], $data['kelas_id']);
+        $tahunAjaranId = $this->tahunAjaranAktifId();
+
+        $tpList = TujuanPembelajaran::where('mata_pelajaran_id', $data['mata_pelajaran_id'])
+            ->where('kelas_id', $data['kelas_id'])->where('tahun_ajaran_id', $tahunAjaranId)
+            ->orderBy('urutan')->get();
+
+        abort_if($tpList->isEmpty(), 422, 'Belum ada kolom N untuk mapel & kelas ini. Tambahkan N terlebih dahulu di Langkah 1.');
+
+        $mapel = MataPelajaran::findOrFail($data['mata_pelajaran_id']);
+        $kelas = Kelas::findOrFail($data['kelas_id']);
+        $siswaKelas = $kelas->siswas()->where('status_aktif', true)->orderBy('nama')->get();
+        $labels = $tpList->values()->map(fn ($tp, $i) => $tp->kode ?: 'N'.($i + 1));
+
+        $nilaiAda = NilaiLm::whereIn('tujuan_pembelajaran_id', $tpList->pluck('id'))
+            ->whereIn('siswa_id', $siswaKelas->pluck('id'))
+            ->get()->keyBy(fn ($n) => $n->siswa_id.'-'.$n->tujuan_pembelajaran_id);
+
+        return response()->streamDownload(function () use ($siswaKelas, $tpList, $labels, $nilaiAda) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, array_merge(['NIS', 'Nama Siswa'], $labels->all()));
+
+            foreach ($siswaKelas as $siswa) {
+                $row = [$siswa->nis, $siswa->nama];
+                foreach ($tpList as $tp) {
+                    $row[] = $nilaiAda[$siswa->id.'-'.$tp->id]->nilai ?? '';
+                }
+                fputcsv($out, $row);
+            }
+
+            fclose($out);
+        }, 'template-nilai-'.Str::slug($mapel->nama_mapel).'-'.Str::slug($kelas->nama_kelas).'.csv', ['Content-Type' => 'text/csv']);
+    }
+
+    public function importNilaiLm(Request $request, PenilaianService $penilaian)
+    {
+        $data = $request->validate([
+            'mata_pelajaran_id' => 'required|exists:mata_pelajarans,id',
+            'kelas_id' => 'required|exists:kelas,id',
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:10240',
+        ]);
+
+        $this->pastikanMapelKelasMilikGuru($data['mata_pelajaran_id'], $data['kelas_id']);
+        $tahunAjaranId = $this->tahunAjaranAktifId();
+
+        $tpList = TujuanPembelajaran::where('mata_pelajaran_id', $data['mata_pelajaran_id'])
+            ->where('kelas_id', $data['kelas_id'])->where('tahun_ajaran_id', $tahunAjaranId)
+            ->orderBy('urutan')->get();
+
+        abort_if($tpList->isEmpty(), 422, 'Belum ada kolom N untuk mapel & kelas ini. Tambahkan N terlebih dahulu di Langkah 1.');
+
+        $import = new NilaiLmImport($data['kelas_id'], $tpList);
+        Excel::import($import, $request->file('file'));
+
+        if (empty($import->nilai)) {
+            return back()->with('error', 'Tidak ada nilai yang berhasil diimpor. '.implode(' | ', array_slice($import->errors, 0, 5)));
+        }
+
+        $this->simpanNilaiLm($import->nilai, [], [], [], $data['mata_pelajaran_id'], $data['kelas_id'], $tahunAjaranId, $penilaian);
+
+        $pesan = "{$import->berhasil} siswa berhasil diimpor nilainya.";
+        if ($import->errors) {
+            return redirect()->route('guru.portal')->with('error', $pesan.' '.count($import->errors).' baris gagal: '.implode(' | ', array_slice($import->errors, 0, 5)));
+        }
+
+        return redirect()->route('guru.portal')->with('success', $pesan.' Nilai Akhir Sumatif diperbarui otomatis dari rata-ratanya.');
     }
 
     public function storeCatatanKompetensi(Request $request)

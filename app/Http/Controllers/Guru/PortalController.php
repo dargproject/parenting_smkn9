@@ -207,6 +207,9 @@ class PortalController extends Controller
 
         $kelasWaliList = $kelasList->where('wali_kelas_id', $guru->id)->sortBy('nama_kelas', SORT_NATURAL)->values();
         $siswaWali = $siswas->whereIn('kelas_id', $kelasWaliList->pluck('id'))->values();
+        // Rapor Parenting bisa dicetak oleh guru_wali maupun wali_kelas -- gabungkan siswa binaan
+        // dari kedua kapasitas itu (satu guru bisa punya salah satu atau keduanya).
+        $siswaRaporParenting = $siswaBinaan->concat($siswaWali)->unique('id')->sortBy('nama')->values();
         $catatanWaliKelasWali = $tahunAjaranAktif
             ? CatatanWaliKelas::whereIn('siswa_id', $siswaWali->pluck('id'))->where('tahun_ajaran_id', $tahunAjaranAktifId)->get()->keyBy('siswa_id')
             : collect();
@@ -283,7 +286,7 @@ class PortalController extends Controller
             'kelasBinaan', 'siswaBinaan', 'rerataBinaan', 'peringkatBinaan',
             'tahunAjaranAktif', 'mapelBinaan', 'tujuanPembelajarans',
             'nilaiLmBinaan', 'nilaiSasBinaan', 'catatanKompetensiBinaan', 'nilaiPklUkkBinaan',
-            'matrixPerKelas', 'raporFinalBinaan', 'logPerubahanNilaiBinaan', 'siswaWali', 'catatanWaliKelasWali', 'pesanWaliKelasWali', 'prestasiNonAkademikWali', 'siswaBinaanLengkap', 'rujukanBkSaya', 'rekapPoinWali',
+            'matrixPerKelas', 'raporFinalBinaan', 'logPerubahanNilaiBinaan', 'siswaWali', 'catatanWaliKelasWali', 'pesanWaliKelasWali', 'prestasiNonAkademikWali', 'siswaBinaanLengkap', 'rujukanBkSaya', 'rekapPoinWali', 'siswaRaporParenting',
             'kelasWaliList', 'rekapPresensiWali', 'rekapHarianWali', 'tanggalPresensiTerbaruWali', 'tanggalPresensiDipilih', 'jadwalHariPresensiDipilih', 'presensiHariDipilihWali', 'presensiWali',
             'siswaPeringatanMingguan', 'ambangAlpaMingguan',
             'jadwalGuruMapel', 'jadwalHariIni', 'jurnalHariIniIds', 'namaHariIni',

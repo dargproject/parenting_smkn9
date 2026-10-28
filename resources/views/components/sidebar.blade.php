@@ -113,6 +113,7 @@
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-wali-prestasi', this)"><i class="fa-solid fa-trophy w-6 text-center mr-2"></i> <span>Prestasi Non-Akademik</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-wali-chat', this)"><i class="fa-solid fa-comments w-6 text-center mr-2"></i> <span>Komunikasi Ortu</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-wali-rekap-poin', this)"><i class="fa-solid fa-scale-balanced w-6 text-center mr-2"></i> <span>Rekap Poin Siswa</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-rapor-parenting', this)"><i class="fa-solid fa-file-pdf w-6 text-center mr-2"></i> <span>Cetak Rapor Parenting</span></a>
         @endif
 
         @if(in_array('guru_wali', $roles))
@@ -122,6 +123,7 @@
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-guru-wali-log', this)"><i class="fa-solid fa-clock-rotate-left w-6 text-center mr-2"></i> <span>Log Perubahan Nilai</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-guru-wali-rilis', this)"><i class="fa-solid fa-lock w-6 text-center mr-2"></i> <span>Finalisasi & Rilis Nilai</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-guru-wali-presensi', this)"><i class="fa-solid fa-calendar-xmark w-6 text-center mr-2"></i> <span>Rekap Presensi per Mapel</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-rapor-parenting', this)"><i class="fa-solid fa-file-pdf w-6 text-center mr-2"></i> <span>Cetak Rapor Parenting</span></a>
         @endif
 
         @if(in_array('tatib', $roles))

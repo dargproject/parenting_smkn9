@@ -88,6 +88,24 @@
                 </div>
 
                 @if($tpMapel->isNotEmpty())
+                {{-- Import massal dari Excel/CSV -- opsional, alternatif lebih cepat dari isi satu-satu di Langkah 2 --}}
+                <div class="rounded-xl border border-slate-700/60 bg-slate-900 p-4">
+                    <h6 class="font-bold text-slate-100 mb-1 text-sm"><i class="fa-solid fa-file-import mr-1 text-blue-400"></i> Import Nilai dari Excel/CSV <span class="font-normal text-slate-400">(opsional)</span></h6>
+                    <p class="text-xs text-slate-400 mb-3">Unduh template berisi daftar siswa & kolom N sesuai Langkah 1, isi nilainya di Excel, lalu unggah kembali. Nilai yang sudah ada akan ditimpa dengan nilai dari file; kolom remedial/pengayaan tetap bisa diisi manual di Langkah 2 setelah import.</p>
+                    <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+                        <a href="{{ route('guru.penilaian.nilai-lm.template', ['mata_pelajaran_id' => $mapel->id, 'kelas_id' => $kelas->id]) }}" class="rounded-lg border border-slate-600 px-4 py-2 text-sm font-semibold text-slate-300 hover:border-blue-500 text-center whitespace-nowrap">
+                            <i class="fa-solid fa-download mr-1"></i> Unduh Template
+                        </a>
+                        <form method="POST" action="{{ route('guru.penilaian.nilai-lm.import') }}" enctype="multipart/form-data" class="flex flex-col sm:flex-row gap-2 flex-1">
+                            @csrf
+                            <input type="hidden" name="mata_pelajaran_id" value="{{ $mapel->id }}">
+                            <input type="hidden" name="kelas_id" value="{{ $kelas->id }}">
+                            <input type="file" name="file" required accept=".xlsx,.xls,.csv" class="flex-1 rounded-lg border border-slate-600 bg-slate-900 px-3 py-1.5 text-sm text-slate-100 file:mr-3 file:rounded-md file:border-0 file:bg-slate-700 file:px-3 file:py-1.5 file:text-slate-100">
+                            <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500 whitespace-nowrap">Import</button>
+                        </form>
+                    </div>
+                </div>
+
                 {{-- Nilai LM + Remedial & Pengayaan, satu kartu per siswa agar rapi & responsive --}}
                 @php $kktpLangkah2 = app(\App\Services\PenilaianService::class)->kktpThreshold(); @endphp
                 <form method="POST" action="{{ route('guru.penilaian.nilai-lm.store') }}">

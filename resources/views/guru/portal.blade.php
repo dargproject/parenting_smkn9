@@ -6,6 +6,8 @@
     @include('admin.partials.flash')
 </div>
 
+@php $raporParentingRendered = false; @endphp
+
 @if($guru->roles->contains('name', 'waka_kurikulum'))
     <!-- ========================================== -->
     <!-- WAKA KURIKULUM VIEWS -->
@@ -635,6 +637,18 @@
             </div>
 
             <div class="mb-3">@include('guru.partials.pilih-kelas', ['daftarKelas' => $kelasWaliList, 'jumlahSiswa' => $jumlahSiswaWali, 'cari' => true])</div>
+            @php
+                $templateCatatanKarakter = [
+                    'Aktif dan percaya diri, mudah bersosialisasi dengan teman sekelas.',
+                    'Disiplin dan bertanggung jawab dalam mengerjakan tugas.',
+                    'Sopan dan santun dalam bersikap kepada guru dan teman.',
+                    'Menunjukkan peningkatan sikap dan kedisiplinan dibanding semester sebelumnya.',
+                    'Kreatif dan memiliki inisiatif tinggi dalam kegiatan kelompok.',
+                    'Perlu bimbingan dalam mengatur waktu dan menyelesaikan tugas tepat waktu.',
+                    'Perlu motivasi lebih untuk lebih aktif berpartisipasi di kelas.',
+                    'Mudah terpengaruh teman, perlu pendampingan dalam bersikap.',
+                ];
+            @endphp
             <form method="POST" action="{{ route('guru.wali-kelas.catatan.store') }}" class="rounded-2xl border border-slate-700/60 bg-slate-800/80 text-slate-100 overflow-hidden">
                 @csrf
                 <div class="overflow-x-auto">
@@ -657,7 +671,13 @@
                                 <tr x-show="kelas == {{ $siswa->kelas_id }} && (!cari || {{ \Illuminate\Support\Js::from(mb_strtolower($siswa->nama)) }}.includes(cari.toLowerCase()))">
                                     <td class="px-3 py-2 align-top font-semibold text-slate-100">{{ $siswa->nama }}<span class="block text-slate-400 font-normal" style="font-size: 10px;">{{ $siswa->kelas->nama_kelas ?? '' }} &middot; NIS {{ $siswa->nis }}</span></td>
                                     <td class="px-3 py-2">
-                                        <textarea name="catatan[{{ $siswa->id }}][catatan_karakter]" rows="2" placeholder="Sikap, kedisiplinan, dan perkembangan siswa..." class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500">{{ $cw->catatan_karakter ?? '' }}</textarea>
+                                        <select onchange="if(this.value){ const ta = document.getElementById('catatan-karakter-{{ $siswa->id }}'); ta.value = ta.value.trim() ? ta.value.trim() + '. ' + this.value : this.value; this.value = ''; }" class="w-full rounded-lg border border-slate-600 bg-slate-900 px-2 py-1 text-xs text-slate-400 mb-1.5">
+                                            <option value="">+ Pilih template catatan...</option>
+                                            @foreach($templateCatatanKarakter as $template)
+                                                <option value="{{ $template }}">{{ \Illuminate\Support\Str::limit($template, 55) }}</option>
+                                            @endforeach
+                                        </select>
+                                        <textarea id="catatan-karakter-{{ $siswa->id }}" name="catatan[{{ $siswa->id }}][catatan_karakter]" rows="2" placeholder="Sikap, kedisiplinan, dan perkembangan siswa..." class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500">{{ $cw->catatan_karakter ?? '' }}</textarea>
                                     </td>
                                     <td class="px-2 py-2 align-top text-center text-cyan-400 font-semibold" title="Dihitung otomatis dari presensi, tidak bisa diketik manual">{{ $h['sakit'] }}</td>
                                     <td class="px-2 py-2 align-top text-center text-amber-400 font-semibold" title="Dihitung otomatis dari presensi, tidak bisa diketik manual">{{ $h['izin'] }}</td>
@@ -861,6 +881,10 @@
         @endif
     </div>
     @include('kesiswaan.wali-rekap-poin')
+    @unless($raporParentingRendered)
+        @include('guru.partials.rapor-parenting')
+        @php $raporParentingRendered = true; @endphp
+    @endunless
 @endif
 
 @if($guru->roles->contains('name', 'guru_wali'))
@@ -951,6 +975,10 @@
     @include('guru.penilaian.wali-log')
     @include('guru.penilaian.wali-rilis')
     @include('guru.penilaian.wali-presensi')
+    @unless($raporParentingRendered)
+        @include('guru.partials.rapor-parenting')
+        @php $raporParentingRendered = true; @endphp
+    @endunless
 @endif
 
 @if($guru->roles->contains('name', 'guru_mapel'))
