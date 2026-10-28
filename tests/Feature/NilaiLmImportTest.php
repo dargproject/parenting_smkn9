@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Exports\NilaiLmTemplateExport;
 use App\Models\Guru;
 use App\Models\Kelas;
 use App\Models\KelasMataPelajaran;
@@ -13,6 +14,8 @@ use App\Models\TujuanPembelajaran;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 use Tests\TestCase;
 
 class NilaiLmImportTest extends TestCase
@@ -52,19 +55,24 @@ class NilaiLmImportTest extends TestCase
         return compact('guru', 'mapel', 'kelas', 'tp1', 'tp2', 'siswa1', 'siswa2');
     }
 
-    public function test_guru_pengampu_bisa_unduh_template_berisi_kolom_n(): void
+    public function test_guru_pengampu_bisa_unduh_template_xlsx_berisi_kolom_n(): void
     {
-        ['guru' => $guru, 'mapel' => $mapel, 'kelas' => $kelas] = $this->siapkanAmpuan();
+        ['guru' => $guru, 'mapel' => $mapel, 'kelas' => $kelas, 'siswa1' => $siswa1] = $this->siapkanAmpuan();
 
-        $response = $this->sebagai($guru)->get(route('guru.penilaian.nilai-lm.template', ['mata_pelajaran_id' => $mapel->id, 'kelas_id' => $kelas->id]));
+        Excel::fake();
 
-        $response->assertOk();
-        $content = $response->streamedContent();
-        $this->assertStringContainsString('NIS', $content);
-        $this->assertStringContainsString('N1', $content);
-        $this->assertStringContainsString('N2', $content);
-        $this->assertStringContainsString('997301', $content);
-        $this->assertStringContainsString('Siswa Import Satu', $content);
+        $this->sebagai($guru)->get(route('guru.penilaian.nilai-lm.template', ['mata_pelajaran_id' => $mapel->id, 'kelas_id' => $kelas->id]))
+            ->assertOk();
+
+        Excel::assertDownloaded(
+            'template-nilai-'.Str::slug($mapel->nama_mapel).'-'.Str::slug($kelas->nama_kelas).'.xlsx',
+            function (NilaiLmTemplateExport $export) use ($siswa1) {
+                $this->assertSame(['NIS', 'Nama Siswa', 'N1', 'N2'], $export->headings());
+                $this->assertTrue($export->collection()->contains(fn ($row) => $row[0] === $siswa1->nis && $row[1] === $siswa1->nama));
+
+                return true;
+            }
+        );
     }
 
     public function test_guru_bukan_pengampu_ditolak_unduh_template(): void

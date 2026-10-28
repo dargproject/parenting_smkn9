@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Guru;
 
+use App\Exports\NilaiLmTemplateExport;
 use App\Http\Controllers\Controller;
 use App\Imports\NilaiLmImport;
 use App\Models\CatatanAkademikSiswa;
@@ -284,20 +285,19 @@ class PenilaianController extends Controller
             ->whereIn('siswa_id', $siswaKelas->pluck('id'))
             ->get()->keyBy(fn ($n) => $n->siswa_id.'-'.$n->tujuan_pembelajaran_id);
 
-        return response()->streamDownload(function () use ($siswaKelas, $tpList, $labels, $nilaiAda) {
-            $out = fopen('php://output', 'w');
-            fputcsv($out, array_merge(['NIS', 'Nama Siswa'], $labels->all()));
-
-            foreach ($siswaKelas as $siswa) {
-                $row = [$siswa->nis, $siswa->nama];
-                foreach ($tpList as $tp) {
-                    $row[] = $nilaiAda[$siswa->id.'-'.$tp->id]->nilai ?? '';
-                }
-                fputcsv($out, $row);
+        $rows = $siswaKelas->map(function ($siswa) use ($tpList, $nilaiAda) {
+            $row = [$siswa->nis, $siswa->nama];
+            foreach ($tpList as $tp) {
+                $row[] = $nilaiAda[$siswa->id.'-'.$tp->id]->nilai ?? '';
             }
 
-            fclose($out);
-        }, 'template-nilai-'.Str::slug($mapel->nama_mapel).'-'.Str::slug($kelas->nama_kelas).'.csv', ['Content-Type' => 'text/csv']);
+            return $row;
+        });
+
+        return Excel::download(
+            new NilaiLmTemplateExport(array_merge(['NIS', 'Nama Siswa'], $labels->all()), $rows),
+            'template-nilai-'.Str::slug($mapel->nama_mapel).'-'.Str::slug($kelas->nama_kelas).'.xlsx'
+        );
     }
 
     public function importNilaiLm(Request $request, PenilaianService $penilaian)
