@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Guru\Bk;
 
+use App\Exports\AsesmenTemplateExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSosiometriRequest;
 use App\Imports\SosiometriImport;
@@ -85,16 +86,12 @@ class SosiometriController extends Controller
 
     public function downloadTemplate()
     {
-        return response()->streamDownload(function () {
-            $out = fopen('php://output', 'w');
-            fputcsv($out, $this->headers());
-            $sample = ['01/08/2026 23:44:58', 'AHMAD FAUZI', 'XII RPL'];
-            foreach (Sosiometri::PERTANYAAN as $key => $pertanyaan) {
-                $sample[] = $key === 'Q1' ? 'Ahmad, Budi, Charlie' : '';
-            }
-            fputcsv($out, $sample);
-            fclose($out);
-        }, 'template-sosiometri.csv', ['Content-Type' => 'text/csv']);
+        $sample = ['01/08/2026 23:44:58', 'AHMAD FAUZI', 'XII RPL'];
+        foreach (Sosiometri::PERTANYAAN as $key => $pertanyaan) {
+            $sample[] = $key === 'Q1' ? 'Ahmad, Budi, Charlie' : '';
+        }
+
+        return Excel::download(new AsesmenTemplateExport($this->headers(), $sample), 'template-sosiometri.xlsx');
     }
 
     public function import(Request $request)

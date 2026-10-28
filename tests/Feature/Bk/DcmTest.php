@@ -2,11 +2,13 @@
 
 namespace Tests\Feature\Bk;
 
+use App\Exports\AsesmenTemplateExport;
 use App\Models\Dcm;
 use App\Models\Guru;
 use App\Models\Siswa;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Maatwebsite\Excel\Facades\Excel;
 use Tests\TestCase;
 
 class DcmTest extends TestCase
@@ -96,6 +98,21 @@ class DcmTest extends TestCase
             ->assertRedirect(route('guru.bk.asesmen.dcm.index'));
 
         $this->assertDatabaseMissing('dcms', ['id' => $dcm->id]);
+    }
+
+    public function test_guru_bk_dapat_unduh_template_xlsx_dcm(): void
+    {
+        $guruBk = $this->guruBk();
+        Excel::fake();
+
+        $this->sebagai($guruBk)->get(route('guru.bk.asesmen.dcm.template'))->assertOk();
+
+        Excel::assertDownloaded('template-dcm.xlsx', function (AsesmenTemplateExport $export) {
+            $this->assertSame('Timestamp', $export->headings()[0]);
+            $this->assertCount(count($export->headings()), $export->array()[0]);
+
+            return true;
+        });
     }
 
     public function test_role_selain_guru_bk_ditolak_mengakses_halaman_dcm(): void

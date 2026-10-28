@@ -2,11 +2,13 @@
 
 namespace Tests\Feature\Bk;
 
+use App\Exports\AsesmenTemplateExport;
 use App\Models\Guru;
 use App\Models\Siswa;
 use App\Models\Sosiometri;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Maatwebsite\Excel\Facades\Excel;
 use Tests\TestCase;
 
 class SosiometriTest extends TestCase
@@ -100,6 +102,21 @@ class SosiometriTest extends TestCase
             ->assertRedirect(route('guru.bk.asesmen.sosiometri.index'));
 
         $this->assertDatabaseMissing('sosiometris', ['id' => $sosiometri->id]);
+    }
+
+    public function test_guru_bk_dapat_unduh_template_xlsx_sosiometri(): void
+    {
+        $guruBk = $this->guruBk();
+        Excel::fake();
+
+        $this->sebagai($guruBk)->get(route('guru.bk.asesmen.sosiometri.template'))->assertOk();
+
+        Excel::assertDownloaded('template-sosiometri.xlsx', function (AsesmenTemplateExport $export) {
+            $this->assertSame('Timestamp', $export->headings()[0]);
+            $this->assertCount(count($export->headings()), $export->array()[0]);
+
+            return true;
+        });
     }
 
     public function test_role_selain_guru_bk_ditolak_mengakses_halaman_sosiometri(): void

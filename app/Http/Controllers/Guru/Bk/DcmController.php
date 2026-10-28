@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Guru\Bk;
 
+use App\Exports\AsesmenTemplateExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreDcmRequest;
 use App\Imports\DcmImport;
@@ -87,20 +88,15 @@ class DcmController extends Controller
 
     public function downloadTemplate()
     {
-        return response()->streamDownload(function () {
-            $out = fopen('php://output', 'w');
-            fputcsv($out, $this->headers());
+        $sample = ['30/07/2026 10:27:39', 'Test', '2026', 'X RPL 1'];
+        foreach (Dcm::SECTIONS as $letter => $title) {
+            $first = array_key_first(Dcm::QUESTION_GROUPS[$letter] ?? []);
+            $sample[] = $first ? $first.' '.Dcm::QUESTION_GROUPS[$letter][$first] : '';
+        }
+        $sample[] = '';
+        $sample[] = '';
 
-            $sample = ['30/07/2026 10:27:39', 'Test', '2026', 'X RPL 1'];
-            foreach (Dcm::SECTIONS as $letter => $title) {
-                $first = array_key_first(Dcm::QUESTION_GROUPS[$letter] ?? []);
-                $sample[] = $first ? $first.' '.Dcm::QUESTION_GROUPS[$letter][$first] : '';
-            }
-            $sample[] = '';
-            $sample[] = '';
-            fputcsv($out, $sample);
-            fclose($out);
-        }, 'template-dcm.csv', ['Content-Type' => 'text/csv']);
+        return Excel::download(new AsesmenTemplateExport($this->headers(), $sample), 'template-dcm.xlsx');
     }
 
     public function import(Request $request)

@@ -2,11 +2,13 @@
 
 namespace Tests\Feature\Bk;
 
+use App\Exports\AsesmenTemplateExport;
 use App\Models\Akpd;
 use App\Models\Guru;
 use App\Models\Siswa;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Maatwebsite\Excel\Facades\Excel;
 use Tests\TestCase;
 
 class AkpdTest extends TestCase
@@ -138,6 +140,22 @@ class AkpdTest extends TestCase
         $this->sebagai($guruMapel)->get(route('guru.bk.asesmen.akpd.index'))->assertRedirect(route('login'));
         $this->sebagai($guruMapel)->get(route('guru.bk.asesmen.akpd.show', $akpd))->assertRedirect(route('login'));
         $this->sebagai($guruMapel)->post(route('guru.bk.asesmen.akpd.store'), [])->assertRedirect(route('login'));
+    }
+
+    public function test_guru_bk_dapat_unduh_template_xlsx_akpd(): void
+    {
+        $guruBk = $this->guruBk();
+        Excel::fake();
+
+        $this->sebagai($guruBk)->get(route('guru.bk.asesmen.akpd.template'))->assertOk();
+
+        Excel::assertDownloaded('template-akpd.xlsx', function (AsesmenTemplateExport $export) {
+            $this->assertSame('Timestamp', $export->headings()[0]);
+            $this->assertCount(54, $export->headings());
+            $this->assertCount(1, $export->array());
+
+            return true;
+        });
     }
 
     public function test_tamu_tanpa_login_ditolak(): void

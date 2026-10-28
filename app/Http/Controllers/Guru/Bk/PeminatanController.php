@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Guru\Bk;
 
+use App\Exports\AsesmenTemplateExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePeminatanRequest;
 use App\Imports\PeminatanImport;
@@ -91,19 +92,14 @@ class PeminatanController extends Controller
 
     public function downloadTemplate()
     {
-        return response()->streamDownload(function () {
-            $out = fopen('php://output', 'w');
-            fputcsv($out, $this->headers());
+        $sample = ['01/08/2026 23:44:58', 'Test', '2026', 'X TKJ 1'];
+        foreach (Peminatan::SECTIONS as $section) {
+            $first = array_key_first(Peminatan::QUESTION_GROUPS[$section]);
+            $sample[] = $first.' '.Peminatan::QUESTION_GROUPS[$section][$first];
+        }
+        $sample[] = '';
 
-            $sample = ['01/08/2026 23:44:58', 'Test', '2026', 'X TKJ 1'];
-            foreach (Peminatan::SECTIONS as $section) {
-                $first = array_key_first(Peminatan::QUESTION_GROUPS[$section]);
-                $sample[] = $first.' '.Peminatan::QUESTION_GROUPS[$section][$first];
-            }
-            $sample[] = '';
-            fputcsv($out, $sample);
-            fclose($out);
-        }, 'template-tes-bakat-minat.csv', ['Content-Type' => 'text/csv']);
+        return Excel::download(new AsesmenTemplateExport($this->headers(), $sample), 'template-tes-bakat-minat.xlsx');
     }
 
     public function import(Request $request)

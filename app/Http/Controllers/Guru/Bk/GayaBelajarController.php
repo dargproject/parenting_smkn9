@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Guru\Bk;
 
+use App\Exports\AsesmenTemplateExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreGayaBelajarRequest;
 use App\Imports\GayaBelajarImport;
@@ -95,16 +96,12 @@ class GayaBelajarController extends Controller
 
     public function downloadTemplate()
     {
-        return response()->streamDownload(function () {
-            $out = fopen('php://output', 'w');
-            fputcsv($out, $this->headers());
-            $sample = ['01/08/2026 23:44:58', 'Test', '2026', 'X TKJ 1', 'Visual', '', ''];
-            foreach (GayaBelajar::flatQuestions() as $q) {
-                $sample[] = 'Ya';
-            }
-            fputcsv($out, $sample);
-            fclose($out);
-        }, 'template-gaya-belajar.csv', ['Content-Type' => 'text/csv']);
+        $sample = ['01/08/2026 23:44:58', 'Test', '2026', 'X TKJ 1', 'Visual', '', ''];
+        foreach (GayaBelajar::flatQuestions() as $q) {
+            $sample[] = 'Ya';
+        }
+
+        return Excel::download(new AsesmenTemplateExport($this->headers(), $sample), 'template-gaya-belajar.xlsx');
     }
 
     public function import(Request $request)
