@@ -141,6 +141,8 @@ class PenilaianController extends Controller
             'remedial' => 'nullable|array',
             'remedial.*.*' => 'nullable|integer|min:0|max:100',
             'pengayaan' => 'nullable|array',
+            'nilai_pengayaan' => 'nullable|array',
+            'nilai_pengayaan.*.*' => 'nullable|integer|min:0|max:100',
             'catatan_pengayaan' => 'nullable|array',
             'catatan_pengayaan.*.*' => 'nullable|string|max:500',
         ]);
@@ -155,7 +157,7 @@ class PenilaianController extends Controller
         }
 
         $this->simpanNilaiLm(
-            $data['nilai'], $data['remedial'] ?? [], $data['pengayaan'] ?? [], $data['catatan_pengayaan'] ?? [],
+            $data['nilai'], $data['remedial'] ?? [], $data['pengayaan'] ?? [], $data['nilai_pengayaan'] ?? [], $data['catatan_pengayaan'] ?? [],
             $data['mata_pelajaran_id'], $data['kelas_id'], $tahunAjaranId, $penilaian
         );
 
@@ -167,11 +169,11 @@ class PenilaianController extends Controller
      * import Excel/CSV (importNilaiLm) -- supaya aturan remedial/pengayaan & rekalkulasi NA
      * Sumatif selalu konsisten dari kedua jalur, tidak ada logika yang didobel-tulis.
      */
-    private function simpanNilaiLm(array $nilaiPerSiswaTp, array $remedial, array $pengayaan, array $catatanPengayaan, int $mataPelajaranId, int $kelasId, int $tahunAjaranId, PenilaianService $penilaian): void
+    private function simpanNilaiLm(array $nilaiPerSiswaTp, array $remedial, array $pengayaan, array $nilaiPengayaan, array $catatanPengayaan, int $mataPelajaranId, int $kelasId, int $tahunAjaranId, PenilaianService $penilaian): void
     {
         $kktp = $penilaian->kktpThreshold();
 
-        DB::transaction(function () use ($nilaiPerSiswaTp, $remedial, $pengayaan, $catatanPengayaan, $mataPelajaranId, $kelasId, $tahunAjaranId, $penilaian, $kktp) {
+        DB::transaction(function () use ($nilaiPerSiswaTp, $remedial, $pengayaan, $nilaiPengayaan, $catatanPengayaan, $mataPelajaranId, $kelasId, $tahunAjaranId, $penilaian, $kktp) {
             foreach ($nilaiPerSiswaTp as $siswaId => $perTp) {
                 foreach ($perTp as $tujuanPembelajaranId => $nilai) {
                     if ($nilai === null || $nilai === '') {
@@ -208,12 +210,28 @@ class PenilaianController extends Controller
                                 'guru_id' => Auth::id(),
                             ]);
                         }
-                        $nl->update(['nilai_remedial' => $baruRemedial, 'sudah_pengayaan' => false, 'catatan_pengayaan' => null]);
+                        $nl->update(['nilai_remedial' => $baruRemedial, 'sudah_pengayaan' => false, 'nilai_pengayaan' => null, 'catatan_pengayaan' => null]);
                     } else {
                         $sudah = isset($pengayaan[$siswaId][$tujuanPembelajaranId]);
+
+                        $baruNilaiPengayaan = $nilaiPengayaan[$siswaId][$tujuanPembelajaranId] ?? null;
+                        $baruNilaiPengayaan = ($baruNilaiPengayaan === null || $baruNilaiPengayaan === '') ? null : (int) $baruNilaiPengayaan;
+                        $baruNilaiPengayaan = $sudah ? $baruNilaiPengayaan : null;
+                        $lamaNilaiPengayaan = $nl->nilai_pengayaan;
+                        if ($lamaNilaiPengayaan !== $baruNilaiPengayaan) {
+                            LogPerubahanNilai::create([
+                                'nilai_lm_id' => $nl->id,
+                                'kolom' => 'nilai_pengayaan',
+                                'nilai_lama' => $lamaNilaiPengayaan,
+                                'nilai_baru' => $baruNilaiPengayaan,
+                                'guru_id' => Auth::id(),
+                            ]);
+                        }
+
                         $nl->update([
                             'nilai_remedial' => null,
                             'sudah_pengayaan' => $sudah,
+                            'nilai_pengayaan' => $baruNilaiPengayaan,
                             'catatan_pengayaan' => $sudah ? ($catatanPengayaan[$siswaId][$tujuanPembelajaranId] ?? null) : null,
                         ]);
                     }
@@ -306,7 +324,7 @@ class PenilaianController extends Controller
             return back()->with('error', 'Tidak ada nilai yang berhasil diimpor. '.implode(' | ', array_slice($import->errors, 0, 5)));
         }
 
-        $this->simpanNilaiLm($import->nilai, [], [], [], $data['mata_pelajaran_id'], $data['kelas_id'], $tahunAjaranId, $penilaian);
+        $this->simpanNilaiLm($import->nilai, [], [], [], [], $data['mata_pelajaran_id'], $data['kelas_id'], $tahunAjaranId, $penilaian);
 
         $pesan = "{$import->berhasil} siswa berhasil diimpor nilainya.";
         if ($import->errors) {

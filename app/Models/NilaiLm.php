@@ -6,17 +6,19 @@ use Illuminate\Database\Eloquent\Model;
 
 class NilaiLm extends Model
 {
-    protected $fillable = ['siswa_id', 'tujuan_pembelajaran_id', 'tahun_ajaran_id', 'nilai', 'nilai_remedial', 'sudah_pengayaan', 'catatan_pengayaan', 'guru_id'];
+    protected $fillable = ['siswa_id', 'tujuan_pembelajaran_id', 'tahun_ajaran_id', 'nilai', 'nilai_remedial', 'sudah_pengayaan', 'nilai_pengayaan', 'catatan_pengayaan', 'guru_id'];
 
     protected $casts = ['sudah_pengayaan' => 'boolean'];
 
     /**
-     * Nilai yang dipakai untuk semua perhitungan (NA, status, dsb): nilai remedial
-     * menggantikan nilai asli bila diisi, tanpa menghapus nilai asli sebagai riwayat.
+     * Nilai yang dipakai untuk semua perhitungan (NA, status, dsb): nilai remedial atau
+     * nilai pengayaan menggantikan nilai asli bila diisi, tanpa menghapus nilai asli
+     * sebagai riwayat. Remedial & pengayaan saling eksklusif (beda ambang KKTP), jadi
+     * aman diprioritaskan begini.
      */
     public function getNilaiEfektifAttribute(): ?int
     {
-        return $this->nilai_remedial ?? $this->nilai;
+        return $this->nilai_remedial ?? $this->nilai_pengayaan ?? $this->nilai;
     }
 
     public function siswa()

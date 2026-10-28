@@ -117,10 +117,10 @@
                     <div class="flex flex-col gap-3">
                         @foreach($siswaKelas as $siswa)
                             @php
-                                $nilaiRow = $tpMapel->map(fn ($tp) => $nilaiLmBinaan[$siswa->id.'-'.$tp->id]->nilai ?? null)->filter(fn ($v) => $v !== null);
+                                $nilaiRow = $tpMapel->map(fn ($tp) => $nilaiLmBinaan[$siswa->id.'-'.$tp->id]->nilai_efektif ?? null)->filter(fn ($v) => $v !== null);
                                 $avgAwal = $nilaiRow->isNotEmpty() ? round($nilaiRow->avg()) : '-';
                             @endphp
-                            <div class="rounded-xl border border-slate-700/60 bg-slate-900 p-3 sm:p-4" x-data="{ avg: @js($avgAwal), hitung() { const a = [...this.$el.querySelectorAll('.nilai-input')].map(i => i.value).filter(v => v !== '').map(Number); this.avg = a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : '-' } }" @input="hitung()">
+                            <div class="rounded-xl border border-slate-700/60 bg-slate-900 p-3 sm:p-4" x-data="{ avg: @js($avgAwal), hitung() { const a = [...this.$el.querySelectorAll('.tp-card')].map(c => { const r = c.querySelector('.remedial-input'); if (r && r.value !== '') return Number(r.value); const pCek = c.querySelector('.pengayaan-checkbox'); const p = c.querySelector('.pengayaan-input'); if (pCek && pCek.checked && p && p.value !== '') return Number(p.value); const n = c.querySelector('.nilai-input'); return (n && n.value !== '') ? Number(n.value) : null }).filter(v => v !== null); this.avg = a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : '-' } }" @input="hitung()" @change="hitung()">
                                 <div class="flex items-center justify-between mb-3">
                                     <span class="font-semibold text-slate-100">{{ $siswa->nama }}</span>
                                     <span class="text-sm text-slate-400">Rata-rata: <span class="font-bold text-blue-400" x-text="avg"></span></span>
@@ -128,7 +128,7 @@
                                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
                                     @foreach($tpMapel as $tp)
                                         @php $nl = $nilaiLmBinaan[$siswa->id.'-'.$tp->id] ?? null; @endphp
-                                        <div class="rounded-lg border border-slate-700/60 p-2.5" x-data="{ nilai: {{ $nl->nilai ?? 'null' }}, kktp: {{ $kktpLangkah2 }} }">
+                                        <div class="tp-card rounded-lg border border-slate-700/60 p-2.5" x-data="{ nilai: {{ $nl->nilai ?? 'null' }}, kktp: {{ $kktpLangkah2 }} }">
                                             <span class="block text-xs font-semibold text-slate-400 mb-1" title="{{ $tp->deskripsi }}">{{ $tp->kode ?: 'N'.$loop->iteration }}</span>
                                             <input type="number" min="0" max="100" name="nilai[{{ $siswa->id }}][{{ $tp->id }}]" x-model="nilai" class="nilai-input w-full rounded-lg border border-slate-600 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 text-center">
 
@@ -146,15 +146,16 @@
                                             <template x-if="nilai !== null && nilai !== '' && Number(nilai) < kktp">
                                                 <div class="mt-2 border-t border-rose-500/20 pt-2">
                                                     <span class="block text-rose-400 font-semibold mb-1" style="font-size: 10px;">Remedial</span>
-                                                    <input type="number" min="0" max="100" name="remedial[{{ $siswa->id }}][{{ $tp->id }}]" value="{{ $nl?->nilai_remedial ?? '' }}" placeholder="Nilai remedial" class="w-full rounded-lg border border-rose-500/40 bg-slate-900 px-2 py-1 text-sm text-slate-100 text-center placeholder:text-slate-600">
+                                                    <input type="number" min="0" max="100" name="remedial[{{ $siswa->id }}][{{ $tp->id }}]" value="{{ $nl?->nilai_remedial ?? '' }}" placeholder="Nilai remedial" class="remedial-input w-full rounded-lg border border-rose-500/40 bg-slate-900 px-2 py-1 text-sm text-slate-100 text-center placeholder:text-slate-600">
                                                 </div>
                                             </template>
                                             <template x-if="nilai !== null && nilai !== '' && Number(nilai) >= kktp">
                                                 <div class="mt-2 border-t border-emerald-500/20 pt-2" x-data="{ cek: {{ $nl?->sudah_pengayaan ? 'true' : 'false' }} }">
                                                     <label class="flex items-center gap-1.5 text-slate-300" style="font-size: 11px;">
-                                                        <input type="checkbox" name="pengayaan[{{ $siswa->id }}][{{ $tp->id }}]" value="1" x-model="cek" class="rounded border-slate-600 bg-slate-900">
+                                                        <input type="checkbox" name="pengayaan[{{ $siswa->id }}][{{ $tp->id }}]" value="1" x-model="cek" class="pengayaan-checkbox rounded border-slate-600 bg-slate-900">
                                                         Pengayaan
                                                     </label>
+                                                    <input type="number" min="0" max="100" name="nilai_pengayaan[{{ $siswa->id }}][{{ $tp->id }}]" value="{{ $nl?->nilai_pengayaan ?? '' }}" placeholder="Nilai pengayaan" x-show="cek" class="pengayaan-input mt-1 w-full rounded-lg border border-emerald-500/40 bg-slate-900 px-2 py-1 text-sm text-slate-100 text-center placeholder:text-slate-600">
                                                     <input type="text" name="catatan_pengayaan[{{ $siswa->id }}][{{ $tp->id }}]" value="{{ $nl?->catatan_pengayaan }}" placeholder="Catatan pengayaan..." x-show="cek" class="mt-1 w-full rounded-lg border border-slate-600 bg-slate-900 px-2 py-1 text-slate-100 placeholder:text-slate-600" style="font-size: 11px;">
                                                 </div>
                                             </template>
