@@ -278,7 +278,7 @@ class PenilaianController extends Controller
 
         $mapel = MataPelajaran::findOrFail($data['mata_pelajaran_id']);
         $kelas = Kelas::findOrFail($data['kelas_id']);
-        $siswaKelas = $kelas->siswas()->where('status_aktif', true)->orderBy('nama')->get();
+        $siswaKelas = $kelas->siswas()->where('status_aktif', true)->orderByRaw('LOWER(nama) asc')->get();
         $labels = $tpList->values()->map(fn ($tp, $i) => $tp->kode ?: 'N'.($i + 1));
 
         $nilaiAda = NilaiLm::whereIn('tujuan_pembelajaran_id', $tpList->pluck('id'))
