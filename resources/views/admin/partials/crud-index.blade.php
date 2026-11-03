@@ -6,6 +6,7 @@
         <div><h1 class="text-2xl font-bold">{{ $title }}</h1><p class="text-sm text-slate-500 dark:text-slate-400">{{ $description }}</p></div>
         <div class="flex items-center gap-2">
             @if($resource === 'admin.siswa' && ($totalSiswaKeseluruhan ?? 0) > 0)
+                <button type="button" onclick="document.getElementById('modal-generate-akun-ortu').style.display='flex'" class="rounded-lg border border-emerald-500 px-4 py-2.5 text-sm font-semibold text-emerald-500 hover:bg-emerald-500/10">Generate Akun Ortu</button>
                 <button type="button" onclick="document.getElementById('modal-hapus-semua-siswa-1').style.display='flex'" class="rounded-lg border border-rose-500 px-4 py-2.5 text-sm font-semibold text-rose-500 hover:bg-rose-500/10">Hapus Semua Siswa</button>
             @endif
             <a href="{{ $createRoute }}" class="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-500">Tambah</a>
@@ -13,6 +14,23 @@
     </div>
 
     @if($resource === 'admin.siswa' && ($totalSiswaKeseluruhan ?? 0) > 0)
+        {{-- Modal: konfirmasi generate akun orang tua massal --}}
+        <div id="modal-generate-akun-ortu" class="fixed inset-0 z-[100] items-center justify-center p-4 bg-black/50" style="display: none;">
+            <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl dark:border-slate-700/60 dark:bg-slate-800">
+                <h5 class="admin-title m-0 font-bold">Generate Akun Orang Tua</h5>
+                <p class="admin-body mt-3 text-sm">
+                    Akan dibuatkan akun orang tua untuk <span class="font-bold text-emerald-500">semua siswa</span> yang sudah diisi No. HP Ortu tapi belum punya akun. Siswa yang sudah punya akun tidak akan diubah. Password default semua akun baru: <span class="font-bold">password</span>.
+                </p>
+                <div class="mt-5 flex justify-end gap-2">
+                    <button type="button" onclick="document.getElementById('modal-generate-akun-ortu').style.display='none'" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold dark:border-slate-600">Batal</button>
+                    <form method="POST" action="{{ route('admin.siswa.akun-ortu.generate-all') }}">
+                        @csrf
+                        <button type="submit" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500">Ya, Generate</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         {{-- Modal 1: konfirmasi jumlah --}}
         <div id="modal-hapus-semua-siswa-1" class="fixed inset-0 z-[100] items-center justify-center p-4 bg-black/50" style="display: none;">
             <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl dark:border-slate-700/60 dark:bg-slate-800">

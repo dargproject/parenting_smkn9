@@ -12,6 +12,8 @@ class SiswasImport implements ToModel, WithHeadingRow
 {
     public int $berhasil = 0;
 
+    public int $diperbarui = 0;
+
     public int $dilewati = 0;
 
     private string $passwordHash;
@@ -32,13 +34,39 @@ class SiswasImport implements ToModel, WithHeadingRow
         $nisn = $row['nisn'] ?? null;
         $nipd = $row['nipd'] ?? null;
 
-        $sudahAda = Siswa::where('nis', $row['nis'])->exists()
-            || ($nisn && Siswa::where('nisn', $nisn)->exists())
-            || ($nipd && Siswa::where('nipd', $nipd)->exists());
+        $siswa = Siswa::where('nis', $row['nis'])->first()
+            ?? ($nisn ? Siswa::where('nisn', $nisn)->first() : null)
+            ?? ($nipd ? Siswa::where('nipd', $nipd)->first() : null);
 
-        $kelas = ! empty($row['kelas']) ? Kelas::where('nama_kelas', trim((string) $row['kelas']))->first() : null;
+        $namaKelas = ! empty($row['kelas']) ? trim((string) $row['kelas']) : null;
+        $kelas = $namaKelas ? Kelas::where('nama_kelas', $namaKelas)->first() : null;
 
-        if ($sudahAda || ! $kelas) {
+        // Siswa sudah ada (dicocokkan lewat NIS/NISN/NIPD): perbarui kolom yang diisi di file,
+        // bukan dilewati total -- supaya upload ulang untuk melengkapi data yang tadinya kosong
+        // (mis. No. HP Ortu) bisa langsung masuk tanpa harus hapus data lama dulu. Kolom yang
+        // dikosongkan di file dibiarkan memakai nilai lama, tidak ikut ditimpa jadi kosong.
+        if ($siswa) {
+            if ($namaKelas && ! $kelas) {
+                $this->dilewati++;
+
+                return null;
+            }
+
+            $siswa->fill(array_filter([
+                'nisn' => $nisn, 'nipd' => $nipd,
+                'nama' => $row['nama'] ?? null,
+                'kelas_id' => $kelas?->id,
+                'jenis_kelamin' => $row['jenis_kelamin'] ?? null,
+                'tanggal_lahir' => $row['tanggal_lahir'] ?? null,
+                'no_hp_ortu' => $row['no_hp_ortu'] ?? null,
+            ], fn ($nilai) => $nilai !== null && $nilai !== ''));
+
+            $this->diperbarui++;
+
+            return $siswa;
+        }
+
+        if (! $kelas) {
             $this->dilewati++;
 
             return null;

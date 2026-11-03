@@ -108,6 +108,47 @@ class SiswaController extends Controller
         return back()->with('success', "Akun orang tua berhasil dibuat. Username: {$username}, password default: password");
     }
 
+    /**
+     * Buat akun orang tua sekaligus untuk semua siswa yang belum punya akun tapi sudah
+     * punya No. HP Ortu -- alternatif lebih cepat dari klik "Buat Akun Ortu" satu per satu.
+     * Nomor yang bentrok (dipakai siswa lain, termasuk sesama kakak-adik di batch yang sama)
+     * dilewati, bukan menimpa akun yang sudah ada.
+     */
+    public function generateAkunOrtuSemua()
+    {
+        $kandidat = Siswa::whereNotNull('no_hp_ortu')->where('no_hp_ortu', '!=', '')->whereDoesntHave('orangTua')->get();
+        $tanpaNoHp = Siswa::whereDoesntHave('orangTua')->count() - $kandidat->count();
+
+        $dibuat = 0;
+        $dilewati = 0;
+
+        foreach ($kandidat as $siswa) {
+            $username = preg_replace('/\D/', '', $siswa->no_hp_ortu);
+
+            if ($username === '' || OrangTua::where('username', $username)->exists()) {
+                $dilewati++;
+
+                continue;
+            }
+
+            OrangTua::create([
+                'siswa_id' => $siswa->id,
+                'nama' => 'Orang Tua/Wali '.$siswa->nama,
+                'username' => $username,
+                'password' => Hash::make('password'),
+                'is_active' => true,
+            ]);
+
+            $dibuat++;
+        }
+
+        if ($dibuat === 0 && $dilewati === 0 && $tanpaNoHp === 0) {
+            return back()->with('error', 'Semua siswa sudah punya akun orang tua.');
+        }
+
+        return back()->with('success', "Generate akun orang tua selesai: {$dibuat} akun baru dibuat, {$dilewati} dilewati (No. HP Ortu sudah dipakai siswa lain), {$tanpaNoHp} siswa belum diisi No. HP Ortu.");
+    }
+
     public function hapusAkunOrtu(Siswa $siswa)
     {
         if (! $siswa->orangTua) {

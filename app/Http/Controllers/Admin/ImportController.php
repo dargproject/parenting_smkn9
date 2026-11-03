@@ -22,7 +22,7 @@ class ImportController extends Controller
         $import = new SiswasImport;
         Excel::import($import, $request->file('file'));
 
-        return back()->with('success', "Import siswa selesai: {$import->berhasil} data ditambahkan, {$import->dilewati} dilewati (NIS/NISN/NIPD sudah ada atau nama kelas tidak cocok dengan data Kelas yang ada).");
+        return back()->with('success', "Import siswa selesai: {$import->berhasil} data baru ditambahkan, {$import->diperbarui} data diperbarui, {$import->dilewati} dilewati (nama kelas tidak cocok dengan data Kelas yang ada).");
     }
 
     public function templateSiswa()

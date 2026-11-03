@@ -169,6 +169,12 @@ class RaporParentingController extends Controller
             'kelas' => $kelas,
             'tahunAjaranAktif' => $tahunAjaranAktif,
             'namaWali' => $siswa->orangTua->nama ?? null,
+            // Wali Kelas resmi kelas ini (bukan $guru yang mencetak -- guru_wali juga boleh
+            // mencetak rapor ini, tapi yang tanda tangan di sini harus tetap wali kelasnya).
+            'waliKelasNama' => $kelas->waliKelas->nama ?? null,
+            'waliKelasNip' => $kelas->waliKelas->nip ?? null,
+            'kepsekNama' => setting('nama_kepsek'),
+            'kepsekNip' => setting('nip_kepsek'),
             'logoPath' => $logoPath,
             'akademikPerMapel' => $akademikPerMapel,
             'rataPraktik' => $rataPraktik,

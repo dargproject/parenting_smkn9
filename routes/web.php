@@ -313,6 +313,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::post('siswa/{siswa}/reset-password', [SiswaController::class, 'resetPassword'])->name('siswa.reset-password');
     Route::post('siswa/{siswa}/akun-ortu', [SiswaController::class, 'buatAkunOrtu'])->name('siswa.akun-ortu.store');
     Route::delete('siswa/{siswa}/akun-ortu', [SiswaController::class, 'hapusAkunOrtu'])->name('siswa.akun-ortu.destroy');
+    Route::post('siswa-generate-akun-ortu', [SiswaController::class, 'generateAkunOrtuSemua'])->name('siswa.akun-ortu.generate-all');
     Route::resource('kelas', KelasController::class)->except(['show'])->parameters(['kelas' => 'kelas']);
     Route::resource('mata-pelajaran', MataPelajaranController::class)->except(['show'])->parameters(['mata-pelajaran' => 'mataPelajaran']);
     Route::get('rombel', [RombelController::class, 'index'])->name('rombel.index');

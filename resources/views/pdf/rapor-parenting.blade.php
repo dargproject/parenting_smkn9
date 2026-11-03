@@ -34,8 +34,16 @@
     .catatan-list { margin: 4px 0 0 14px; padding: 0; font-size: 9.5px; }
     .catatan-list li { margin-bottom: 2px; }
     .garis { border-bottom: 1px solid #000; height: 16px; margin-bottom: 4px; }
-    .ttd { margin-top: 30px; text-align: right; font-size: 11px; }
     .kecil { font-size: 9.5px; color: #444; font-style: italic; }
+    .ttd-wrap { margin-top: 26px; }
+    table.ttd-dua { width: 100%; border-collapse: collapse; }
+    table.ttd-dua td { border: none; width: 50%; text-align: center; vertical-align: top; padding: 0 8px; }
+    .ttd-tanggal { text-align: right; margin: 0 0 4px; }
+    .ttd-peran { margin: 0; }
+    .ttd-spasi { height: 46px; }
+    .ttd-nama { margin: 0; font-weight: bold; text-decoration: underline; }
+    .ttd-nip { margin: 2px 0 0; font-size: 10px; }
+    .ttd-kepsek { text-align: center; margin-top: 18px; }
 </style>
 </head>
 <body>
@@ -219,6 +227,36 @@
         <div class="catatan-blok">&nbsp;</div>
     </div>
 
-    <p class="ttd">Malang, {{ now()->translatedFormat('d F Y') }}</p>
+    <div class="blok-utuh ttd-wrap">
+        <table class="ttd-dua">
+            <tr>
+                <td>
+                    <p class="ttd-peran">&nbsp;</p>
+                    <p class="ttd-peran">Orang Tua / Wali Murid,</p>
+                    <div class="ttd-spasi"></div>
+                    <p class="ttd-nama">{{ $namaWali ?: '...........................................' }}</p>
+                </td>
+                <td>
+                    <p class="ttd-tanggal">Malang, {{ now()->translatedFormat('d F Y') }}</p>
+                    <p class="ttd-peran">Wali Kelas,</p>
+                    <div class="ttd-spasi"></div>
+                    <p class="ttd-nama">{{ $waliKelasNama ?: '...........................................' }}</p>
+                    @if($waliKelasNip)
+                        <p class="ttd-nip">NIP. {{ $waliKelasNip }}</p>
+                    @endif
+                </td>
+            </tr>
+        </table>
+
+        <div class="ttd-kepsek">
+            <p class="ttd-peran">Mengetahui,</p>
+            <p class="ttd-peran">Kepala Sekolah,</p>
+            <div class="ttd-spasi"></div>
+            <p class="ttd-nama">{{ $kepsekNama ?: '...........................................' }}</p>
+            @if($kepsekNip)
+                <p class="ttd-nip">NIP. {{ $kepsekNip }}</p>
+            @endif
+        </div>
+    </div>
 </body>
 </html>
