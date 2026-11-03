@@ -103,6 +103,7 @@ class SiswaController extends Controller
             'username' => $username,
             'password' => Hash::make('password'),
             'is_active' => true,
+            'harus_lengkapi_profil' => true,
         ]);
 
         return back()->with('success', "Akun orang tua berhasil dibuat. Username: {$username}, password default: password");
@@ -137,6 +138,7 @@ class SiswaController extends Controller
                 'username' => $username,
                 'password' => Hash::make('password'),
                 'is_active' => true,
+                'harus_lengkapi_profil' => true,
             ]);
 
             $dibuat++;
