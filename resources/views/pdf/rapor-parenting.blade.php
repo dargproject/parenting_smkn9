@@ -196,7 +196,7 @@
         </tr>
     </table>
 
-    <div class="blok-utuh">
+    {{-- <div class="blok-utuh">
         <h3>IV. Lembar Pantauan Parenting (diisi oleh Wali Murid)</h3>
         <p class="kecil">Bapak/Ibu Wali Murid dimohon memberikan checklist (&radic;) dan catatan ringkas kondisi anak di rumah:</p>
         <table class="isi">
@@ -219,13 +219,13 @@
                 </tr>
             @endforeach
         </table>
-    </div>
+    </div> --}}
 
-    <div class="blok-utuh">
+    {{-- <div class="blok-utuh">
         <h3>V. Catatan Kolaborasi &amp; Rencana Tindak Lanjut</h3>
         <p><strong>Tanggapan / Harapan Orang Tua:</strong></p>
         <div class="catatan-blok">&nbsp;</div>
-    </div>
+    </div> --}}
 
     <div class="blok-utuh ttd-wrap">
         <table class="ttd-dua">
