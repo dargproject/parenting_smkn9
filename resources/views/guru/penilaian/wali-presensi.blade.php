@@ -8,7 +8,7 @@
         <p class="text-slate-400 text-sm">Anda belum menjadi guru wali (akademik) untuk kelas manapun.</p>
     @else
         <div class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-4 flex flex-col gap-2 sm:flex-row sm:items-center">
-            <select x-model="periode" @change="muat()" class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-1.5 text-sm text-slate-100">
+            <select x-model="periode" @change="muat()" class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-1.5 text-sm text-slate-800 dark:text-slate-100">
                 <option value="minggu">Minggu Ini</option>
                 <option value="bulan" selected>Bulan Ini</option>
                 <option value="custom">Rentang Tanggal...</option>

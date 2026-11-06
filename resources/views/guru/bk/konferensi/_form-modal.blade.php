@@ -115,7 +115,7 @@
                     <div class="rounded-lg border border-dashed border-slate-600 p-3">
                         <div class="flex gap-2">
                             <input type="text" x-model="namaBaru" @keydown.enter.prevent="tambahPeserta()" placeholder="Nama peserta..." class="flex-1 rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500">
-                            <select x-model="peranBaru" class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+                            <select x-model="peranBaru" class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100">
                                 <option value="Guru BK">Guru BK</option>
                                 <option value="Wali Kelas">Wali Kelas</option>
                                 <option value="Kepala Sekolah">Kepala Sekolah</option>

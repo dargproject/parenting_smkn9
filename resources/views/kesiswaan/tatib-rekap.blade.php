@@ -30,11 +30,11 @@
             <i class="fa-solid fa-magnifying-glass pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400"></i>
             <input type="search" x-model="cari" placeholder="Cari nama atau NIS siswa..." class="w-full rounded-lg border border-slate-600 bg-slate-900 py-1.5 pl-9 pr-3 text-sm text-slate-100 placeholder:text-slate-500">
         </div>
-        <select x-model="kelas" class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-1.5 text-sm text-slate-100">
+        <select x-model="kelas" class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-1.5 text-sm text-slate-800 dark:text-slate-100">
             <option value="">Semua kelas</option>
             @foreach($kelasRekap as $k)<option value="{{ $k->id }}">{{ $k->nama_kelas }}</option>@endforeach
         </select>
-        <select x-model="status" class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-1.5 text-sm text-slate-100">
+        <select x-model="status" class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-1.5 text-sm text-slate-800 dark:text-slate-100">
             <option value="">Semua status</option>
             <option>Aman</option><option>Surat Peringatan 1</option><option>Surat Peringatan 2</option><option>Surat Peringatan 3</option><option>Dikembalikan ke Orang Tua</option>
         </select>

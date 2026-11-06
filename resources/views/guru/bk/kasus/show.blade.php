@@ -112,7 +112,7 @@
                 <h6 class="font-bold text-slate-100 mb-3">Status Kasus</h6>
                 <form method="POST" action="{{ route('guru.bk.kasus.status', $kasusBk) }}">
                     @csrf @method('PATCH')
-                    <select name="status" onchange="this.form.submit()" class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+                    <select name="status" onchange="this.form.submit()" class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100">
                         @foreach(['antrean' => 'Antrean', 'proses' => 'Sedang Diproses', 'selesai' => 'Selesai (Ditutup)'] as $value => $label)
                             <option value="{{ $value }}" @selected($kasusBk->status === $value)>{{ $label }}</option>
                         @endforeach

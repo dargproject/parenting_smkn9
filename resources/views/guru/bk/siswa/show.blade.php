@@ -61,7 +61,7 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="mb-1 block text-xs font-medium text-slate-400">Rencana Setelah Lulus</label>
-                        <select name="rencana_lulus" class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+                        <select name="rencana_lulus" class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100">
                             <option value="">- Pilih -</option>
                             @foreach(['Bekerja', 'Kuliah', 'Menikah'] as $opt)
                                 <option value="{{ $opt }}" @selected(old('rencana_lulus', $profil->rencana_lulus ?? '') === $opt)>{{ $opt }}</option>

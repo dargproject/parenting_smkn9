@@ -13,7 +13,7 @@
 
             <div>
                 <label class="mb-1.5 block text-sm font-medium text-slate-300">Kegiatan</label>
-                <select name="kegiatan" required class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+                <select name="kegiatan" required class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100">
                     <option value="">-- Pilih kegiatan --</option>
                     <option value="Petugas Upacara">Petugas Upacara</option>
                     <option value="Juara Lomba">Juara Lomba</option>

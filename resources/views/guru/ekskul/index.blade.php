@@ -51,7 +51,7 @@
                                                 @csrf
                                                 <input type="hidden" name="ekstrakurikuler_id" value="{{ $ekskul->id }}">
                                                 <input type="hidden" name="siswa_id" value="{{ $peserta->siswa_id }}">
-                                                <select name="nilai" onchange="this.form.submit()" class="rounded-lg border border-slate-600 bg-slate-900 px-2 py-1.5 text-sm text-slate-100">
+                                                <select name="nilai" onchange="this.form.submit()" class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1.5 text-sm text-slate-800 dark:text-slate-100">
                                                     <option value="" disabled {{ !$nilai ? 'selected' : '' }}>Pilih</option>
                                                     @foreach(['A', 'B', 'C'] as $opsi)
                                                         <option value="{{ $opsi }}" @selected($nilai?->nilai === $opsi)>{{ $opsi }}</option>

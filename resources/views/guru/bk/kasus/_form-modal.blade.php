@@ -44,7 +44,7 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-400">Kategori</label>
-                        <select name="kategori_id" class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+                        <select name="kategori_id" class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100">
                             <option value="">Pilih kategori (opsional)</option>
                             @foreach($kategoriKasusList as $kategori)
                                 <option value="{{ $kategori->id }}" @selected(old('kategori_id', $kasusBk->kategori_id ?? null) == $kategori->id)>{{ $kategori->nama_kategori }}</option>
@@ -53,7 +53,7 @@
                     </div>
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-400">Prioritas</label>
-                        <select name="prioritas" required class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+                        <select name="prioritas" required class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100">
                             @foreach(['rendah' => 'Rendah', 'sedang' => 'Sedang', 'tinggi' => 'Tinggi'] as $value => $label)
                                 <option value="{{ $value }}" @selected(old('prioritas', $kasusBk->prioritas ?? 'rendah') === $value)>{{ $label }}</option>
                             @endforeach

@@ -55,7 +55,7 @@
             </div>
             <div class="col-md-8">
                 <label class="form-label small font-semibold">Pilih Jadwal Mengajar</label>
-                <select name="jadwal_pelajaran_id" x-model="jadwalId" @change="muatPresensi()" required class="form-select form-select-sm text-slate-100">
+                <select name="jadwal_pelajaran_id" x-model="jadwalId" @change="muatPresensi()" required class="form-select form-select-sm text-slate-800 dark:text-slate-100">
                     <option value="">-- Pilih tanggal terlebih dahulu --</option>
                     <template x-for="j in opsiJadwal" :key="j.id">
                         <option :value="j.id" x-text="j.label"></option>
@@ -134,7 +134,7 @@
 
         <div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center">
             <input type="date" x-model="tanggal" class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-1.5 text-sm text-slate-100 sm:w-48">
-            <select x-model="kelasId" class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-1.5 text-sm text-slate-100 sm:w-48">
+            <select x-model="kelasId" class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-1.5 text-sm text-slate-800 dark:text-slate-100 sm:w-48">
                 <option value="">Semua kelas</option>
                 @foreach($kelasRiwayat as $k)
                     <option value="{{ $k->id }}">{{ $k->nama_kelas }}</option>

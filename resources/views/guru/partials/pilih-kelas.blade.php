@@ -2,7 +2,7 @@
 <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
     <div class="flex items-center gap-2">
         <label class="text-sm font-medium text-slate-400 whitespace-nowrap"><i class="fa-solid fa-people-roof mr-1"></i> Kelas</label>
-        <select x-model="kelas" class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-1.5 text-sm text-slate-100">
+        <select x-model="kelas" class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-1.5 text-sm text-slate-800 dark:text-slate-100">
             @foreach($daftarKelas as $k)
                 <option value="{{ $k->id }}">{{ $k->nama_kelas }}@isset($jumlahSiswa[$k->id]) ({{ $jumlahSiswa[$k->id] }} siswa)@endisset</option>
             @endforeach

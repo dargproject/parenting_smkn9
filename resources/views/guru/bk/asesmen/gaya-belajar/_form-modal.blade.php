@@ -81,7 +81,7 @@
                 </div>
                 <div>
                     <label class="mb-1 block text-sm font-medium text-slate-400">Hasil (gaya belajar dominan)</label>
-                    <select name="hasil" x-model="hasil" class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+                    <select name="hasil" x-model="hasil" class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100">
                         <option value="">- Pilih -</option>
                         <option value="Visual">Visual</option>
                         <option value="Auditorial">Auditorial</option>

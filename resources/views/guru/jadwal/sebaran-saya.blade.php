@@ -33,7 +33,7 @@
                 <input type="hidden" name="_method" value="POST" id="jadwal-saya-form-method">
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-slate-400">Kelas</label>
-                    <select name="kelas_id" required onchange="isiMapelJadwalSaya(); tampilkanJadwalKelas();" class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+                    <select name="kelas_id" required onchange="isiMapelJadwalSaya(); tampilkanJadwalKelas();" class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100">
                         <option value="">Pilih kelas...</option>
                         @foreach($kelasSayaList as $k)
                             <option value="{{ $k->id }}">{{ $k->nama_kelas }}</option>
@@ -42,13 +42,13 @@
                 </div>
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-slate-400">Mata Pelajaran</label>
-                    <select name="mata_pelajaran_id" required class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+                    <select name="mata_pelajaran_id" required class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100">
                         <option value="">Pilih kelas dulu...</option>
                     </select>
                 </div>
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-slate-400">Hari</label>
-                    <select name="hari" required class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+                    <select name="hari" required class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100">
                         @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'] as $hari)
                             <option value="{{ $hari }}">{{ $hari }}</option>
                         @endforeach

@@ -17,19 +17,19 @@
             <div class="lg:col-span-2">
                 <input type="search" name="search" value="{{ request('search') }}" placeholder="Cari nama siswa / uraian masalah..." class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500">
             </div>
-            <select name="kelas_id" class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+            <select name="kelas_id" class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100">
                 <option value="">Semua Kelas</option>
                 @foreach($kelasOptions as $id => $nama)
                     <option value="{{ $id }}" @selected((string) request('kelas_id') === (string) $id)>{{ $nama }}</option>
                 @endforeach
             </select>
-            <select name="jurusan" class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+            <select name="jurusan" class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100">
                 <option value="">Semua Jurusan</option>
                 @foreach($jurusanOptions as $jurusan)
                     <option value="{{ $jurusan }}" @selected(request('jurusan') === $jurusan)>{{ $jurusan }}</option>
                 @endforeach
             </select>
-            <select name="jenis_kelamin" class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+            <select name="jenis_kelamin" class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100">
                 <option value="">Semua Jenis Kelamin</option>
                 <option value="L" @selected(request('jenis_kelamin') === 'L')>Laki-laki</option>
                 <option value="P" @selected(request('jenis_kelamin') === 'P')>Perempuan</option>

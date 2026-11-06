@@ -116,7 +116,7 @@
                     </div>
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-400">Minat Lanjutan</label>
-                        <select name="minat_karir" x-model="f.minat_karir" class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+                        <select name="minat_karir" x-model="f.minat_karir" class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100">
                             <option value="">Belum ditentukan</option>
                             <option>Bekerja di Industri</option>
                             <option>Melanjutkan Kuliah</option>
@@ -607,13 +607,13 @@
                 <p class="text-slate-400 text-xs mb-3">Kirim rujukan ke guru BK untuk ditinjau -- bukan langsung jadi kasus, guru BK yang menerima akan memegang kasusnya.</p>
                 <form method="POST" action="{{ route('guru.wali-kelas.rujukan-bk.store') }}" class="grid grid-cols-1 md:grid-cols-4 gap-2">
                     @csrf
-                    <select name="siswa_id" required class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 md:col-span-1">
+                    <select name="siswa_id" required class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 md:col-span-1">
                         <option value="">- Pilih Siswa -</option>
                         @foreach($siswaWali as $siswa)
                             <option value="{{ $siswa->id }}">{{ $siswa->nama }}</option>
                         @endforeach
                     </select>
-                    <select name="kategori" required class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 md:col-span-1">
+                    <select name="kategori" required class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 md:col-span-1">
                         <option value="Akademik">Akademik</option>
                         <option value="Perilaku">Perilaku</option>
                         <option value="Sosial">Sosial</option>
@@ -719,7 +719,7 @@
                     </div>
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-400">Tingkat</label>
-                        <select name="tingkat" required class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+                        <select name="tingkat" required class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100">
                             <option value="Sekolah">Sekolah</option>
                             <option value="Kecamatan">Kecamatan</option>
                             <option value="Kabupaten/Kota">Kabupaten/Kota</option>

@@ -12,7 +12,7 @@
             @if($daftarKelasLog->count() > 1)
                 <div class="flex items-center gap-2">
                     <label class="text-sm font-medium text-slate-400 whitespace-nowrap"><i class="fa-solid fa-people-roof mr-1"></i> Kelas</label>
-                    <select x-model="kelas" class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-1.5 text-sm text-slate-100">
+                    <select x-model="kelas" class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-1.5 text-sm text-slate-800 dark:text-slate-100">
                         <option value="semua">Semua Kelas</option>
                         @foreach($daftarKelasLog as $k)
                             <option value="{{ $k->id }}">{{ $k->nama_kelas }}</option>

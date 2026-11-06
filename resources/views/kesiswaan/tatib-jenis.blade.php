@@ -31,15 +31,15 @@
             <i class="fa-solid fa-magnifying-glass pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400"></i>
             <input type="search" x-model="cari" placeholder="Cari nama pelanggaran..." class="w-full rounded-lg border border-slate-600 bg-slate-900 py-1.5 pl-9 pr-3 text-sm text-slate-100 placeholder:text-slate-500">
         </div>
-        <select x-model="pasal" class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-1.5 text-sm text-slate-100">
+        <select x-model="pasal" class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-1.5 text-sm text-slate-800 dark:text-slate-100">
             <option value="">Semua pasal</option>
             @foreach($grouped->keys() as $namaPasal)<option value="{{ $namaPasal }}">{{ $namaPasal }}</option>@endforeach
         </select>
-        <select x-model="jenis" class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-1.5 text-sm text-slate-100">
+        <select x-model="jenis" class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-1.5 text-sm text-slate-800 dark:text-slate-100">
             <option value="">Semua jenis</option>
             @foreach($pilihanJenis as $namaJenis)<option value="{{ $namaJenis }}">{{ $namaJenis }}</option>@endforeach
         </select>
-        <select x-model="status" class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-1.5 text-sm text-slate-100">
+        <select x-model="status" class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-1.5 text-sm text-slate-800 dark:text-slate-100">
             <option value="">Semua status</option>
             <option value="aktif">Aktif</option>
             <option value="nonaktif">Nonaktif</option>

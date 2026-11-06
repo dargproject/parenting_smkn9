@@ -81,7 +81,7 @@
                 <input type="hidden" name="siswa_id" :value="rujukSiswaId">
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-slate-300">Kategori</label>
-                    <select name="kategori" x-model="kategori" class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+                    <select name="kategori" x-model="kategori" class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100">
                         <option value="Normal">Normal</option>
                         <option value="Mendesak">Mendesak</option>
                     </select>

@@ -55,7 +55,7 @@
                 </div>
                 <div x-show="!terpilih" class="space-y-2">
                     <div class="flex flex-col gap-2 sm:flex-row">
-                        <select x-model="pasal" class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 sm:w-56">
+                        <select x-model="pasal" class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 sm:w-56">
                             <option value="">Semua pasal</option>
                             @foreach($masterPelanggaranAktif->map(fn ($mp) => $mp->pasal->nama ?? '-')->unique()->values() as $namaPasal)<option value="{{ $namaPasal }}">{{ $namaPasal }}</option>@endforeach
                         </select>

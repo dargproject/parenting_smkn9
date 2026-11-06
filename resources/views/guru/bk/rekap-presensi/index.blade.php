@@ -12,7 +12,7 @@
     <form method="GET" class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <div>
             <label class="mb-1 block text-xs font-medium text-slate-400">Kelas</label>
-            <select name="kelas_id" onchange="this.form.submit()" class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+            <select name="kelas_id" onchange="this.form.submit()" class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100">
                 <option value="">Pilih kelas...</option>
                 @foreach($kelasList as $k)
                     <option value="{{ $k->id }}" @selected($kelasTerpilih?->id === $k->id)>{{ $k->nama_kelas }}{{ $kelasBinaanIds->contains($k->id) ? ' (Siswa Saya)' : '' }}</option>

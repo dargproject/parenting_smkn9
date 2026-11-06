@@ -17,19 +17,19 @@
             <div class="lg:col-span-2">
                 <input type="search" name="search" value="{{ request('search') }}" placeholder="Cari nama siswa / uraian masalah..." class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500">
             </div>
-            <select name="status" class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+            <select name="status" class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100">
                 <option value="">Semua Status</option>
                 @foreach(['diproses' => 'Diproses', 'ditunda' => 'Ditunda', 'dibatalkan' => 'Dibatalkan'] as $value => $label)
                     <option value="{{ $value }}" @selected(request('status') === $value)>{{ $label }}</option>
                 @endforeach
             </select>
-            <select name="kelas_id" class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+            <select name="kelas_id" class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100">
                 <option value="">Semua Kelas</option>
                 @foreach($kelasOptions as $id => $nama)
                     <option value="{{ $id }}" @selected((string) request('kelas_id') === (string) $id)>{{ $nama }}</option>
                 @endforeach
             </select>
-            <select name="jurusan" class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+            <select name="jurusan" class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100">
                 <option value="">Semua Jurusan</option>
                 @foreach($jurusanOptions as $jurusan)
                     <option value="{{ $jurusan }}" @selected(request('jurusan') === $jurusan)>{{ $jurusan }}</option>

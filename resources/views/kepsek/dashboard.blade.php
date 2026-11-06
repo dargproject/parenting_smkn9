@@ -255,7 +255,7 @@
             <p class="text-slate-400 text-sm m-0">Rekapitulasi nilai akhir seluruh rombel (KKM {{ setting('kktp_threshold', 75) }}).</p>
         </div>
         <form method="GET" action="{{ route('kepsek.dashboard') }}#akademik" class="flex items-center gap-2">
-            <select name="jurusan" onchange="this.form.submit()" class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+            <select name="jurusan" onchange="this.form.submit()" class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100">
                 <option value="all" @selected($jurusanFilter === 'all')>Semua Jurusan</option>
                 @foreach($jurusanList as $jurusan)
                     <option value="{{ $jurusan }}" @selected($jurusanFilter === $jurusan)>{{ $jurusan }}</option>
@@ -383,7 +383,7 @@
         <form method="POST" action="{{ route('kepsek.pengumuman.store') }}" class="grid grid-cols-1 md:grid-cols-4 gap-2">
             @csrf
             <input type="text" name="judul" required placeholder="Judul Pengumuman..." class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 md:col-span-1">
-            <select name="kategori" required class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+            <select name="kategori" required class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100">
                 @forelse($kategoriPengumumanList as $kategori)
                     <option value="{{ $kategori }}">{{ $kategori }}</option>
                 @empty
