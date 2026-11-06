@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Rapor Parenting - {{ $siswa->nama }}</title>
 <style>
-    @page { margin: 22mm 18mm; }
+    @page { margin: 11mm 9mm; }
     body { font-family: 'DejaVu Sans', sans-serif; font-size: 11px; color: #111; }
     h1 { text-align: center; font-size: 15px; margin: 0 0 2px; text-transform: uppercase; }
     h2 { text-align: center; font-size: 12px; margin: 0 0 16px; font-weight: normal; }

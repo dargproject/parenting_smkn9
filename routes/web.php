@@ -302,6 +302,7 @@ Route::prefix('ortu')->name('ortu.')->group(function () {
         Route::get('/mapel/{mataPelajaran}', [OrangTuaDashboardController::class, 'show'])->name('mapel.show');
         Route::get('/keluarga', [OrangTuaKeluargaController::class, 'edit'])->name('keluarga.edit');
         Route::put('/keluarga', [OrangTuaKeluargaController::class, 'update'])->name('keluarga.update');
+        Route::get('/akun', [OrangTuaAkunController::class, 'edit'])->name('akun.edit');
         Route::put('/akun', [OrangTuaAkunController::class, 'update'])->name('akun.update');
     });
 });

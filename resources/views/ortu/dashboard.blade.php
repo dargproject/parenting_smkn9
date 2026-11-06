@@ -138,9 +138,14 @@
             @endif
         </div>
 
-        <a href="{{ route('ortu.keluarga.edit') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm hover:border-blue-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
-            <i class="fa-solid fa-house-user text-blue-500"></i> Lengkapi Data Keluarga
-        </a>
+        <div class="flex flex-wrap gap-3">
+            <a href="{{ route('ortu.keluarga.edit') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm hover:border-blue-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                <i class="fa-solid fa-house-user text-blue-500"></i> Lengkapi Data Keluarga
+            </a>
+            <a href="{{ route('ortu.akun.edit') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm hover:border-blue-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                <i class="fa-solid fa-user-gear text-blue-500"></i> Ganti Nama &amp; Password
+            </a>
+        </div>
 
         @if($riwayat->isNotEmpty() || $tahunAjaranAktifSistem)
             <form method="GET" class="flex items-center gap-2 text-sm">

@@ -87,4 +87,28 @@ class OrtuLengkapiProfilTest extends TestCase
 
         $this->assertTrue($orangTua->refresh()->harus_lengkapi_profil);
     }
+
+    public function test_halaman_akun_saya_selalu_bisa_dibuka_setelah_profil_lengkap(): void
+    {
+        $orangTua = $this->buatAkun(harusLengkapiProfil: false);
+
+        $this->actingAs($orangTua, 'orangtua')->get(route('ortu.akun.edit'))
+            ->assertOk()
+            ->assertSee('Akun Saya')
+            ->assertSee($orangTua->nama);
+    }
+
+    public function test_ganti_nama_saja_tanpa_password_dari_halaman_akun_saya(): void
+    {
+        $orangTua = $this->buatAkun(harusLengkapiProfil: false);
+        $passwordLama = $orangTua->password;
+
+        $this->actingAs($orangTua, 'orangtua')->put(route('ortu.akun.update'), [
+            'nama' => 'Nama Baru Tanpa Ganti Password',
+        ])->assertRedirect();
+
+        $orangTua->refresh();
+        $this->assertSame('Nama Baru Tanpa Ganti Password', $orangTua->nama);
+        $this->assertSame($passwordLama, $orangTua->password);
+    }
 }

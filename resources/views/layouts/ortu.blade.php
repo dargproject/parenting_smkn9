@@ -75,6 +75,9 @@
                     <i class="fa-solid fa-sun" x-show="darkMode" style="display: none;"></i>
                 </button>
                 @auth('orangtua')
+                    <a href="{{ route('ortu.akun.edit') }}" class="rounded-full p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700" title="Akun Saya">
+                        <i class="fa-solid fa-user-gear"></i>
+                    </a>
                     <form method="POST" action="{{ route('ortu.logout') }}">
                         @csrf
                         <button type="submit" class="rounded-lg border border-rose-300 px-3 py-1.5 text-sm font-semibold text-rose-600 hover:bg-rose-50 dark:border-rose-500/40 dark:text-rose-400 dark:hover:bg-rose-500/10">
