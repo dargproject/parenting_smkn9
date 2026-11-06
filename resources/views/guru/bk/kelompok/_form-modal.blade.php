@@ -64,24 +64,24 @@
                     <label class="mb-1 block text-sm font-medium text-slate-400">Peserta Siswa</label>
                     <div class="flex flex-wrap gap-2 mb-2" x-show="selectedSiswas.length" style="display: none;">
                         <template x-for="s in selectedSiswas" :key="s.id">
-                            <span class="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-slate-900 px-3 py-1 text-xs text-slate-100">
+                            <span class="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-50 px-3 py-1 text-xs text-slate-800 dark:bg-slate-900 dark:text-slate-100">
                                 <span x-text="s.nama + ' (' + s.kelas + ')'"></span>
-                                <button type="button" @click="removeSiswa(s.id)" class="text-slate-400 hover:text-rose-400"><i class="fa-solid fa-xmark"></i></button>
+                                <button type="button" @click="removeSiswa(s.id)" class="text-slate-500 hover:text-rose-400 dark:text-slate-400"><i class="fa-solid fa-xmark"></i></button>
                             </span>
                         </template>
                     </div>
                     <div class="relative">
                         <input type="text" x-model="query" @focus="showPicker = true" @click.outside="showPicker = false" autocomplete="off"
                             placeholder="Ketik nama, NIS, atau kelas untuk menambah peserta..."
-                            class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500">
-                        <div x-show="showPicker && filtered.length" style="display: none;" class="absolute z-20 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border border-slate-700 bg-slate-900 shadow-lg">
+                            class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500">
+                        <div x-show="showPicker && filtered.length" style="display: none;" class="absolute z-20 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
                             <template x-for="s in filtered" :key="s.id">
-                                <button type="button" @click="addSiswa(s.id); showPicker = true" class="block w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-800">
-                                    <span x-text="s.nama"></span> <span class="text-xs text-slate-400" x-text="'· NIS ' + s.nis + ' · ' + s.kelas"></span>
+                                <button type="button" @click="addSiswa(s.id); showPicker = true" class="block w-full px-3 py-2 text-left text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">
+                                    <span x-text="s.nama"></span> <span class="text-xs text-slate-500 dark:text-slate-400" x-text="'· NIS ' + s.nis + ' · ' + s.kelas"></span>
                                 </button>
                             </template>
                         </div>
-                        <div x-show="showPicker && query.trim() && !filtered.length" style="display: none;" class="absolute z-20 mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-400 shadow-lg">Siswa tidak ditemukan.</div>
+                        <div x-show="showPicker && query.trim() && !filtered.length" style="display: none;" class="absolute z-20 mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500 shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">Siswa tidak ditemukan.</div>
                     </div>
                     <p class="mt-1 text-xs" :class="siswaIds.length ? 'text-slate-500' : 'text-rose-400'" x-text="siswaIds.length + ' peserta dipilih' + (siswaIds.length ? '' : ' -- minimal 1 peserta')"></p>
                 </div>

@@ -44,10 +44,10 @@
                  }" class="relative">
                 <label class="mb-1.5 block text-sm font-medium text-slate-300">Jenis Pelanggaran</label>
                 <input type="hidden" name="master_pelanggaran_id" :value="pilihId">
-                <div x-show="terpilih" style="display: none;" class="rounded-lg border border-emerald-500/40 bg-slate-900 px-3 py-2 text-sm text-slate-100">
+                <div x-show="terpilih" style="display: none;" class="rounded-lg border border-emerald-500/40 bg-emerald-50 px-3 py-2 text-sm text-slate-800 dark:bg-slate-900 dark:text-slate-100">
                     <div class="flex items-center justify-between gap-2">
-                        <span><span x-text="terpilih?.nama"></span> <span class="text-xs text-slate-400" x-text="'· ' + terpilih?.jenis + ' · ' + terpilih?.poin + ' poin · ' + terpilih?.pasal"></span></span>
-                        <button type="button" @click="pilihId = ''" class="text-slate-400 hover:text-slate-100" title="Ganti jenis"><i class="fa-solid fa-xmark"></i></button>
+                        <span><span x-text="terpilih?.nama"></span> <span class="text-xs text-slate-500 dark:text-slate-400" x-text="'· ' + terpilih?.jenis + ' · ' + terpilih?.poin + ' poin · ' + terpilih?.pasal"></span></span>
+                        <button type="button" @click="pilihId = ''" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100" title="Ganti jenis"><i class="fa-solid fa-xmark"></i></button>
                     </div>
                     <p x-show="terpilih?.tindakanLangsung" style="display: none;" class="mt-1.5 text-xs text-amber-400">
                         <i class="fa-solid fa-bolt mr-1"></i> Tindakan langsung: <span x-text="terpilih?.tindakanLangsung"></span>
@@ -59,16 +59,16 @@
                             <option value="">Semua pasal</option>
                             @foreach($masterPelanggaranAktif->map(fn ($mp) => $mp->pasal->nama ?? '-')->unique()->values() as $namaPasal)<option value="{{ $namaPasal }}">{{ $namaPasal }}</option>@endforeach
                         </select>
-                        <input type="text" x-model="cari" @focus="open = true" @click.outside="open = false" autocomplete="off" placeholder="Ketik nama pelanggaran..." class="flex-1 rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500">
+                        <input type="text" x-model="cari" @focus="open = true" @click.outside="open = false" autocomplete="off" placeholder="Ketik nama pelanggaran..." class="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500">
                     </div>
-                    <div class="max-h-56 overflow-y-auto rounded-lg border border-slate-700 bg-slate-900 shadow-lg" x-show="open || cari || pasal" style="display: none;">
+                    <div class="max-h-56 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900" x-show="open || cari || pasal" style="display: none;">
                         <template x-for="d in hasil" :key="d.id">
-                            <button type="button" @click="pilih(d)" class="block w-full px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-800">
-                                <span x-text="d.nama"></span> <span class="text-xs text-slate-400" x-text="'· ' + d.jenis + ' · ' + d.poin + ' poin'"></span>
+                            <button type="button" @click="pilih(d)" class="block w-full px-3 py-2 text-left text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">
+                                <span x-text="d.nama"></span> <span class="text-xs text-slate-500 dark:text-slate-400" x-text="'· ' + d.jenis + ' · ' + d.poin + ' poin'"></span>
                                 <span class="block text-xs text-slate-500" x-text="d.pasal"></span>
                             </button>
                         </template>
-                        <p x-show="!hasil.length" class="px-3 py-2 text-sm text-slate-400">Tidak ada jenis pelanggaran yang cocok.</p>
+                        <p x-show="!hasil.length" class="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">Tidak ada jenis pelanggaran yang cocok.</p>
                     </div>
                 </div>
                 @error('master_pelanggaran_id')<p class="mt-1 text-xs text-rose-400">{{ $message }}</p>@enderror
