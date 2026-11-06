@@ -47,6 +47,17 @@ class Sosiometri extends Model
         return $this->hasMany(SosiometriRespon::class);
     }
 
+    /**
+     * Ringkasan singkat untuk ditampilkan di daftar, tanpa harus buka Detail dulu.
+     */
+    public function ringkasan(): string
+    {
+        $terisi = $this->respons->count();
+        $maksimal = count(self::PERTANYAAN) * $this->jumlah_pilihan;
+
+        return "{$terisi}/{$maksimal} pilihan terisi";
+    }
+
     public function questionGroups(): array
     {
         $groups = [];

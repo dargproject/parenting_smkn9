@@ -62,20 +62,21 @@
                         <tr>
                             <td class="px-4 py-3 font-semibold text-slate-100">{{ $siswa->nama }}<span class="block text-slate-400 font-normal" style="font-size: 10px;">NIS {{ $siswa->nis }}</span></td>
                             <td class="px-4 py-3 text-slate-400">{{ $siswa->kelas->nama_kelas ?? '-' }}</td>
+                            @php $filterSiswa = ['search' => $siswa->nama, 'tingkat' => $tingkat, 'kelas_id' => $siswa->kelas_id]; @endphp
                             <td class="px-3 py-3 text-center">
-                                <a href="{{ route('guru.bk.asesmen.akpd.index', ['search' => $siswa->nama]) }}" class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20">AKPD</a>
+                                <a href="{{ route('guru.bk.asesmen.akpd.index', $filterSiswa) }}" class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20">AKPD</a>
                             </td>
                             <td class="px-3 py-3 text-center">
-                                <a href="{{ route('guru.bk.asesmen.dcm.index', ['search' => $siswa->nama]) }}" class="inline-flex items-center gap-1 rounded-lg bg-blue-500/10 px-2.5 py-1 text-xs font-semibold text-blue-400 hover:bg-blue-500/20">DCM</a>
+                                <a href="{{ route('guru.bk.asesmen.dcm.index', $filterSiswa) }}" class="inline-flex items-center gap-1 rounded-lg bg-blue-500/10 px-2.5 py-1 text-xs font-semibold text-blue-400 hover:bg-blue-500/20">DCM</a>
                             </td>
                             <td class="px-3 py-3 text-center">
-                                <a href="{{ route('guru.bk.asesmen.gaya-belajar.index', ['search' => $siswa->nama]) }}" class="inline-flex items-center gap-1 rounded-lg bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-400 hover:bg-amber-500/20">Gaya Belajar</a>
+                                <a href="{{ route('guru.bk.asesmen.gaya-belajar.index', $filterSiswa) }}" class="inline-flex items-center gap-1 rounded-lg bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-400 hover:bg-amber-500/20">Gaya Belajar</a>
                             </td>
                             <td class="px-3 py-3 text-center">
-                                <a href="{{ route('guru.bk.asesmen.sosiometri.index', ['search' => $siswa->nama]) }}" class="inline-flex items-center gap-1 rounded-lg bg-purple-500/10 px-2.5 py-1 text-xs font-semibold text-purple-400 hover:bg-purple-500/20">Sosiometri</a>
+                                <a href="{{ route('guru.bk.asesmen.sosiometri.index', $filterSiswa) }}" class="inline-flex items-center gap-1 rounded-lg bg-purple-500/10 px-2.5 py-1 text-xs font-semibold text-purple-400 hover:bg-purple-500/20">Sosiometri</a>
                             </td>
                             <td class="px-3 py-3 text-center">
-                                <a href="{{ route('guru.bk.asesmen.peminatan.index', ['search' => $siswa->nama]) }}" class="inline-flex items-center gap-1 rounded-lg bg-rose-500/10 px-2.5 py-1 text-xs font-semibold text-rose-400 hover:bg-rose-500/20">Bakat Minat</a>
+                                <a href="{{ route('guru.bk.asesmen.peminatan.index', $filterSiswa) }}" class="inline-flex items-center gap-1 rounded-lg bg-rose-500/10 px-2.5 py-1 text-xs font-semibold text-rose-400 hover:bg-rose-500/20">Bakat Minat</a>
                             </td>
                         </tr>
                     @empty

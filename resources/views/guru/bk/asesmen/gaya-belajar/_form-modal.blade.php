@@ -2,6 +2,10 @@
     Modal tambah/edit Gaya Belajar. Langkah 1 = data siswa & tanggal, langkah 2-4 = checklist
     pernyataan per kelompok (Visual/Auditorial/Kinestetik), langkah 5 = hasil & catatan.
     Variabel wajib: $formId, $siswas. Variabel opsional: $gayaBelajar (model, untuk mode edit).
+
+    Mode edit langsung dibuka di langkah 5 (hasil & checkbox tampilkan_ke_ortu) -- jawabannya
+    sudah pernah diisi, jadi tidak perlu klik "Selanjutnya" berkali-kali cuma untuk ganti checkbox
+    itu. Tombol "Kembali" tetap bisa dipakai kalau memang perlu cek/ubah jawaban.
 --}}
 @php
     $mode = isset($gayaBelajar) ? 'edit' : 'create';
@@ -11,7 +15,7 @@
 <div id="{{ $formId }}" class="fixed inset-0 z-[100] items-center justify-center p-4 bg-black/50" style="display: none;">
     <div class="solid-panel w-full max-w-2xl rounded-2xl border border-slate-700/60 bg-slate-800/80 text-slate-100 shadow-xl max-h-[90vh] overflow-y-auto"
         x-data="{
-            step: 1,
+            step: {{ $mode === 'edit' ? 5 : 1 }},
             tanggal: {{ \Illuminate\Support\Js::from(old('tanggal', optional($gayaBelajar->tanggal ?? null)->toDateString() ?? now()->toDateString())) }},
             jawaban: {{ \Illuminate\Support\Js::from(old('jawaban', $gayaBelajar->jawaban ?? ['Visual' => [], 'Auditorial' => [], 'Kinestetik' => []])) }},
             hasil: {{ \Illuminate\Support\Js::from(old('hasil', $gayaBelajar->hasil ?? '')) }},

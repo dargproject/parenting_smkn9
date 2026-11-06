@@ -62,7 +62,11 @@ class GayaBelajarTest extends TestCase
         $this->assertSame(0, $gb->kinestetik);
         $this->assertSame('Visual', $gb->hasil);
 
-        $this->sebagai($guruBk)->get(route('guru.bk.asesmen.gaya-belajar.index'))->assertOk()->assertSee($siswa->nama);
+        // Modal "Gaya Belajar Baru" (mode create) tetap mulai dari langkah 1.
+        $this->sebagai($guruBk)->get(route('guru.bk.asesmen.gaya-belajar.index'))
+            ->assertOk()
+            ->assertSee($siswa->nama)
+            ->assertSee('step: 1,', false);
     }
 
     public function test_guru_bk_dapat_melihat_dan_mengubah_data_gaya_belajar(): void
@@ -76,7 +80,11 @@ class GayaBelajarTest extends TestCase
             'jawaban' => ['Visual' => [], 'Auditorial' => [], 'Kinestetik' => []],
         ]);
 
-        $this->sebagai($guruBk)->get(route('guru.bk.asesmen.gaya-belajar.show', $gb))->assertOk()->assertSee($siswa->nama);
+        // Modal edit langsung dibuka di langkah terakhir (hasil & checkbox tampilkan ke ortu).
+        $this->sebagai($guruBk)->get(route('guru.bk.asesmen.gaya-belajar.show', $gb))
+            ->assertOk()
+            ->assertSee($siswa->nama)
+            ->assertSee('step: 5,', false);
 
         $this->sebagai($guruBk)->put(route('guru.bk.asesmen.gaya-belajar.update', $gb), [
             'siswa_id' => $siswa->id,
@@ -88,6 +96,64 @@ class GayaBelajarTest extends TestCase
         $gb->refresh();
         $this->assertSame(2, $gb->auditori);
         $this->assertSame('Auditorial', $gb->hasil);
+    }
+
+    public function test_toggle_tampilkan_ortu_dari_daftar_tanpa_buka_modal(): void
+    {
+        $guruBk = $this->guruBk();
+        $gb = GayaBelajar::create([
+            'siswa_id' => Siswa::firstOrFail()->id,
+            'tanggal' => now()->toDateString(),
+            'jawaban' => [],
+            'tampilkan_ke_ortu' => false,
+        ]);
+
+        $this->sebagai($guruBk)->patch(route('guru.bk.asesmen.gaya-belajar.tampilkan-ortu', $gb))
+            ->assertRedirect();
+        $this->assertTrue($gb->refresh()->tampilkan_ke_ortu);
+
+        // Klik lagi -- kembali tersembunyi.
+        $this->sebagai($guruBk)->patch(route('guru.bk.asesmen.gaya-belajar.tampilkan-ortu', $gb))
+            ->assertRedirect();
+        $this->assertFalse($gb->refresh()->tampilkan_ke_ortu);
+    }
+
+    public function test_bulk_toggle_tampilkan_ortu_untuk_siswa_yang_dicentang(): void
+    {
+        $guruBk = $this->guruBk();
+        $siswas = Siswa::take(3)->get();
+        $gbSatu = GayaBelajar::create(['siswa_id' => $siswas[0]->id, 'tanggal' => now()->toDateString(), 'jawaban' => [], 'tampilkan_ke_ortu' => false]);
+        $gbDua = GayaBelajar::create(['siswa_id' => $siswas[1]->id, 'tanggal' => now()->toDateString(), 'jawaban' => [], 'tampilkan_ke_ortu' => false]);
+        $gbTiga = GayaBelajar::create(['siswa_id' => $siswas[2]->id, 'tanggal' => now()->toDateString(), 'jawaban' => [], 'tampilkan_ke_ortu' => false]);
+
+        // Hanya dua yang dicentang & dikirim -- yang ketiga tidak boleh ikut berubah.
+        $this->sebagai($guruBk)->post(route('guru.bk.asesmen.gaya-belajar.bulk-tampilkan-ortu'), [
+            'ids' => [$gbSatu->id, $gbDua->id],
+            'tampilkan' => '1',
+        ])->assertRedirect();
+
+        $this->assertTrue($gbSatu->refresh()->tampilkan_ke_ortu);
+        $this->assertTrue($gbDua->refresh()->tampilkan_ke_ortu);
+        $this->assertFalse($gbTiga->refresh()->tampilkan_ke_ortu);
+
+        // Sembunyikan lagi keduanya sekaligus.
+        $this->sebagai($guruBk)->post(route('guru.bk.asesmen.gaya-belajar.bulk-tampilkan-ortu'), [
+            'ids' => [$gbSatu->id, $gbDua->id],
+            'tampilkan' => '0',
+        ])->assertRedirect();
+
+        $this->assertFalse($gbSatu->refresh()->tampilkan_ke_ortu);
+        $this->assertFalse($gbDua->refresh()->tampilkan_ke_ortu);
+    }
+
+    public function test_bulk_toggle_tampilkan_ortu_ditolak_tanpa_pilihan_siswa(): void
+    {
+        $guruBk = $this->guruBk();
+
+        $this->sebagai($guruBk)->post(route('guru.bk.asesmen.gaya-belajar.bulk-tampilkan-ortu'), [
+            'ids' => [],
+            'tampilkan' => '1',
+        ])->assertSessionHasErrors('ids');
     }
 
     public function test_guru_bk_dapat_menghapus_data_gaya_belajar(): void

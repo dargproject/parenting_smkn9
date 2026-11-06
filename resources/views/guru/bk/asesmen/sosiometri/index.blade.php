@@ -55,6 +55,7 @@
                     <th class="px-4 py-3">Tanggal</th>
                     <th class="px-4 py-3">Siswa</th>
                     <th class="px-4 py-3">Kelas</th>
+                    <th class="px-4 py-3">Ringkasan</th>
                     <th class="px-4 py-3 text-right">Aksi</th>
                 </tr>
             </thead>
@@ -64,12 +65,13 @@
                         <td class="px-4 py-3 text-slate-300 whitespace-nowrap">{{ $s->tanggal->translatedFormat('d M Y') }}</td>
                         <td class="px-4 py-3 font-semibold text-slate-100">{{ $s->siswa->nama ?? '-' }}<span class="block text-slate-400 font-normal" style="font-size: 10px;">NIS {{ $s->siswa->nis ?? '-' }}</span></td>
                         <td class="px-4 py-3 text-slate-400">{{ $s->siswa->kelas->nama_kelas ?? '-' }}</td>
+                        <td class="px-4 py-3 text-slate-400">{{ $s->ringkasan() }}</td>
                         <td class="px-4 py-3 text-right">
                             <a href="{{ route('guru.bk.asesmen.sosiometri.show', $s) }}" class="text-blue-400 hover:text-blue-300 text-sm font-semibold">Detail</a>
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="4" class="px-4 py-8 text-center text-slate-400">{{ request()->query() ? 'Tidak ada data yang cocok dengan filter.' : 'Belum ada data Sosiometri.' }}</td></tr>
+                    <tr><td colspan="5" class="px-4 py-8 text-center text-slate-400">{{ request()->query() ? 'Tidak ada data yang cocok dengan filter.' : 'Belum ada data Sosiometri.' }}</td></tr>
                 @endforelse
             </tbody>
         </table>

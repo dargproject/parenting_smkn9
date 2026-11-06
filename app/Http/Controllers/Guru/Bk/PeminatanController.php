@@ -90,6 +90,36 @@ class PeminatanController extends Controller
         return redirect()->route('guru.bk.asesmen.peminatan.index')->with('success', 'Data Tes Bakat Minat berhasil dihapus.');
     }
 
+    /**
+     * Toggle cepat dari daftar -- tanpa buka modal edit -- supaya lebih praktis kalau ada
+     * banyak siswa yang mau diatur visibilitasnya ke dashboard orang tua satu per satu.
+     */
+    public function toggleTampilkanOrtu(Peminatan $peminatan)
+    {
+        $peminatan->update(['tampilkan_ke_ortu' => ! $peminatan->tampilkan_ke_ortu]);
+
+        return back()->with('success', $peminatan->tampilkan_ke_ortu
+            ? 'Hasil Tes Bakat Minat ditampilkan ke dashboard orang tua.'
+            : 'Hasil Tes Bakat Minat disembunyikan dari dashboard orang tua.');
+    }
+
+    /**
+     * Versi massal dari toggleTampilkanOrtu -- untuk siswa yang dicentang lewat checkbox di
+     * daftar, supaya tidak perlu klik badge satu-satu kalau mau ubah banyak siswa sekaligus.
+     */
+    public function bulkToggleTampilkanOrtu(Request $request)
+    {
+        $data = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'exists:peminatans,id',
+            'tampilkan' => 'required|boolean',
+        ]);
+
+        $jumlah = Peminatan::whereIn('id', $data['ids'])->update(['tampilkan_ke_ortu' => $data['tampilkan']]);
+
+        return back()->with('success', "{$jumlah} data Tes Bakat Minat berhasil ".($data['tampilkan'] ? 'ditampilkan ke' : 'disembunyikan dari').' dashboard orang tua.');
+    }
+
     public function downloadTemplate()
     {
         $sample = ['01/08/2026 23:44:58', 'Test', '2026', 'X TKJ 1'];

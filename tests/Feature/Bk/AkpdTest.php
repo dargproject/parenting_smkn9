@@ -38,6 +38,38 @@ class AkpdTest extends TestCase
         return Guru::whereHas('roles', fn ($q) => $q->where('name', 'guru_bk'))->firstOrFail();
     }
 
+    public function test_ringkasan_tampil_di_daftar_tanpa_buka_detail(): void
+    {
+        $guruBk = $this->guruBk();
+        $siswa = Siswa::firstOrFail();
+
+        $jawaban = array_fill(1, 50, 'Tidak');
+        $jawaban[1] = 'Ya';
+        $jawaban[2] = 'Ya';
+        $jawaban[3] = 'Ya';
+
+        Akpd::create(['siswa_id' => $siswa->id, 'tanggal' => now()->toDateString(), 'jawaban' => $jawaban]);
+
+        $this->sebagai($guruBk)->get(route('guru.bk.asesmen.akpd.index'))
+            ->assertOk()
+            ->assertSee('3 dari 50 jawaban')
+            ->assertSee('Tertinggi: Pribadi (3)');
+    }
+
+    public function test_link_dari_asesmen_index_membawa_filter_tingkat_dan_kelas(): void
+    {
+        $guruBk = $this->guruBk();
+        $siswa = Siswa::firstOrFail();
+
+        $response = $this->sebagai($guruBk)->get(route('guru.bk.asesmen.index', ['tingkat' => $siswa->kelas->tingkat]));
+
+        $response->assertOk();
+        $html = $response->getContent();
+        $this->assertStringContainsString('guru/bk/asesmen/akpd', $html);
+        $this->assertStringContainsString('tingkat='.$siswa->kelas->tingkat, $html);
+        $this->assertStringContainsString('kelas_id='.$siswa->kelas_id, $html);
+    }
+
     public function test_guru_bk_dapat_membuat_data_akpd_baru(): void
     {
         $guruBk = $this->guruBk();

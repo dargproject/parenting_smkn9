@@ -65,7 +65,7 @@
                         <td class="px-4 py-3 text-slate-300 whitespace-nowrap">{{ $dcm->tanggal->translatedFormat('d M Y') }}</td>
                         <td class="px-4 py-3 font-semibold text-slate-100">{{ $dcm->siswa->nama ?? '-' }}<span class="block text-slate-400 font-normal" style="font-size: 10px;">NIS {{ $dcm->siswa->nis ?? '-' }}</span></td>
                         <td class="px-4 py-3 text-slate-400">{{ $dcm->siswa->kelas->nama_kelas ?? '-' }}</td>
-                        <td class="px-4 py-3 text-slate-400">{{ count($dcm->masalah_teridentifikasi ?? []) }} masalah</td>
+                        <td class="px-4 py-3 text-slate-400">{{ $dcm->ringkasan() }}</td>
                         <td class="px-4 py-3 text-right">
                             <a href="{{ route('guru.bk.asesmen.dcm.show', $dcm) }}" class="text-blue-400 hover:text-blue-300 text-sm font-semibold">Detail</a>
                         </td>

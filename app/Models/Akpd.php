@@ -122,4 +122,24 @@ class Akpd extends Model
 
         return $groups;
     }
+
+    /**
+     * Ringkasan singkat untuk ditampilkan di daftar, tanpa harus buka Detail dulu.
+     */
+    public function ringkasan(): string
+    {
+        $totalYa = collect($this->jawaban ?? [])->filter(fn ($jawaban) => $jawaban === 'Ya')->count();
+
+        if ($totalYa === 0) {
+            return 'Belum ada jawaban "Ya"';
+        }
+
+        $aspekTertinggi = collect($this->aspectAnswers())->sortByDesc('ya_count')->first();
+
+        if (($aspekTertinggi['ya_count'] ?? 0) === 0) {
+            return "{$totalYa} dari 50 jawaban \"Ya\"";
+        }
+
+        return "{$totalYa} dari 50 jawaban \"Ya\" · Tertinggi: {$aspekTertinggi['aspect']} ({$aspekTertinggi['ya_count']})";
+    }
 }

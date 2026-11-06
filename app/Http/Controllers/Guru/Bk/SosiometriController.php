@@ -18,7 +18,7 @@ class SosiometriController extends Controller
 {
     public function index(Request $request)
     {
-        $records = Sosiometri::with(['siswa.kelas'])
+        $records = Sosiometri::with(['siswa.kelas', 'respons'])
             ->when($request->filled('search'), fn ($q) => $q->whereHas('siswa', fn ($qs) => $qs->where('nama', 'like', '%'.$request->search.'%')))
             ->when($request->filled('tingkat'), fn ($q) => $q->whereHas('siswa.kelas', fn ($qk) => $qk->where('tingkat', $request->tingkat)))
             ->when($request->filled('kelas_id'), fn ($q) => $q->whereHas('siswa', fn ($qs) => $qs->where('kelas_id', $request->kelas_id)))

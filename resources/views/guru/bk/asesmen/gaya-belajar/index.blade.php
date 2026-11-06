@@ -48,39 +48,70 @@
         </div>
     </form>
 
-    <div class="overflow-x-auto rounded-2xl border border-slate-700/60 bg-slate-800/80">
-        <table class="w-full min-w-[720px] text-left text-sm">
-            <thead class="bg-slate-900 border-b border-slate-700/60 text-xs text-slate-400">
-                <tr>
-                    <th class="px-4 py-3">Tanggal</th>
-                    <th class="px-4 py-3">Siswa</th>
-                    <th class="px-4 py-3">Kelas</th>
-                    <th class="px-4 py-3">Hasil</th>
-                    <th class="px-4 py-3 text-right">Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-700/60">
-                @forelse($records as $g)
+    <div x-data="{ selected: [], allIds: @js($records->pluck('id')->all()) }">
+        {{-- Toolbar aksi massal -- cuma muncul kalau ada yang dicentang, supaya tidak perlu klik
+             badge satu-satu di tabel kalau mau ubah banyak siswa sekaligus. --}}
+        <div x-show="selected.length > 0" x-cloak class="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-blue-500/30 bg-blue-500/10 p-3">
+            <p class="text-sm text-blue-300 m-0"><span x-text="selected.length"></span> siswa dipilih</p>
+            <form method="POST" action="{{ route('guru.bk.asesmen.gaya-belajar.bulk-tampilkan-ortu', request()->query()) }}" class="flex gap-2">
+                @csrf
+                <template x-for="id in selected" :key="id">
+                    <input type="hidden" name="ids[]" :value="id">
+                </template>
+                <button type="submit" name="tampilkan" value="1" class="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500"><i class="fa-solid fa-eye mr-1"></i> Tampilkan ke Ortu</button>
+                <button type="submit" name="tampilkan" value="0" class="rounded-lg bg-slate-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-500"><i class="fa-solid fa-eye-slash mr-1"></i> Sembunyikan dari Ortu</button>
+            </form>
+        </div>
+
+        <div class="overflow-x-auto rounded-2xl border border-slate-700/60 bg-slate-800/80">
+            <table class="w-full min-w-[760px] text-left text-sm">
+                <thead class="bg-slate-900 border-b border-slate-700/60 text-xs text-slate-400">
                     <tr>
-                        <td class="px-4 py-3 text-slate-300 whitespace-nowrap">{{ $g->tanggal->translatedFormat('d M Y') }}</td>
-                        <td class="px-4 py-3 font-semibold text-slate-100">{{ $g->siswa->nama ?? '-' }}<span class="block text-slate-400 font-normal" style="font-size: 10px;">NIS {{ $g->siswa->nis ?? '-' }}</span></td>
-                        <td class="px-4 py-3 text-slate-400">{{ $g->siswa->kelas->nama_kelas ?? '-' }}</td>
-                        <td class="px-4 py-3">
-                            @if($g->hasil)
-                                <span class="rounded-full bg-blue-500/10 px-2.5 py-1 text-xs font-bold text-blue-400">{{ $g->hasil }}</span>
-                            @else
-                                <span class="text-slate-500">-</span>
-                            @endif
-                        </td>
-                        <td class="px-4 py-3 text-right">
-                            <a href="{{ route('guru.bk.asesmen.gaya-belajar.show', $g) }}" class="text-blue-400 hover:text-blue-300 text-sm font-semibold">Detail</a>
-                        </td>
+                        <th class="px-4 py-3 w-10">
+                            <input type="checkbox" :checked="allIds.length > 0 && selected.length === allIds.length" @change="selected = $event.target.checked ? [...allIds] : []">
+                        </th>
+                        <th class="px-4 py-3">Tanggal</th>
+                        <th class="px-4 py-3">Siswa</th>
+                        <th class="px-4 py-3">Kelas</th>
+                        <th class="px-4 py-3">Hasil</th>
+                        <th class="px-4 py-3 text-center">Tampil ke Ortu</th>
+                        <th class="px-4 py-3 text-right">Aksi</th>
                     </tr>
-                @empty
-                    <tr><td colspan="5" class="px-4 py-8 text-center text-slate-400">{{ request()->query() ? 'Tidak ada data yang cocok dengan filter.' : 'Belum ada data Gaya Belajar.' }}</td></tr>
-                @endforelse
-            </tbody>
-        </table>
+                </thead>
+                <tbody class="divide-y divide-slate-700/60">
+                    @forelse($records as $g)
+                        <tr>
+                            <td class="px-4 py-3">
+                                <input type="checkbox" value="{{ $g->id }}" :checked="selected.includes({{ $g->id }})" @change="$event.target.checked ? selected.push({{ $g->id }}) : selected = selected.filter(x => x !== {{ $g->id }})">
+                            </td>
+                            <td class="px-4 py-3 text-slate-300 whitespace-nowrap">{{ $g->tanggal->translatedFormat('d M Y') }}</td>
+                            <td class="px-4 py-3 font-semibold text-slate-100">{{ $g->siswa->nama ?? '-' }}<span class="block text-slate-400 font-normal" style="font-size: 10px;">NIS {{ $g->siswa->nis ?? '-' }}</span></td>
+                            <td class="px-4 py-3 text-slate-400">{{ $g->siswa->kelas->nama_kelas ?? '-' }}</td>
+                            <td class="px-4 py-3">
+                                @if($g->hasil)
+                                    <span class="rounded-full bg-blue-500/10 px-2.5 py-1 text-xs font-bold text-blue-400">{{ $g->hasil }}</span>
+                                @else
+                                    <span class="text-slate-500">-</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <form method="POST" action="{{ route('guru.bk.asesmen.gaya-belajar.tampilkan-ortu', $g) }}">
+                                    @csrf @method('PATCH')
+                                    <button type="submit" title="Klik untuk {{ $g->tampilkan_ke_ortu ? 'sembunyikan dari' : 'tampilkan ke' }} orang tua" class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold {{ $g->tampilkan_ke_ortu ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20' : 'bg-slate-500/10 text-slate-400 hover:bg-slate-500/20' }}">
+                                        <i class="fa-solid {{ $g->tampilkan_ke_ortu ? 'fa-eye' : 'fa-eye-slash' }}"></i> {{ $g->tampilkan_ke_ortu ? 'Tampil' : 'Tersembunyi' }}
+                                    </button>
+                                </form>
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <a href="{{ route('guru.bk.asesmen.gaya-belajar.show', $g) }}" class="text-blue-400 hover:text-blue-300 text-sm font-semibold">Detail</a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="7" class="px-4 py-8 text-center text-slate-400">{{ request()->query() ? 'Tidak ada data yang cocok dengan filter.' : 'Belum ada data Gaya Belajar.' }}</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <div class="flex items-center justify-between">

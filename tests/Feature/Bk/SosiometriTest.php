@@ -38,6 +38,23 @@ class SosiometriTest extends TestCase
         return Guru::whereHas('roles', fn ($q) => $q->where('name', 'guru_bk'))->firstOrFail();
     }
 
+    public function test_ringkasan_jumlah_pilihan_terisi_tampil_di_daftar(): void
+    {
+        $guruBk = $this->guruBk();
+        $siswa = Siswa::firstOrFail();
+        $teman = Siswa::where('id', '!=', $siswa->id)->firstOrFail();
+
+        $sosiometri = Sosiometri::create([
+            'siswa_id' => $siswa->id, 'tanggal' => now()->toDateString(), 'jumlah_pilihan' => 3,
+        ]);
+        $sosiometri->respons()->create(['siswa_dipilih_id' => $teman->id, 'urutan' => 1, 'pertanyaan' => 'Q1']);
+        $sosiometri->respons()->create(['siswa_dipilih_id' => $teman->id, 'urutan' => 1, 'pertanyaan' => 'Q2']);
+
+        $this->sebagai($guruBk)->get(route('guru.bk.asesmen.sosiometri.index'))
+            ->assertOk()
+            ->assertSee('2/15 pilihan terisi');
+    }
+
     public function test_guru_bk_dapat_membuat_data_sosiometri_baru(): void
     {
         $guruBk = $this->guruBk();

@@ -1,6 +1,10 @@
 {{--
     Modal tambah/edit Tes Bakat Minat. Langkah 1 = data siswa & tanggal, langkah 2-9 = 8 bagian
     kecerdasan majemuk, langkah 10 = hasil & catatan. Variabel wajib: $formId, $siswas. Opsional: $peminatan.
+
+    Mode edit langsung dibuka di langkah terakhir (hasil & checkbox tampilkan_ke_ortu) -- jawabannya
+    sudah pernah diisi, jadi tidak perlu klik "Selanjutnya" 9x lagi cuma untuk ganti checkbox itu.
+    Tombol "Kembali" tetap bisa dipakai kalau memang perlu cek/ubah jawaban.
 --}}
 @php
     $mode = isset($peminatan) ? 'edit' : 'create';
@@ -13,7 +17,7 @@
 <div id="{{ $formId }}" class="fixed inset-0 z-[100] items-center justify-center p-4 bg-black/50" style="display: none;">
     <div class="solid-panel w-full max-w-2xl rounded-2xl border border-slate-700/60 bg-slate-800/80 text-slate-100 shadow-xl max-h-[90vh] overflow-y-auto"
         x-data="{
-            step: 1,
+            step: {{ $mode === 'edit' ? $totalSteps : 1 }},
             tanggal: {{ \Illuminate\Support\Js::from(old('tanggal', optional($peminatan->tanggal ?? null)->toDateString() ?? now()->toDateString())) }},
             jawaban: {{ \Illuminate\Support\Js::from(old('jawaban', $peminatan->jawaban ?? $initJawaban)) }},
             get dominan() {

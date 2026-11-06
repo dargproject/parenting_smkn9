@@ -59,7 +59,11 @@ class PeminatanTest extends TestCase
         $this->assertSame('Musikal', $peminatan->pilihan2);
         $this->assertSame('Linguistik', $peminatan->hasil);
 
-        $this->sebagai($guruBk)->get(route('guru.bk.asesmen.peminatan.index'))->assertOk()->assertSee($siswa->nama);
+        // Modal "Tes Bakat Minat Baru" (mode create) tetap mulai dari langkah 1.
+        $this->sebagai($guruBk)->get(route('guru.bk.asesmen.peminatan.index'))
+            ->assertOk()
+            ->assertSee($siswa->nama)
+            ->assertSee('step: 1,', false);
     }
 
     public function test_guru_bk_dapat_melihat_dan_mengubah_data_tes_bakat_minat(): void
@@ -73,7 +77,12 @@ class PeminatanTest extends TestCase
             'jawaban' => ['Linguistik' => ['LG01']],
         ]);
 
-        $this->sebagai($guruBk)->get(route('guru.bk.asesmen.peminatan.show', $peminatan))->assertOk()->assertSee($siswa->nama);
+        // Modal edit langsung dibuka di langkah terakhir (hasil & checkbox tampilkan ke ortu),
+        // bukan langkah 1 -- supaya tidak perlu klik "Selanjutnya" 9x cuma untuk ganti checkbox.
+        $this->sebagai($guruBk)->get(route('guru.bk.asesmen.peminatan.show', $peminatan))
+            ->assertOk()
+            ->assertSee($siswa->nama)
+            ->assertSee('step: 10,', false);
 
         $this->sebagai($guruBk)->put(route('guru.bk.asesmen.peminatan.update', $peminatan), [
             'siswa_id' => $siswa->id,
@@ -83,6 +92,64 @@ class PeminatanTest extends TestCase
 
         $peminatan->refresh();
         $this->assertSame('Kinestetik', $peminatan->pilihan1);
+    }
+
+    public function test_toggle_tampilkan_ortu_dari_daftar_tanpa_buka_modal(): void
+    {
+        $guruBk = $this->guruBk();
+        $peminatan = Peminatan::create([
+            'siswa_id' => Siswa::firstOrFail()->id,
+            'tanggal' => now()->toDateString(),
+            'jawaban' => [],
+            'tampilkan_ke_ortu' => false,
+        ]);
+
+        $this->sebagai($guruBk)->patch(route('guru.bk.asesmen.peminatan.tampilkan-ortu', $peminatan))
+            ->assertRedirect();
+        $this->assertTrue($peminatan->refresh()->tampilkan_ke_ortu);
+
+        // Klik lagi -- kembali tersembunyi.
+        $this->sebagai($guruBk)->patch(route('guru.bk.asesmen.peminatan.tampilkan-ortu', $peminatan))
+            ->assertRedirect();
+        $this->assertFalse($peminatan->refresh()->tampilkan_ke_ortu);
+    }
+
+    public function test_bulk_toggle_tampilkan_ortu_untuk_siswa_yang_dicentang(): void
+    {
+        $guruBk = $this->guruBk();
+        $siswas = Siswa::take(3)->get();
+        $peminatanSatu = Peminatan::create(['siswa_id' => $siswas[0]->id, 'tanggal' => now()->toDateString(), 'jawaban' => [], 'tampilkan_ke_ortu' => false]);
+        $peminatanDua = Peminatan::create(['siswa_id' => $siswas[1]->id, 'tanggal' => now()->toDateString(), 'jawaban' => [], 'tampilkan_ke_ortu' => false]);
+        $peminatanTiga = Peminatan::create(['siswa_id' => $siswas[2]->id, 'tanggal' => now()->toDateString(), 'jawaban' => [], 'tampilkan_ke_ortu' => false]);
+
+        // Hanya dua yang dicentang & dikirim -- yang ketiga tidak boleh ikut berubah.
+        $this->sebagai($guruBk)->post(route('guru.bk.asesmen.peminatan.bulk-tampilkan-ortu'), [
+            'ids' => [$peminatanSatu->id, $peminatanDua->id],
+            'tampilkan' => '1',
+        ])->assertRedirect();
+
+        $this->assertTrue($peminatanSatu->refresh()->tampilkan_ke_ortu);
+        $this->assertTrue($peminatanDua->refresh()->tampilkan_ke_ortu);
+        $this->assertFalse($peminatanTiga->refresh()->tampilkan_ke_ortu);
+
+        // Sembunyikan lagi keduanya sekaligus.
+        $this->sebagai($guruBk)->post(route('guru.bk.asesmen.peminatan.bulk-tampilkan-ortu'), [
+            'ids' => [$peminatanSatu->id, $peminatanDua->id],
+            'tampilkan' => '0',
+        ])->assertRedirect();
+
+        $this->assertFalse($peminatanSatu->refresh()->tampilkan_ke_ortu);
+        $this->assertFalse($peminatanDua->refresh()->tampilkan_ke_ortu);
+    }
+
+    public function test_bulk_toggle_tampilkan_ortu_ditolak_tanpa_pilihan_siswa(): void
+    {
+        $guruBk = $this->guruBk();
+
+        $this->sebagai($guruBk)->post(route('guru.bk.asesmen.peminatan.bulk-tampilkan-ortu'), [
+            'ids' => [],
+            'tampilkan' => '1',
+        ])->assertSessionHasErrors('ids');
     }
 
     public function test_guru_bk_dapat_menghapus_data_tes_bakat_minat(): void

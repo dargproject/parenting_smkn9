@@ -408,4 +408,23 @@ class Dcm extends Model
 
         return $labels;
     }
+
+    /**
+     * Ringkasan singkat untuk ditampilkan di daftar, tanpa harus buka Detail dulu.
+     */
+    public function ringkasan(): string
+    {
+        $jawaban = $this->jawaban ?? [];
+        $total = collect($jawaban)->flatten()->count();
+
+        if ($total === 0) {
+            return 'Tidak ada masalah teridentifikasi';
+        }
+
+        $sectionTerbanyak = collect($jawaban)->map(fn ($codes) => count($codes))->sortDesc()->keys()->first();
+        $namaSection = self::SECTIONS[$sectionTerbanyak] ?? $sectionTerbanyak;
+        $jumlahSection = count($jawaban[$sectionTerbanyak] ?? []);
+
+        return "{$total} masalah teridentifikasi · Terbanyak: {$namaSection} ({$jumlahSection})";
+    }
 }

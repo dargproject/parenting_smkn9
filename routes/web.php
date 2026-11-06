@@ -220,8 +220,10 @@ Route::middleware('role:guru_bk')->prefix('guru/bk')->name('guru.bk.')->group(fu
         Route::get('/template', [GayaBelajarController::class, 'downloadTemplate'])->name('template');
         Route::post('/import', [GayaBelajarController::class, 'import'])->name('import');
         Route::get('/export', [GayaBelajarController::class, 'export'])->name('export');
+        Route::post('/bulk-tampilkan-ortu', [GayaBelajarController::class, 'bulkToggleTampilkanOrtu'])->name('bulk-tampilkan-ortu');
         Route::get('/{gayaBelajar}', [GayaBelajarController::class, 'show'])->name('show');
         Route::put('/{gayaBelajar}', [GayaBelajarController::class, 'update'])->name('update');
+        Route::patch('/{gayaBelajar}/tampilkan-ortu', [GayaBelajarController::class, 'toggleTampilkanOrtu'])->name('tampilkan-ortu');
         Route::delete('/{gayaBelajar}', [GayaBelajarController::class, 'destroy'])->name('destroy');
     });
 
@@ -253,8 +255,10 @@ Route::middleware('role:guru_bk')->prefix('guru/bk')->name('guru.bk.')->group(fu
         Route::get('/template', [PeminatanController::class, 'downloadTemplate'])->name('template');
         Route::post('/import', [PeminatanController::class, 'import'])->name('import');
         Route::get('/export', [PeminatanController::class, 'export'])->name('export');
+        Route::post('/bulk-tampilkan-ortu', [PeminatanController::class, 'bulkToggleTampilkanOrtu'])->name('bulk-tampilkan-ortu');
         Route::get('/{peminatan}', [PeminatanController::class, 'show'])->name('show');
         Route::put('/{peminatan}', [PeminatanController::class, 'update'])->name('update');
+        Route::patch('/{peminatan}/tampilkan-ortu', [PeminatanController::class, 'toggleTampilkanOrtu'])->name('tampilkan-ortu');
         Route::delete('/{peminatan}', [PeminatanController::class, 'destroy'])->name('destroy');
     });
 });
