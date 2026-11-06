@@ -17,7 +17,7 @@ class NilaiEkstrakurikulerController extends Controller
     {
         $tahunAjaranAktif = TahunAjaran::where('is_active', true)->first();
 
-        $ekstrakurikulers = Ekstrakurikuler::where('guru_id', Auth::id())
+        $ekstrakurikulers = Ekstrakurikuler::whereHas('pembinas', fn ($q) => $q->where('gurus.id', Auth::id()))
             ->orderBy('nama_ekskul')
             ->get()
             ->map(function ($ekskul) use ($tahunAjaranAktif) {
@@ -55,7 +55,7 @@ class NilaiEkstrakurikulerController extends Controller
             'siswa_id' => 'required|exists:siswas,id',
         ]);
 
-        $ekskul = Ekstrakurikuler::where('guru_id', Auth::id())->findOrFail($data['ekstrakurikuler_id']);
+        $ekskul = Ekstrakurikuler::whereHas('pembinas', fn ($q) => $q->where('gurus.id', Auth::id()))->findOrFail($data['ekstrakurikuler_id']);
         $tahunAjaranAktif = TahunAjaran::where('is_active', true)->firstOrFail();
 
         $sudahAda = EkstrakurikulerSiswa::where('ekstrakurikuler_id', $ekskul->id)
@@ -78,7 +78,7 @@ class NilaiEkstrakurikulerController extends Controller
 
     public function destroySiswa(EkstrakurikulerSiswa $ekstrakurikulerSiswa)
     {
-        abort_unless($ekstrakurikulerSiswa->ekstrakurikuler->guru_id === Auth::id(), 403, 'Anda tidak memiliki akses ke ekstrakurikuler ini.');
+        abort_unless($ekstrakurikulerSiswa->ekstrakurikuler->pembinas->contains('id', Auth::id()), 403, 'Anda tidak memiliki akses ke ekstrakurikuler ini.');
 
         $ekstrakurikulerSiswa->delete();
 
@@ -94,7 +94,7 @@ class NilaiEkstrakurikulerController extends Controller
             'catatan' => 'nullable|string|max:1000',
         ]);
 
-        $ekskul = Ekstrakurikuler::where('guru_id', Auth::id())->findOrFail($data['ekstrakurikuler_id']);
+        $ekskul = Ekstrakurikuler::whereHas('pembinas', fn ($q) => $q->where('gurus.id', Auth::id()))->findOrFail($data['ekstrakurikuler_id']);
         $tahunAjaranAktif = TahunAjaran::where('is_active', true)->firstOrFail();
 
         NilaiEkstrakurikuler::updateOrCreate(

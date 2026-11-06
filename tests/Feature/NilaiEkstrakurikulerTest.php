@@ -45,7 +45,8 @@ class NilaiEkstrakurikulerTest extends TestCase
     public function test_pembina_dapat_mengelola_peserta_dan_nilai_ekskul_miliknya(): void
     {
         $pembina = $this->pembina();
-        $ekskul = Ekstrakurikuler::create(['nama_ekskul' => 'Basket', 'guru_id' => $pembina->id, 'is_active' => true]);
+        $ekskul = Ekstrakurikuler::create(['nama_ekskul' => 'Basket', 'is_active' => true]);
+        $ekskul->pembinas()->attach($pembina->id);
         $siswa = Siswa::firstOrFail();
 
         $this->sebagai($pembina)->get(route('guru.ekskul.index'))->assertOk()->assertSee('Basket');
@@ -84,7 +85,8 @@ class NilaiEkstrakurikulerTest extends TestCase
     {
         $pembinaA = $this->pembina('Pembina A', '9999102');
         $pembinaB = $this->pembina('Pembina B', '9999103');
-        $ekskulB = Ekstrakurikuler::create(['nama_ekskul' => 'Paduan Suara', 'guru_id' => $pembinaB->id, 'is_active' => true]);
+        $ekskulB = Ekstrakurikuler::create(['nama_ekskul' => 'Paduan Suara', 'is_active' => true]);
+        $ekskulB->pembinas()->attach($pembinaB->id);
         $siswa = Siswa::firstOrFail();
 
         $this->sebagai($pembinaA)->get(route('guru.ekskul.index'))->assertOk()->assertDontSee('Paduan Suara');
@@ -99,6 +101,36 @@ class NilaiEkstrakurikulerTest extends TestCase
             'siswa_id' => $siswa->id,
             'nilai' => 'A',
         ])->assertStatus(404);
+    }
+
+    public function test_dua_pembina_punya_akses_setara_ke_ekskul_yang_sama(): void
+    {
+        $pembinaSatu = $this->pembina('Pembina Dua Satu', '9999104');
+        $pembinaDua = $this->pembina('Pembina Dua Dua', '9999105');
+        $ekskul = Ekstrakurikuler::create(['nama_ekskul' => 'Futsal', 'is_active' => true]);
+        $ekskul->pembinas()->attach([$pembinaSatu->id, $pembinaDua->id]);
+        $siswa = Siswa::firstOrFail();
+
+        $this->sebagai($pembinaSatu)->get(route('guru.ekskul.index'))->assertOk()->assertSee('Futsal');
+        $this->sebagai($pembinaDua)->get(route('guru.ekskul.index'))->assertOk()->assertSee('Futsal');
+
+        $this->sebagai($pembinaSatu)->post(route('guru.ekskul.siswa.store'), [
+            'ekstrakurikuler_id' => $ekskul->id,
+            'siswa_id' => $siswa->id,
+        ])->assertRedirect();
+
+        $roster = EkstrakurikulerSiswa::where('ekstrakurikuler_id', $ekskul->id)->where('siswa_id', $siswa->id)->firstOrFail();
+
+        // Pembina kedua (bukan yang menambahkan) tetap bisa input nilai & keluarkan peserta.
+        $this->sebagai($pembinaDua)->post(route('guru.ekskul.nilai.store'), [
+            'ekstrakurikuler_id' => $ekskul->id,
+            'siswa_id' => $siswa->id,
+            'nilai' => 'B',
+        ])->assertRedirect();
+        $this->assertDatabaseHas('nilai_ekstrakurikulers', ['ekstrakurikuler_id' => $ekskul->id, 'siswa_id' => $siswa->id, 'nilai' => 'B']);
+
+        $this->sebagai($pembinaDua)->delete(route('guru.ekskul.siswa.destroy', $roster))->assertRedirect();
+        $this->assertDatabaseMissing('ekstrakurikuler_siswas', ['id' => $roster->id]);
     }
 
     public function test_role_lain_ditolak_mengakses_menu_ekskul(): void

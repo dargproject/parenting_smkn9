@@ -12,7 +12,7 @@ class EkstrakurikulerController extends Controller
     public function index()
     {
         return view('admin.ekstrakurikuler.index', [
-            'items' => Ekstrakurikuler::with('pembina')->orderBy('nama_ekskul')->paginate(20),
+            'items' => Ekstrakurikuler::with('pembinas')->orderBy('nama_ekskul')->paginate(20),
         ]);
     }
 
@@ -21,12 +21,19 @@ class EkstrakurikulerController extends Controller
         return view('admin.ekstrakurikuler.create', [
             'item' => new Ekstrakurikuler(['is_active' => true]),
             'pembinaOptions' => $this->pembinaOptions(),
+            'selectedPembinaIds' => old('pembina_ids', []),
         ]);
     }
 
     public function store(StoreEkstrakurikulerRequest $request)
     {
-        Ekstrakurikuler::create($request->validated() + ['is_active' => $request->boolean('is_active')]);
+        $data = $request->validated();
+
+        $ekstrakurikuler = Ekstrakurikuler::create([
+            'nama_ekskul' => $data['nama_ekskul'],
+            'is_active' => $request->boolean('is_active'),
+        ]);
+        $ekstrakurikuler->pembinas()->sync($data['pembina_ids'] ?? []);
 
         return redirect()->route('admin.ekstrakurikuler.index')->with('success', 'Ekstrakurikuler berhasil ditambahkan.');
     }
@@ -36,12 +43,19 @@ class EkstrakurikulerController extends Controller
         return view('admin.ekstrakurikuler.edit', [
             'item' => $ekstrakurikuler,
             'pembinaOptions' => $this->pembinaOptions(),
+            'selectedPembinaIds' => old('pembina_ids', $ekstrakurikuler->pembinas->pluck('id')->all()),
         ]);
     }
 
     public function update(StoreEkstrakurikulerRequest $request, Ekstrakurikuler $ekstrakurikuler)
     {
-        $ekstrakurikuler->update($request->validated() + ['is_active' => $request->boolean('is_active')]);
+        $data = $request->validated();
+
+        $ekstrakurikuler->update([
+            'nama_ekskul' => $data['nama_ekskul'],
+            'is_active' => $request->boolean('is_active'),
+        ]);
+        $ekstrakurikuler->pembinas()->sync($data['pembina_ids'] ?? []);
 
         return redirect()->route('admin.ekstrakurikuler.index')->with('success', 'Ekstrakurikuler berhasil diperbarui.');
     }
@@ -57,7 +71,6 @@ class EkstrakurikulerController extends Controller
     {
         return Guru::whereHas('roles', fn ($q) => $q->where('name', 'pembina_ekskul'))
             ->orderBy('nama')
-            ->pluck('nama', 'id')
-            ->prepend('— Belum ditentukan —', '');
+            ->pluck('nama', 'id');
     }
 }

@@ -21,7 +21,7 @@
                 @forelse($items as $item)
                     <tr>
                         <td class="px-5 py-4 font-semibold">{{ $item->nama_ekskul }}</td>
-                        <td class="px-5 py-4 text-slate-500 dark:text-slate-400">{{ $item->pembina->nama ?? '-' }}</td>
+                        <td class="px-5 py-4 text-slate-500 dark:text-slate-400">{{ $item->pembinas->pluck('nama')->implode(', ') ?: '-' }}</td>
                         <td class="px-5 py-4 text-center">
                             <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $item->is_active ? 'bg-emerald-500/10 text-emerald-500' : 'bg-slate-500/10 text-slate-500' }}">{{ $item->is_active ? 'Aktif' : 'Nonaktif' }}</span>
                         </td>

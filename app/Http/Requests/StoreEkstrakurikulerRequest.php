@@ -15,7 +15,8 @@ class StoreEkstrakurikulerRequest extends FormRequest
     {
         return [
             'nama_ekskul' => ['required', 'string', 'max:255'],
-            'guru_id' => ['nullable', 'exists:gurus,id'],
+            'pembina_ids' => ['nullable', 'array'],
+            'pembina_ids.*' => ['exists:gurus,id'],
             'is_active' => ['nullable', 'boolean'],
         ];
     }

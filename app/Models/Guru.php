@@ -35,6 +35,6 @@ class Guru extends Authenticatable
 
     public function ekstrakurikulerBinaan()
     {
-        return $this->hasMany(Ekstrakurikuler::class, 'guru_id');
+        return $this->belongsToMany(Ekstrakurikuler::class, 'ekstrakurikuler_guru');
     }
 }

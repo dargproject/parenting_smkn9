@@ -6,15 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class Ekstrakurikuler extends Model
 {
-    protected $fillable = ['nama_ekskul', 'guru_id', 'is_active'];
+    protected $fillable = ['nama_ekskul', 'is_active'];
 
     protected $casts = [
         'is_active' => 'boolean',
     ];
 
-    public function pembina()
+    public function pembinas()
     {
-        return $this->belongsTo(Guru::class, 'guru_id');
+        return $this->belongsToMany(Guru::class, 'ekstrakurikuler_guru');
     }
 
     public function peserta()
