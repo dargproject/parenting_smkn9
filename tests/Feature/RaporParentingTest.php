@@ -300,7 +300,7 @@ class RaporParentingTest extends TestCase
         $response = $this->sebagai($guru)->get(route('guru.rapor-parenting.preview', $siswa));
 
         $response->assertOk();
-        $response->assertSee('Alpa (tanpa keterangan): 1');
+        $response->assertSee('Alpa: 1');
         $response->assertSee('Mapel Alpa Uji');
         $response->assertSee('Tidak Hadir per Mata Pelajaran');
     }
