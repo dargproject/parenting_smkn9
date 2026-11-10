@@ -21,6 +21,7 @@ class UpdateSettingRequest extends FormRequest
             'gambar_login' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'nama_kepsek' => ['nullable', 'string', 'max:255'],
             'nip_kepsek' => ['nullable', 'string', 'max:50'],
+            'tanggal_cetak_rapor' => ['nullable', 'date'],
             'kktp_threshold' => ['required', 'integer', 'min:0', 'max:100'],
             'kktp_margin' => ['required', 'integer', 'min:0', 'max:50'],
             'alpa_mingguan_threshold' => ['required', 'integer', 'min:1', 'max:6'],

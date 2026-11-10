@@ -9,6 +9,8 @@ use App\Http\Controllers\Admin\KategoriPengumumanController;
 use App\Http\Controllers\Admin\KelasController;
 use App\Http\Controllers\Admin\MasterPelanggaranController;
 use App\Http\Controllers\Admin\MataPelajaranController;
+use App\Http\Controllers\Admin\PembimbingPklController;
+use App\Http\Controllers\Admin\PenempatanPklController;
 use App\Http\Controllers\Admin\RombelController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\SiswaController;
@@ -41,6 +43,7 @@ use App\Http\Controllers\Guru\NilaiEkstrakurikulerController;
 use App\Http\Controllers\Guru\PanggilanOrtuController;
 use App\Http\Controllers\Guru\PenilaianController;
 use App\Http\Controllers\Guru\PesanWaliKelasController;
+use App\Http\Controllers\Guru\PklBimbinganController;
 use App\Http\Controllers\Guru\PortalController;
 use App\Http\Controllers\Guru\PrestasiNonAkademikController;
 use App\Http\Controllers\Guru\RaporParentingController;
@@ -292,6 +295,12 @@ Route::middleware('role:pembina_ekskul')->prefix('guru/ekskul')->name('guru.eksk
     Route::post('/nilai', [NilaiEkstrakurikulerController::class, 'storeNilai'])->name('nilai.store');
 });
 
+Route::middleware('role:pembimbing_pkl')->prefix('guru/pkl')->name('guru.pkl.')->group(function () {
+    Route::get('/', [PklBimbinganController::class, 'index'])->name('index');
+    Route::put('/periode', [PklBimbinganController::class, 'updatePeriode'])->name('periode');
+    Route::put('/{penempatanPkl}', [PklBimbinganController::class, 'update'])->name('update');
+});
+
 Route::prefix('ortu')->name('ortu.')->group(function () {
     Route::get('/login', [OrangTuaAuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [OrangTuaAuthController::class, 'login'])->name('login.post');
@@ -330,6 +339,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::resource('kategori-pengumuman', KategoriPengumumanController::class)->except(['show'])->parameters(['kategori-pengumuman' => 'kategoriPengumuman']);
     Route::resource('kategori-kasus', KategoriKasusController::class)->except(['show'])->parameters(['kategori-kasus' => 'kategoriKasus']);
     Route::resource('ekstrakurikuler', EkstrakurikulerController::class)->except(['show'])->parameters(['ekstrakurikuler' => 'ekstrakurikuler']);
+    Route::get('penempatan-pkl/template', [PenempatanPklController::class, 'template'])->name('penempatan-pkl.template');
+    Route::get('penempatan-pkl/export', [PenempatanPklController::class, 'export'])->name('penempatan-pkl.export');
+    Route::post('penempatan-pkl/import', [PenempatanPklController::class, 'import'])->name('penempatan-pkl.import');
+    Route::resource('penempatan-pkl', PenempatanPklController::class)->except(['show'])->parameters(['penempatan-pkl' => 'penempatanPkl']);
+    Route::get('pembimbing-pkl', [PembimbingPklController::class, 'edit'])->name('pembimbing-pkl.edit');
+    Route::put('pembimbing-pkl', [PembimbingPklController::class, 'update'])->name('pembimbing-pkl.update');
     Route::get('import', [ImportController::class, 'index'])->name('import.index');
     Route::get('import/template/siswa', [ImportController::class, 'templateSiswa'])->name('import.template.siswa');
     Route::post('import/siswa', [ImportController::class, 'students'])->name('import.siswa');

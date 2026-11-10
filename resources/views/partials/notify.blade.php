@@ -7,6 +7,13 @@
         $pesanError->push(session('error'));
     }
 
+    // Rincian per baris dari import yang gagal sebagian (mis. import Excel) -- ditampilkan
+    // satu per satu di daftar supaya bisa di-scroll, bukan dipotong jadi 5 baris saja.
+    if (session('import_errors')) {
+        $judulError = 'Terjadi Kesalahan';
+        $pesanError = $pesanError->merge(session('import_errors'));
+    }
+
     if ($errors->any()) {
         $judulError = 'Data Belum Lengkap atau Tidak Valid';
         foreach ($errors->getBags() as $bag) {
@@ -19,7 +26,7 @@
 @if($pesanError->isNotEmpty() && !request()->routeIs('login', 'ortu.login'))
     <div x-data="{ open: true }" x-show="open" @keydown.escape.window="open = false" style="z-index: 10001;"
         class="fixed inset-0 flex items-center justify-center p-4 bg-black/50" role="alertdialog" aria-modal="true">
-        <div class="solid-panel w-full max-w-md rounded-2xl border border-slate-700/60 bg-slate-800/80 text-slate-100 shadow-xl p-5" @click.outside="open = false">
+        <div class="solid-panel w-full {{ $pesanError->count() > 5 ? 'max-w-lg' : 'max-w-md' }} rounded-2xl border border-slate-700/60 bg-slate-800/80 text-slate-100 shadow-xl p-5" @click.outside="open = false">
             <div class="flex items-start gap-3">
                 <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-rose-500/10 text-rose-400">
                     <i class="fa-solid fa-triangle-exclamation"></i>
@@ -27,7 +34,7 @@
                 <div class="min-w-0 flex-1">
                     <h5 class="font-bold text-slate-100 m-0 mb-1">{{ $judulError }}</h5>
                     <p class="text-sm text-slate-400 mb-2">Mohon periksa kembali hal berikut:</p>
-                    <ul class="list-disc pl-5 space-y-1 text-sm text-slate-100 m-0">
+                    <ul class="list-disc pl-5 space-y-1 text-sm text-slate-100 m-0 max-h-80 overflow-y-auto pr-2">
                         @foreach($pesanError as $pesan)
                             <li>{{ $pesan }}</li>
                         @endforeach

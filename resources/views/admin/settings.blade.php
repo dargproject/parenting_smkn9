@@ -18,6 +18,7 @@
                 ['name' => 'npsn', 'label' => 'NPSN', 'type' => 'text'],
                 ['name' => 'nama_kepsek', 'label' => 'Nama Kepala Sekolah', 'type' => 'text'],
                 ['name' => 'nip_kepsek', 'label' => 'NIP Kepala Sekolah', 'type' => 'text'],
+                ['name' => 'tanggal_cetak_rapor', 'label' => 'Tanggal Cetak Rapor', 'type' => 'date'],
                 ['name' => 'kktp_threshold', 'label' => 'Ambang KKTP', 'type' => 'number'],
                 ['name' => 'kktp_margin', 'label' => 'Toleransi "Cukup" di bawah KKTP (poin)', 'type' => 'number'],
                 ['name' => 'alpa_mingguan_threshold', 'label' => 'Ambang Peringatan Alpa Mingguan (hari)', 'type' => 'number'],
@@ -34,6 +35,9 @@
             </div>
             <div class="md:col-span-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
                 Tahun ajaran dan semester aktif diatur di menu <a href="{{ route('admin.tahun-ajaran.index') }}" class="font-semibold text-blue-600 dark:text-blue-400 underline">Tahun Ajaran</a> (tombol Aktifkan), agar tidak ada dua sumber yang berbeda.
+            </div>
+            <div class="md:col-span-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                "Tanggal Cetak Rapor" dipakai sebagai tanggal pada bagian tanda tangan Rapor Parenting. Jika dikosongkan, tanggal cetak akan memakai tanggal hari ini secara otomatis.
             </div>
             <div class="md:col-span-2">
                 <label for="logo_sekolah" class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Logo Sekolah</label>

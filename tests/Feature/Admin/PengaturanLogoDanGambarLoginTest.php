@@ -116,4 +116,15 @@ class PengaturanLogoDanGambarLoginTest extends TestCase
     {
         $this->get(route('login'))->assertOk()->assertSee('grid-image/image-01.png', false);
     }
+
+    public function test_admin_dapat_mengatur_tanggal_cetak_rapor(): void
+    {
+        $admin = $this->admin();
+
+        $this->sebagai($admin)->put(route('admin.settings.update'), $this->dataSettingWajib() + [
+            'tanggal_cetak_rapor' => '2026-12-18',
+        ])->assertRedirect();
+
+        $this->assertSame('2026-12-18', Setting::where('key', 'tanggal_cetak_rapor')->value('value'));
+    }
 }

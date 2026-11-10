@@ -12,6 +12,7 @@ use App\Models\NilaiLm;
 use App\Models\NilaiSas;
 use App\Models\Pelanggaran;
 use App\Models\Peminatan;
+use App\Models\PenempatanPkl;
 use App\Models\Presensi;
 use App\Models\PrestasiNonAkademik;
 use App\Models\Role;
@@ -340,6 +341,109 @@ class RaporParentingTest extends TestCase
 
         $response->assertOk();
         $response->assertDontSee('Naturalis');
+    }
+
+    public function test_penempatan_pkl_tampil_di_rapor_termasuk_pembimbing_sekolah(): void
+    {
+        $guru = Guru::create(['nama' => 'Wali Kelas PKL Uji', 'nip' => '9997222', 'password' => bcrypt('password'), 'is_active' => true]);
+        $guru->roles()->attach(Role::firstOrCreate(['name' => 'wali_kelas'])->id);
+        $kelas = Kelas::create(['nama_kelas' => 'XII Rapor Uji PKL', 'tingkat' => 'XII', 'jurusan' => 'Uji', 'wali_kelas_id' => $guru->id]);
+        $siswa = Siswa::create(['nis' => '997222', 'nama' => 'Siswa PKL Uji', 'kelas_id' => $kelas->id, 'password' => bcrypt('password'), 'status_aktif' => true]);
+
+        $pembimbing = Guru::create(['nama' => 'Pembimbing PKL Rapor Uji', 'nip' => '9997223', 'password' => bcrypt('password'), 'is_active' => true]);
+        $pembimbing->roles()->attach(Role::firstOrCreate(['name' => 'pembimbing_pkl'])->id);
+
+        PenempatanPkl::create([
+            'siswa_id' => $siswa->id,
+            'tahun_ajaran_id' => TahunAjaran::where('is_active', true)->value('id'),
+            'nama_iduka' => 'PT Rapor Industri Uji',
+            'alamat' => 'Jl. Rapor Uji No. 9',
+            'nama_cp_industri' => 'Citra',
+            'no_cp_industri' => '081234567890',
+            'guru_pembimbing_id' => $pembimbing->id,
+            'tanggal_mulai' => '2026-07-01',
+            'tanggal_selesai' => '2026-09-30',
+        ]);
+
+        $response = $this->sebagai($guru)->get(route('guru.rapor-parenting.preview', $siswa));
+
+        $response->assertOk();
+        $response->assertSee('Praktik Kerja Lapangan');
+        $response->assertSee('PT Rapor Industri Uji');
+        $response->assertSee('Citra');
+        $response->assertSee('Pembimbing PKL Rapor Uji');
+    }
+
+    public function test_placeholder_pkl_tampil_jika_belum_ada_penempatan(): void
+    {
+        $guru = Guru::create(['nama' => 'Wali Kelas PKL Kosong Uji', 'nip' => '9997224', 'password' => bcrypt('password'), 'is_active' => true]);
+        $guru->roles()->attach(Role::firstOrCreate(['name' => 'wali_kelas'])->id);
+        $kelas = Kelas::create(['nama_kelas' => 'XII Rapor Uji PKL Kosong', 'tingkat' => 'XII', 'jurusan' => 'Uji', 'wali_kelas_id' => $guru->id]);
+        $siswa = Siswa::create(['nis' => '997225', 'nama' => 'Siswa PKL Kosong Uji', 'kelas_id' => $kelas->id, 'password' => bcrypt('password'), 'status_aktif' => true]);
+
+        $response = $this->sebagai($guru)->get(route('guru.rapor-parenting.preview', $siswa));
+
+        $response->assertOk();
+        $response->assertSee('Belum ada data penempatan PKL untuk siswa ini.');
+    }
+
+    public function test_bagian_pkl_tidak_tampil_untuk_kelas_x_dan_xi(): void
+    {
+        $guru = Guru::create(['nama' => 'Wali Kelas Bukan XII Uji', 'nip' => '9997226', 'password' => bcrypt('password'), 'is_active' => true]);
+        $guru->roles()->attach(Role::firstOrCreate(['name' => 'wali_kelas'])->id);
+        $kelas = Kelas::create(['nama_kelas' => 'XI Rapor Uji Bukan PKL', 'tingkat' => 'XI', 'jurusan' => 'Uji', 'wali_kelas_id' => $guru->id]);
+        $siswa = Siswa::create(['nis' => '997226', 'nama' => 'Siswa Bukan XII Uji', 'kelas_id' => $kelas->id, 'password' => bcrypt('password'), 'status_aktif' => true]);
+
+        $response = $this->sebagai($guru)->get(route('guru.rapor-parenting.preview', $siswa));
+
+        $response->assertOk();
+        $response->assertDontSee('Praktik Kerja Lapangan');
+        $response->assertSee('Capaian Akademik');
+        $response->assertSee('Bakat &amp; Minat', false);
+    }
+
+    public function test_bagian_akademik_dan_bk_tidak_tampil_untuk_kelas_xii(): void
+    {
+        $guru = Guru::create(['nama' => 'Wali Kelas XII Uji', 'nip' => '9997227', 'password' => bcrypt('password'), 'is_active' => true]);
+        $guru->roles()->attach(Role::firstOrCreate(['name' => 'wali_kelas'])->id);
+        $kelas = Kelas::create(['nama_kelas' => 'XII Rapor Uji Ringkas', 'tingkat' => 'XII', 'jurusan' => 'Uji', 'wali_kelas_id' => $guru->id]);
+        $siswa = Siswa::create(['nis' => '997228', 'nama' => 'Siswa XII Ringkas Uji', 'kelas_id' => $kelas->id, 'password' => bcrypt('password'), 'status_aktif' => true]);
+
+        $response = $this->sebagai($guru)->get(route('guru.rapor-parenting.preview', $siswa));
+
+        $response->assertOk();
+        $response->assertSee('Praktik Kerja Lapangan');
+        $response->assertDontSee('Capaian Akademik');
+        $response->assertDontSee('Soft Skills');
+        $response->assertDontSee('Bakat &amp; Minat', false);
+    }
+
+    public function test_tanggal_cetak_rapor_memakai_pengaturan_admin_jika_diisi(): void
+    {
+        Setting::updateOrCreate(['key' => 'tanggal_cetak_rapor'], ['value' => '2026-12-18']);
+
+        $guru = Guru::create(['nama' => 'Wali Kelas Tanggal Cetak Uji', 'nip' => '9997229', 'password' => bcrypt('password'), 'is_active' => true]);
+        $guru->roles()->attach(Role::firstOrCreate(['name' => 'wali_kelas'])->id);
+        $kelas = Kelas::create(['nama_kelas' => 'X Rapor Uji Tanggal Cetak', 'tingkat' => 'X', 'jurusan' => 'Uji', 'wali_kelas_id' => $guru->id]);
+        $siswa = Siswa::create(['nis' => '997229', 'nama' => 'Siswa Tanggal Cetak Uji', 'kelas_id' => $kelas->id, 'password' => bcrypt('password'), 'status_aktif' => true]);
+
+        $response = $this->sebagai($guru)->get(route('guru.rapor-parenting.preview', $siswa));
+
+        $response->assertOk();
+        $response->assertSee('Malang, 18 Desember 2026');
+    }
+
+    public function test_tanggal_cetak_rapor_memakai_hari_ini_jika_belum_diatur(): void
+    {
+        $guru = Guru::create(['nama' => 'Wali Kelas Tanggal Default Uji', 'nip' => '9997230', 'password' => bcrypt('password'), 'is_active' => true]);
+        $guru->roles()->attach(Role::firstOrCreate(['name' => 'wali_kelas'])->id);
+        $kelas = Kelas::create(['nama_kelas' => 'X Rapor Uji Tanggal Default', 'tingkat' => 'X', 'jurusan' => 'Uji', 'wali_kelas_id' => $guru->id]);
+        $siswa = Siswa::create(['nis' => '997230', 'nama' => 'Siswa Tanggal Default Uji', 'kelas_id' => $kelas->id, 'password' => bcrypt('password'), 'status_aktif' => true]);
+
+        $response = $this->sebagai($guru)->get(route('guru.rapor-parenting.preview', $siswa));
+
+        $response->assertOk();
+        $response->assertSee('Malang, '.now()->translatedFormat('d F Y'));
     }
 
     public function test_portal_merender_menu_cetak_rapor_parenting_untuk_wali_kelas_dan_guru_wali(): void

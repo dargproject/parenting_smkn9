@@ -12,6 +12,7 @@ use App\Models\NilaiPklUkk;
 use App\Models\NilaiSas;
 use App\Models\Pelanggaran;
 use App\Models\Peminatan;
+use App\Models\PenempatanPkl;
 use App\Models\PenguranganPoin;
 use App\Models\Presensi;
 use App\Models\PrestasiNonAkademik;
@@ -31,7 +32,7 @@ class RaporParentingController extends Controller
      */
     public function cetak(Siswa $siswa, PenilaianService $penilaian, SanksiService $sanksi)
     {
-        $pdf = Pdf::loadView('pdf.rapor-parenting', $this->data($siswa, $penilaian, $sanksi, forPdf: true))->setPaper('a4');
+        $pdf = Pdf::loadView($this->view($siswa), $this->data($siswa, $penilaian, $sanksi, forPdf: true))->setPaper('a4');
 
         return $pdf->stream('Rapor-Parenting-'.str_replace(' ', '-', $siswa->nama).'.pdf');
     }
@@ -42,7 +43,17 @@ class RaporParentingController extends Controller
      */
     public function preview(Siswa $siswa, PenilaianService $penilaian, SanksiService $sanksi)
     {
-        return view('pdf.rapor-parenting', $this->data($siswa, $penilaian, $sanksi, forPdf: false));
+        return view($this->view($siswa), $this->data($siswa, $penilaian, $sanksi, forPdf: false));
+    }
+
+    /**
+     * Kelas XII fokus PKL (bukan nilai akademik/BK) sehingga pakai template terpisah --
+     * section-nya cukup berbeda (tanpa Capaian Akademik, tanpa Bakat & Minat BK, tapi
+     * dengan PKL) sehingga lebih aman dipisah daripada satu file penuh kondisional.
+     */
+    private function view(Siswa $siswa): string
+    {
+        return $siswa->kelas?->tingkat === 'XII' ? 'pdf.rapor-parenting-xii' : 'pdf.rapor-parenting';
     }
 
     private function data(Siswa $siswa, PenilaianService $penilaian, SanksiService $sanksi, bool $forPdf): array
@@ -157,6 +168,12 @@ class RaporParentingController extends Controller
         // dibatasi tahun ajaran karena prestasi tidak selalu dicatat per semester).
         $prestasiNonAkademik = PrestasiNonAkademik::where('siswa_id', $siswa->id)->latest('tanggal')->get();
 
+        // Penempatan PKL -- diisi admin (IDUKA, CP industri, pembimbing), periodenya diisi
+        // sendiri oleh guru pembimbing yang ditugaskan lewat menu "PKL Bimbingan Saya".
+        $penempatanPkl = $tahunAjaranAktifId
+            ? PenempatanPkl::where('siswa_id', $siswa->id)->where('tahun_ajaran_id', $tahunAjaranAktifId)->with('guruPembimbing')->latest('id')->first()
+            : null;
+
         // Untuk PDF (DomPDF) pakai path filesystem langsung; untuk preview di browser pakai URL
         // publik -- path filesystem Windows tidak bisa dipakai sebagai src gambar di browser.
         $logoRelatif = setting('logo_sekolah');
@@ -190,6 +207,7 @@ class RaporParentingController extends Controller
             'catatanKarakter' => $catatanKarakter,
             'peminatan' => $peminatan,
             'prestasiNonAkademik' => $prestasiNonAkademik,
+            'penempatanPkl' => $penempatanPkl,
         ];
     }
 }
