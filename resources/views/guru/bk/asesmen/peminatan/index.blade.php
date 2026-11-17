@@ -19,7 +19,7 @@
     @include('admin.partials.flash')
 
     <form method="GET" class="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             <input type="search" name="search" value="{{ request('search') }}" placeholder="Cari nama siswa..." class="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500">
             <select name="tingkat" class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100">
                 <option value="">Semua Tingkat</option>
@@ -38,6 +38,11 @@
                 @foreach($jurusanOptions as $jurusan)
                     <option value="{{ $jurusan }}" @selected(request('jurusan') === $jurusan)>{{ $jurusan }}</option>
                 @endforeach
+            </select>
+            <select name="per_page" class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-100">
+                <option value="10" @selected($perPage === '10')>Tampilkan 10</option>
+                <option value="15" @selected($perPage === '15')>Tampilkan 15</option>
+                <option value="all" @selected($perPage === 'all')>Tampilkan Semua</option>
             </select>
         </div>
         <div class="mt-3 flex items-center gap-2">

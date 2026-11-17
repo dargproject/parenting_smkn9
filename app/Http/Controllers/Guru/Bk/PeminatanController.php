@@ -17,17 +17,24 @@ class PeminatanController extends Controller
 {
     public function index(Request $request)
     {
-        $records = Peminatan::with(['siswa.kelas'])
+        $query = Peminatan::with(['siswa.kelas'])
             ->when($request->filled('search'), fn ($q) => $q->whereHas('siswa', fn ($qs) => $qs->where('nama', 'like', '%'.$request->search.'%')))
             ->when($request->filled('tingkat'), fn ($q) => $q->whereHas('siswa.kelas', fn ($qk) => $qk->where('tingkat', $request->tingkat)))
             ->when($request->filled('kelas_id'), fn ($q) => $q->whereHas('siswa', fn ($qs) => $qs->where('kelas_id', $request->kelas_id)))
             ->when($request->filled('jurusan'), fn ($q) => $q->whereHas('siswa.kelas', fn ($qk) => $qk->where('jurusan', $request->jurusan)))
-            ->latest('tanggal')
-            ->paginate(15)
-            ->withQueryString();
+            ->latest('tanggal');
+
+        $perPage = (string) $request->get('per_page', '15');
+        if (! in_array($perPage, ['10', '15', 'all'], true)) {
+            $perPage = '15';
+        }
+
+        $jumlahPerHalaman = $perPage === 'all' ? max((clone $query)->count(), 1) : (int) $perPage;
+        $records = $query->paginate($jumlahPerHalaman)->withQueryString();
 
         return view('guru.bk.asesmen.peminatan.index', [
             'records' => $records,
+            'perPage' => $perPage,
             'siswas' => Siswa::with('kelas')->orderBy('nama')->get(),
             'kelasOptions' => Kelas::orderBy('nama_kelas')->pluck('nama_kelas', 'id'),
             'jurusanOptions' => Kelas::whereNotNull('jurusan')->orderBy('jurusan')->distinct()->pluck('jurusan', 'jurusan'),

@@ -194,6 +194,28 @@ class PeminatanTest extends TestCase
         ])->assertSessionHasErrors('ids');
     }
 
+    public function test_daftar_bisa_diatur_jumlah_per_halaman(): void
+    {
+        $guruBk = $this->guruBk();
+        $siswas = Siswa::take(12)->get();
+        foreach ($siswas as $i => $siswa) {
+            Peminatan::create(['siswa_id' => $siswa->id, 'tanggal' => now()->subDays($i)->toDateString(), 'jawaban' => []]);
+        }
+
+        $this->sebagai($guruBk)->get(route('guru.bk.asesmen.peminatan.index', ['per_page' => '10']))
+            ->assertOk()
+            ->assertViewHas('records', fn ($records) => $records->perPage() === 10 && $records->count() === 10);
+
+        $this->sebagai($guruBk)->get(route('guru.bk.asesmen.peminatan.index', ['per_page' => 'all']))
+            ->assertOk()
+            ->assertViewHas('records', fn ($records) => $records->count() === 12);
+
+        // Nilai tidak dikenal harus aman, jatuh kembali ke default (15), bukan error.
+        $this->sebagai($guruBk)->get(route('guru.bk.asesmen.peminatan.index', ['per_page' => 'bukan-angka']))
+            ->assertOk()
+            ->assertViewHas('records', fn ($records) => $records->perPage() === 15);
+    }
+
     public function test_guru_bk_dapat_unduh_template_xlsx_tes_bakat_minat(): void
     {
         $guruBk = $this->guruBk();
