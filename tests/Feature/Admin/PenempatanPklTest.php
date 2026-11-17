@@ -146,6 +146,27 @@ class PenempatanPklTest extends TestCase
         ]);
     }
 
+    public function test_import_mencocokkan_nama_siswa_kelas_dan_pembimbing_tanpa_peduli_huruf_besar_kecil(): void
+    {
+        $kelas = Kelas::create(['nama_kelas' => 'Xi Import Huruf Uji', 'tingkat' => 'XI', 'jurusan' => 'Uji']);
+        $siswa = Siswa::create(['nis' => '998905', 'nama' => 'Akhmad Abi Kholili', 'kelas_id' => $kelas->id, 'password' => bcrypt('password'), 'status_aktif' => true]);
+        $pembimbing = $this->pembimbingPkl('Ria Afianti', '9999205');
+
+        $csv = "nama_siswa,kelas,nama_iduka,alamat,nama_cp_industri,cp_industri,pembimbing_sekolah\n".
+            "AKHMAD ABI KHOLILI,XI IMPORT HURUF UJI,Alfa Percetakan,,,,ria afianti\n";
+        $file = UploadedFile::fake()->createWithContent('penempatan-pkl.csv', $csv);
+
+        $response = $this->sebagai($this->admin())->post(route('admin.penempatan-pkl.import'), ['file' => $file]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $this->assertDatabaseHas('penempatan_pkls', [
+            'siswa_id' => $siswa->id,
+            'nama_iduka' => 'Alfa Percetakan',
+            'guru_pembimbing_id' => $pembimbing->id,
+        ]);
+    }
+
     public function test_import_gagal_menampilkan_semua_baris_gagal_tanpa_dipotong(): void
     {
         $csv = "nama_siswa,kelas,nama_iduka,alamat,nama_cp_industri,cp_industri,pembimbing_sekolah\n";

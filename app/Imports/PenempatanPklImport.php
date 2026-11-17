@@ -40,8 +40,8 @@ class PenempatanPklImport implements ToModel, WithHeadingRow
             return null;
         }
 
-        $siswa = Siswa::where('nama', $namaSiswa)
-            ->when($namaKelas, fn ($q) => $q->whereHas('kelas', fn ($qk) => $qk->where('nama_kelas', $namaKelas)))
+        $siswa = Siswa::whereRaw('LOWER(nama) = ?', [mb_strtolower($namaSiswa)])
+            ->when($namaKelas, fn ($q) => $q->whereHas('kelas', fn ($qk) => $qk->whereRaw('LOWER(nama_kelas) = ?', [mb_strtolower($namaKelas)])))
             ->first();
 
         if (! $siswa) {
@@ -54,7 +54,7 @@ class PenempatanPklImport implements ToModel, WithHeadingRow
         $guruPembimbingId = null;
         if ($namaPembimbing) {
             $guruPembimbingId = Guru::whereHas('roles', fn ($q) => $q->where('name', 'pembimbing_pkl'))
-                ->where('nama', $namaPembimbing)->value('id');
+                ->whereRaw('LOWER(nama) = ?', [mb_strtolower($namaPembimbing)])->value('id');
 
             if (! $guruPembimbingId) {
                 $this->errors[] = "{$namaSiswa}: pembimbing \"{$namaPembimbing}\" tidak ditemukan/belum berrole Pembimbing PKL -- dikosongkan, bisa dipilih manual nanti.";
