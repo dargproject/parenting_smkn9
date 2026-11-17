@@ -167,6 +167,33 @@ class PeminatanTest extends TestCase
         $this->assertDatabaseMissing('peminatans', ['id' => $peminatan->id]);
     }
 
+    public function test_bulk_hapus_data_tes_bakat_minat_untuk_siswa_yang_dicentang(): void
+    {
+        $guruBk = $this->guruBk();
+        $siswas = Siswa::take(3)->get();
+        $peminatanSatu = Peminatan::create(['siswa_id' => $siswas[0]->id, 'tanggal' => now()->toDateString(), 'jawaban' => []]);
+        $peminatanDua = Peminatan::create(['siswa_id' => $siswas[1]->id, 'tanggal' => now()->toDateString(), 'jawaban' => []]);
+        $peminatanTiga = Peminatan::create(['siswa_id' => $siswas[2]->id, 'tanggal' => now()->toDateString(), 'jawaban' => []]);
+
+        // Hanya dua yang dicentang & dikirim -- yang ketiga tidak boleh ikut terhapus.
+        $this->sebagai($guruBk)->delete(route('guru.bk.asesmen.peminatan.bulk-destroy'), [
+            'ids' => [$peminatanSatu->id, $peminatanDua->id],
+        ])->assertRedirect();
+
+        $this->assertDatabaseMissing('peminatans', ['id' => $peminatanSatu->id]);
+        $this->assertDatabaseMissing('peminatans', ['id' => $peminatanDua->id]);
+        $this->assertDatabaseHas('peminatans', ['id' => $peminatanTiga->id]);
+    }
+
+    public function test_bulk_hapus_ditolak_tanpa_pilihan_siswa(): void
+    {
+        $guruBk = $this->guruBk();
+
+        $this->sebagai($guruBk)->delete(route('guru.bk.asesmen.peminatan.bulk-destroy'), [
+            'ids' => [],
+        ])->assertSessionHasErrors('ids');
+    }
+
     public function test_guru_bk_dapat_unduh_template_xlsx_tes_bakat_minat(): void
     {
         $guruBk = $this->guruBk();

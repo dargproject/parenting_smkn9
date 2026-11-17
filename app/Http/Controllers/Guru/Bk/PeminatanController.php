@@ -120,6 +120,22 @@ class PeminatanController extends Controller
         return back()->with('success', "{$jumlah} data Tes Bakat Minat berhasil ".($data['tampilkan'] ? 'ditampilkan ke' : 'disembunyikan dari').' dashboard orang tua.');
     }
 
+    /**
+     * Versi massal dari destroy -- siswa yang dicentang lewat checkbox di daftar, supaya
+     * tidak perlu buka Detail satu-satu kalau mau hapus banyak data sekaligus.
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $data = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'exists:peminatans,id',
+        ]);
+
+        $jumlah = Peminatan::whereIn('id', $data['ids'])->delete();
+
+        return back()->with('success', "{$jumlah} data Tes Bakat Minat berhasil dihapus.");
+    }
+
     public function downloadTemplate()
     {
         $sample = ['01/08/2026 23:44:58', 'Test', '2026', 'X TKJ 1'];

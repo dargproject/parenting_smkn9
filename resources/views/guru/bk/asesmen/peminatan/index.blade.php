@@ -53,14 +53,24 @@
              badge satu-satu di tabel kalau mau ubah banyak siswa sekaligus. --}}
         <div x-show="selected.length > 0" x-cloak class="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-blue-500/30 bg-blue-500/10 p-3">
             <p class="text-sm text-blue-300 m-0"><span x-text="selected.length"></span> siswa dipilih</p>
-            <form method="POST" action="{{ route('guru.bk.asesmen.peminatan.bulk-tampilkan-ortu', request()->query()) }}" class="flex gap-2">
-                @csrf
-                <template x-for="id in selected" :key="id">
-                    <input type="hidden" name="ids[]" :value="id">
-                </template>
-                <button type="submit" name="tampilkan" value="1" class="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500"><i class="fa-solid fa-eye mr-1"></i> Tampilkan ke Ortu</button>
-                <button type="submit" name="tampilkan" value="0" class="rounded-lg bg-slate-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-500"><i class="fa-solid fa-eye-slash mr-1"></i> Sembunyikan dari Ortu</button>
-            </form>
+            <div class="flex gap-2">
+                <form method="POST" action="{{ route('guru.bk.asesmen.peminatan.bulk-tampilkan-ortu', request()->query()) }}" class="flex gap-2">
+                    @csrf
+                    <template x-for="id in selected" :key="id">
+                        <input type="hidden" name="ids[]" :value="id">
+                    </template>
+                    <button type="submit" name="tampilkan" value="1" class="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500"><i class="fa-solid fa-eye mr-1"></i> Tampilkan ke Ortu</button>
+                    <button type="submit" name="tampilkan" value="0" class="rounded-lg bg-slate-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-500"><i class="fa-solid fa-eye-slash mr-1"></i> Sembunyikan dari Ortu</button>
+                </form>
+                <form method="POST" action="{{ route('guru.bk.asesmen.peminatan.bulk-destroy', request()->query()) }}" onsubmit="return confirm('Hapus data Tes Bakat Minat yang dipilih? Tindakan ini tidak bisa dibatalkan.')">
+                    @csrf
+                    @method('DELETE')
+                    <template x-for="id in selected" :key="id">
+                        <input type="hidden" name="ids[]" :value="id">
+                    </template>
+                    <button type="submit" class="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-500"><i class="fa-solid fa-trash mr-1"></i> Hapus</button>
+                </form>
+            </div>
         </div>
 
         <div class="overflow-x-auto rounded-2xl border border-slate-700/60 bg-slate-800/80">

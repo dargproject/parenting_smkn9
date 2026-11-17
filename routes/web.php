@@ -259,6 +259,7 @@ Route::middleware('role:guru_bk')->prefix('guru/bk')->name('guru.bk.')->group(fu
         Route::post('/import', [PeminatanController::class, 'import'])->name('import');
         Route::get('/export', [PeminatanController::class, 'export'])->name('export');
         Route::post('/bulk-tampilkan-ortu', [PeminatanController::class, 'bulkToggleTampilkanOrtu'])->name('bulk-tampilkan-ortu');
+        Route::delete('/bulk-hapus', [PeminatanController::class, 'bulkDestroy'])->name('bulk-destroy');
         Route::get('/{peminatan}', [PeminatanController::class, 'show'])->name('show');
         Route::put('/{peminatan}', [PeminatanController::class, 'update'])->name('update');
         Route::patch('/{peminatan}/tampilkan-ortu', [PeminatanController::class, 'toggleTampilkanOrtu'])->name('tampilkan-ortu');
