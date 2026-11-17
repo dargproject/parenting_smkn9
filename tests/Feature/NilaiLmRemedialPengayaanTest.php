@@ -158,4 +158,36 @@ class NilaiLmRemedialPengayaanTest extends TestCase
 
         $this->assertDatabaseHas('nilai_sas', ['siswa_id' => $siswa->id, 'mata_pelajaran_id' => $mapel->id, 'nilai' => $rataAwal]);
     }
+
+    public function test_kolom_n_yang_sudah_mulai_diisi_menjadikan_siswa_lain_yang_kosong_sebagai_nol(): void
+    {
+        $guru = Guru::create(['nama' => 'Guru Kolom Kosong Uji', 'nip' => '9997402', 'password' => bcrypt('password'), 'is_active' => true]);
+        $guru->roles()->attach(Role::firstOrCreate(['name' => 'guru_mapel'])->id);
+        $mapel = MataPelajaran::firstOrFail();
+        $kelas = Kelas::create(['nama_kelas' => 'X Kolom Kosong Uji', 'tingkat' => 'X', 'jurusan' => 'Uji']);
+        KelasMataPelajaran::create(['kelas_id' => $kelas->id, 'mata_pelajaran_id' => $mapel->id, 'guru_id' => $guru->id]);
+
+        $taAktifId = TahunAjaran::where('is_active', true)->value('id');
+        $tp1 = TujuanPembelajaran::create(['mata_pelajaran_id' => $mapel->id, 'kelas_id' => $kelas->id, 'tahun_ajaran_id' => $taAktifId, 'kode' => 'N1', 'deskripsi' => 'TP 1 Kosong Uji', 'urutan' => 1]);
+        $tp2 = TujuanPembelajaran::create(['mata_pelajaran_id' => $mapel->id, 'kelas_id' => $kelas->id, 'tahun_ajaran_id' => $taAktifId, 'kode' => 'N2', 'deskripsi' => 'TP 2 Kosong Uji', 'urutan' => 2]);
+
+        $siswaA = Siswa::create(['nis' => '997402', 'nama' => 'Siswa Kosong A', 'kelas_id' => $kelas->id, 'password' => bcrypt('password'), 'status_aktif' => true]);
+        $siswaB = Siswa::create(['nis' => '997403', 'nama' => 'Siswa Kosong B', 'kelas_id' => $kelas->id, 'password' => bcrypt('password'), 'status_aktif' => true]);
+
+        // N1: siswa A diisi 70, siswa B dikosongkan -> siswa B otomatis 0.
+        // N2: dikosongkan untuk keduanya -> tetap tidak tersimpan sama sekali (bukan 0).
+        $this->sebagai($guru)->post(route('guru.penilaian.nilai-lm.store'), [
+            'mata_pelajaran_id' => $mapel->id,
+            'kelas_id' => $kelas->id,
+            'nilai' => [
+                $siswaA->id => [$tp1->id => 70, $tp2->id => ''],
+                $siswaB->id => [$tp1->id => '', $tp2->id => ''],
+            ],
+        ])->assertRedirect(route('guru.portal'));
+
+        $this->assertDatabaseHas('nilai_lms', ['siswa_id' => $siswaA->id, 'tujuan_pembelajaran_id' => $tp1->id, 'nilai' => 70]);
+        $this->assertDatabaseHas('nilai_lms', ['siswa_id' => $siswaB->id, 'tujuan_pembelajaran_id' => $tp1->id, 'nilai' => 0]);
+        $this->assertDatabaseMissing('nilai_lms', ['siswa_id' => $siswaA->id, 'tujuan_pembelajaran_id' => $tp2->id]);
+        $this->assertDatabaseMissing('nilai_lms', ['siswa_id' => $siswaB->id, 'tujuan_pembelajaran_id' => $tp2->id]);
+    }
 }

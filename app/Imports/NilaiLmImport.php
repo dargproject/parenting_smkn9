@@ -31,6 +31,12 @@ class NilaiLmImport implements ToCollection, WithHeadingRow
             $lookup[Str::slug($label, '_')] = $tp->id;
         }
 
+        // Baris kosong per kolom N tidak langsung dibuang -- ditampung dulu supaya bisa
+        // ditentukan belakangan: kolom N yang sudah mulai diisi (minimal satu siswa) tapi
+        // kosong untuk siswa lain dianggap 0, sementara kolom N yang kosong semua (belum
+        // digarap sama sekali) tetap dibiarkan kosong.
+        $mentah = [];
+
         foreach ($rows as $index => $row) {
             $lineNumber = $index + 2;
             $nis = trim((string) ($row['nis'] ?? ''));
@@ -49,7 +55,6 @@ class NilaiLmImport implements ToCollection, WithHeadingRow
                 continue;
             }
 
-            $adaNilai = false;
             foreach ($lookup as $key => $tujuanPembelajaranId) {
                 if (! $row->has($key)) {
                     continue;
@@ -57,6 +62,8 @@ class NilaiLmImport implements ToCollection, WithHeadingRow
 
                 $nilai = $row[$key];
                 if ($nilai === null || trim((string) $nilai) === '') {
+                    $mentah[$siswa->id][$tujuanPembelajaranId] = null;
+
                     continue;
                 }
 
@@ -66,7 +73,31 @@ class NilaiLmImport implements ToCollection, WithHeadingRow
                     continue;
                 }
 
-                $this->nilai[$siswa->id][$tujuanPembelajaranId] = (int) round((float) $nilai);
+                $mentah[$siswa->id][$tujuanPembelajaranId] = (int) round((float) $nilai);
+            }
+        }
+
+        $tpTerisi = [];
+        foreach ($mentah as $perTp) {
+            foreach ($perTp as $tujuanPembelajaranId => $nilai) {
+                if ($nilai !== null) {
+                    $tpTerisi[$tujuanPembelajaranId] = true;
+                }
+            }
+        }
+
+        foreach ($mentah as $siswaId => $perTp) {
+            $adaNilai = false;
+            foreach ($perTp as $tujuanPembelajaranId => $nilai) {
+                if ($nilai === null) {
+                    if (! isset($tpTerisi[$tujuanPembelajaranId])) {
+                        continue;
+                    }
+
+                    $nilai = 0;
+                }
+
+                $this->nilai[$siswaId][$tujuanPembelajaranId] = $nilai;
                 $adaNilai = true;
             }
 

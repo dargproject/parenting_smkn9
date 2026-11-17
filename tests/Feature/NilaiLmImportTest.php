@@ -126,6 +126,30 @@ class NilaiLmImportTest extends TestCase
         $this->assertDatabaseMissing('siswas', ['nis' => '999999']);
     }
 
+    public function test_import_kolom_n_yang_sudah_mulai_diisi_menjadikan_sel_kosong_sebagai_nol(): void
+    {
+        ['guru' => $guru, 'mapel' => $mapel, 'kelas' => $kelas, 'tp1' => $tp1, 'tp2' => $tp2, 'siswa1' => $siswa1, 'siswa2' => $siswa2] = $this->siapkanAmpuan();
+
+        // N1: siswa1 diisi 80, siswa2 dikosongkan -> siswa2 otomatis 0.
+        // N2: dikosongkan untuk keduanya -> tetap tidak tersimpan sama sekali (bukan 0).
+        $csv = "NIS,Nama Siswa,N1,N2\n{$siswa1->nis},Siswa Import Satu,80,\n{$siswa2->nis},Siswa Import Dua,,\n";
+        $file = UploadedFile::fake()->createWithContent('nilai.csv', $csv);
+
+        $response = $this->sebagai($guru)->post(route('guru.penilaian.nilai-lm.import'), [
+            'mata_pelajaran_id' => $mapel->id,
+            'kelas_id' => $kelas->id,
+            'file' => $file,
+        ]);
+
+        $response->assertRedirect(route('guru.portal'));
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('nilai_lms', ['siswa_id' => $siswa1->id, 'tujuan_pembelajaran_id' => $tp1->id, 'nilai' => 80]);
+        $this->assertDatabaseHas('nilai_lms', ['siswa_id' => $siswa2->id, 'tujuan_pembelajaran_id' => $tp1->id, 'nilai' => 0]);
+        $this->assertDatabaseMissing('nilai_lms', ['siswa_id' => $siswa1->id, 'tujuan_pembelajaran_id' => $tp2->id]);
+        $this->assertDatabaseMissing('nilai_lms', ['siswa_id' => $siswa2->id, 'tujuan_pembelajaran_id' => $tp2->id]);
+    }
+
     public function test_import_ditolak_jika_belum_ada_kolom_n(): void
     {
         $guru = Guru::create(['nama' => 'Guru Belum Ada N Uji', 'nip' => '9997304', 'password' => bcrypt('password'), 'is_active' => true]);

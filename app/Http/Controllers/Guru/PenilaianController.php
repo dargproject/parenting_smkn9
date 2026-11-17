@@ -170,15 +170,40 @@ class PenilaianController extends Controller
      * import Excel/CSV (importNilaiLm) -- supaya aturan remedial/pengayaan & rekalkulasi NA
      * Sumatif selalu konsisten dari kedua jalur, tidak ada logika yang didobel-tulis.
      */
+    /**
+     * Kolom N yang sudah mulai diisi (minimal satu siswa) tapi masih kosong untuk siswa
+     * lain dianggap 0 -- siswa itu dianggap tidak mengerjakan. Kolom N yang memang belum
+     * digarap sama sekali (kosong semua) tetap dibiarkan kosong, bukan 0, supaya guru yang
+     * belum sempat menilai N tersebut tidak keburu menandai semua siswa dapat 0.
+     */
+    private function tpYangSudahMulaiDiisi(array $nilaiPerSiswaTp): array
+    {
+        $terisi = [];
+        foreach ($nilaiPerSiswaTp as $perTp) {
+            foreach ($perTp as $tujuanPembelajaranId => $nilai) {
+                if ($nilai !== null && $nilai !== '') {
+                    $terisi[$tujuanPembelajaranId] = true;
+                }
+            }
+        }
+
+        return $terisi;
+    }
+
     private function simpanNilaiLm(array $nilaiPerSiswaTp, array $remedial, array $pengayaan, array $nilaiPengayaan, array $catatanPengayaan, int $mataPelajaranId, int $kelasId, int $tahunAjaranId, PenilaianService $penilaian): void
     {
         $kktp = $penilaian->kktpThreshold();
+        $tpTerisi = $this->tpYangSudahMulaiDiisi($nilaiPerSiswaTp);
 
-        DB::transaction(function () use ($nilaiPerSiswaTp, $remedial, $pengayaan, $nilaiPengayaan, $catatanPengayaan, $mataPelajaranId, $kelasId, $tahunAjaranId, $penilaian, $kktp) {
+        DB::transaction(function () use ($nilaiPerSiswaTp, $remedial, $pengayaan, $nilaiPengayaan, $catatanPengayaan, $mataPelajaranId, $kelasId, $tahunAjaranId, $penilaian, $kktp, $tpTerisi) {
             foreach ($nilaiPerSiswaTp as $siswaId => $perTp) {
                 foreach ($perTp as $tujuanPembelajaranId => $nilai) {
                     if ($nilai === null || $nilai === '') {
-                        continue;
+                        if (! isset($tpTerisi[$tujuanPembelajaranId])) {
+                            continue;
+                        }
+
+                        $nilai = 0;
                     }
 
                     $sebelum = NilaiLm::where('siswa_id', $siswaId)->where('tujuan_pembelajaran_id', $tujuanPembelajaranId)->first();
