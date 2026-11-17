@@ -24,7 +24,7 @@
                 <td>
                     @forelse($nilaiEkskul as $ne)
                         <div class="card-item">
-                            <strong>{{ $ne->ekstrakurikuler->nama ?? '-' }}</strong> &mdash;
+                            <strong>{{ $ne->ekstrakurikuler->nama_ekskul ?? '-' }}</strong> &mdash;
                             <span class="badge-mini badge-info">Nilai {{ $ne->nilai }}</span>
                             @if($ne->catatan) <span class="text-muted italic">({{ $ne->catatan }})</span> @endif
                         </div>

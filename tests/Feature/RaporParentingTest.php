@@ -2,12 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Models\Ekstrakurikuler;
 use App\Models\Guru;
 use App\Models\JadwalPelajaran;
 use App\Models\Kelas;
 use App\Models\KelasMataPelajaran;
 use App\Models\MasterPelanggaran;
 use App\Models\MataPelajaran;
+use App\Models\NilaiEkstrakurikuler;
 use App\Models\NilaiLm;
 use App\Models\NilaiSas;
 use App\Models\Pelanggaran;
@@ -416,6 +418,24 @@ class RaporParentingTest extends TestCase
         $response->assertDontSee('Capaian Akademik');
         $response->assertDontSee('Soft Skills');
         $response->assertDontSee('Bakat &amp; Minat', false);
+    }
+
+    public function test_nama_ekstrakurikuler_tampil_di_rapor_kelas_x(): void
+    {
+        $guru = Guru::create(['nama' => 'Wali Kelas Ekskul Uji', 'nip' => '9997231', 'password' => bcrypt('password'), 'is_active' => true]);
+        $guru->roles()->attach(Role::firstOrCreate(['name' => 'wali_kelas'])->id);
+        $kelas = Kelas::create(['nama_kelas' => 'X Rapor Uji Ekskul', 'tingkat' => 'X', 'jurusan' => 'Uji', 'wali_kelas_id' => $guru->id]);
+        $siswa = Siswa::create(['nis' => '997231', 'nama' => 'Siswa Ekskul Uji', 'kelas_id' => $kelas->id, 'password' => bcrypt('password'), 'status_aktif' => true]);
+        $taAktifId = TahunAjaran::where('is_active', true)->value('id');
+
+        $ekskul = Ekstrakurikuler::create(['nama_ekskul' => 'Pramuka Rapor Uji', 'is_active' => true]);
+        NilaiEkstrakurikuler::create(['siswa_id' => $siswa->id, 'ekstrakurikuler_id' => $ekskul->id, 'tahun_ajaran_id' => $taAktifId, 'nilai' => 'A']);
+
+        $response = $this->sebagai($guru)->get(route('guru.rapor-parenting.preview', $siswa));
+
+        $response->assertOk();
+        $response->assertSee('Pramuka Rapor Uji');
+        $response->assertDontSee('<strong>-</strong>', false);
     }
 
     public function test_tanggal_cetak_rapor_memakai_pengaturan_admin_jika_diisi(): void
