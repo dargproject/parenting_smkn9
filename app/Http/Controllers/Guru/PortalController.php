@@ -168,7 +168,7 @@ class PortalController extends Controller
             $mapelKelas = $kelasMapelSemua
                 ->where('kelas_id', $kelas->id)
                 ->pluck('mataPelajaran')
-                ->filter()
+                ->filter(fn ($mapel) => $mapel && $mapel->wajib_dinilai)
                 ->unique('id')
                 ->values();
 
