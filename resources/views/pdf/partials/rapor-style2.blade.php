@@ -25,6 +25,18 @@
     .mt-2 { margin-top: 8px; }
     .no-break { page-break-inside: avoid; }
 
+    /* KETERANGAN BELUM DIRILIS -- cuma tampil di preview HTML, tidak pernah ikut tercetak
+       di PDF karena cetak() mensyaratkan rapor sudah dirilis sebelum bisa diakses. */
+    .belum-rilis-notice {
+        background-color: #fef3c7;
+        border: 1px solid #f59e0b;
+        color: #78350f;
+        padding: 6px 8px;
+        border-radius: 4px;
+        margin-bottom: 8px;
+        font-size: 9.5px;
+    }
+
     /* HEADER KOP */
     .header-table {
         width: 100%;

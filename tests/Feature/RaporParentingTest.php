@@ -17,6 +17,7 @@ use App\Models\Peminatan;
 use App\Models\PenempatanPkl;
 use App\Models\Presensi;
 use App\Models\PrestasiNonAkademik;
+use App\Models\RaporFinal;
 use App\Models\Role;
 use App\Models\Setting;
 use App\Models\Siswa;
@@ -45,12 +46,76 @@ class RaporParentingTest extends TestCase
         ]);
     }
 
+    /**
+     * Mencetak PDF rapor mensyaratkan rapor sudah dirilis (beda dari preview yang tidak
+     * digerbang) -- jadi test yang mau cetak PDF harus merilis dulu lewat helper ini.
+     */
+    private function rilis(Siswa $siswa): void
+    {
+        RaporFinal::updateOrCreate(
+            ['siswa_id' => $siswa->id, 'tahun_ajaran_id' => TahunAjaran::where('is_active', true)->value('id')],
+            ['status' => 'final', 'dirilis_at' => now()]
+        );
+    }
+
+    public function test_cetak_rapor_ditolak_jika_belum_dirilis(): void
+    {
+        $guru = Guru::create(['nama' => 'Wali Kelas Belum Rilis Uji', 'nip' => '9997233', 'password' => bcrypt('password'), 'is_active' => true]);
+        $guru->roles()->attach(Role::firstOrCreate(['name' => 'wali_kelas'])->id);
+        $kelas = Kelas::create(['nama_kelas' => 'X Rapor Uji Belum Rilis', 'tingkat' => 'X', 'jurusan' => 'Uji', 'wali_kelas_id' => $guru->id]);
+        $siswa = Siswa::create(['nis' => '997233', 'nama' => 'Siswa Belum Rilis Uji', 'kelas_id' => $kelas->id, 'password' => bcrypt('password'), 'status_aktif' => true]);
+
+        $this->sebagai($guru)->get(route('guru.rapor-parenting.cetak', $siswa))->assertStatus(403);
+    }
+
+    public function test_preview_rapor_tetap_bisa_diakses_walau_belum_dirilis(): void
+    {
+        $guru = Guru::create(['nama' => 'Wali Kelas Preview Belum Rilis Uji', 'nip' => '9997234', 'password' => bcrypt('password'), 'is_active' => true]);
+        $guru->roles()->attach(Role::firstOrCreate(['name' => 'wali_kelas'])->id);
+        $kelas = Kelas::create(['nama_kelas' => 'X Rapor Uji Preview Belum Rilis', 'tingkat' => 'X', 'jurusan' => 'Uji', 'wali_kelas_id' => $guru->id]);
+        $siswa = Siswa::create(['nis' => '997234', 'nama' => 'Siswa Preview Belum Rilis Uji', 'kelas_id' => $kelas->id, 'password' => bcrypt('password'), 'status_aktif' => true]);
+
+        $this->sebagai($guru)->get(route('guru.rapor-parenting.preview', $siswa))
+            ->assertOk()
+            ->assertSee('Siswa Preview Belum Rilis Uji')
+            ->assertSee('belum difinalisasi', false);
+    }
+
+    public function test_keterangan_belum_rilis_hilang_dari_preview_setelah_dirilis(): void
+    {
+        $guru = Guru::create(['nama' => 'Wali Kelas Preview Sudah Rilis Uji', 'nip' => '9997236', 'password' => bcrypt('password'), 'is_active' => true]);
+        $guru->roles()->attach(Role::firstOrCreate(['name' => 'wali_kelas'])->id);
+        $kelas = Kelas::create(['nama_kelas' => 'X Rapor Uji Preview Sudah Rilis', 'tingkat' => 'X', 'jurusan' => 'Uji', 'wali_kelas_id' => $guru->id]);
+        $siswa = Siswa::create(['nis' => '997236', 'nama' => 'Siswa Preview Sudah Rilis Uji', 'kelas_id' => $kelas->id, 'password' => bcrypt('password'), 'status_aktif' => true]);
+
+        $this->rilis($siswa);
+
+        $this->sebagai($guru)->get(route('guru.rapor-parenting.preview', $siswa))
+            ->assertOk()
+            ->assertDontSee('belum difinalisasi', false);
+    }
+
+    public function test_cetak_rapor_bisa_diakses_lagi_setelah_dirilis(): void
+    {
+        $guru = Guru::create(['nama' => 'Wali Kelas Sudah Rilis Uji', 'nip' => '9997235', 'password' => bcrypt('password'), 'is_active' => true]);
+        $guru->roles()->attach(Role::firstOrCreate(['name' => 'wali_kelas'])->id);
+        $kelas = Kelas::create(['nama_kelas' => 'X Rapor Uji Sudah Rilis', 'tingkat' => 'X', 'jurusan' => 'Uji', 'wali_kelas_id' => $guru->id]);
+        $siswa = Siswa::create(['nis' => '997235', 'nama' => 'Siswa Sudah Rilis Uji', 'kelas_id' => $kelas->id, 'password' => bcrypt('password'), 'status_aktif' => true]);
+
+        $this->sebagai($guru)->get(route('guru.rapor-parenting.cetak', $siswa))->assertStatus(403);
+
+        $this->rilis($siswa);
+
+        $this->sebagai($guru)->get(route('guru.rapor-parenting.cetak', $siswa))->assertOk();
+    }
+
     public function test_wali_kelas_bisa_cetak_rapor_parenting_siswa_binaannya(): void
     {
         $guru = Guru::create(['nama' => 'Wali Kelas Rapor Uji', 'nip' => '9997201', 'password' => bcrypt('password'), 'is_active' => true]);
         $guru->roles()->attach(Role::firstOrCreate(['name' => 'wali_kelas'])->id);
         $kelas = Kelas::create(['nama_kelas' => 'X Rapor Uji A', 'tingkat' => 'X', 'jurusan' => 'Uji', 'wali_kelas_id' => $guru->id]);
         $siswa = Siswa::create(['nis' => '997201', 'nama' => 'Siswa Rapor Uji A', 'kelas_id' => $kelas->id, 'password' => bcrypt('password'), 'status_aktif' => true]);
+        $this->rilis($siswa);
 
         $response = $this->sebagai($guru)->get(route('guru.rapor-parenting.cetak', $siswa));
 
@@ -64,6 +129,7 @@ class RaporParentingTest extends TestCase
         $guru->roles()->attach(Role::firstOrCreate(['name' => 'guru_wali'])->id);
         $kelas = Kelas::create(['nama_kelas' => 'X Rapor Uji B', 'tingkat' => 'X', 'jurusan' => 'Uji', 'guru_wali_id' => $guru->id]);
         $siswa = Siswa::create(['nis' => '997202', 'nama' => 'Siswa Rapor Uji B', 'kelas_id' => $kelas->id, 'password' => bcrypt('password'), 'status_aktif' => true]);
+        $this->rilis($siswa);
 
         $response = $this->sebagai($guru)->get(route('guru.rapor-parenting.cetak', $siswa));
 
@@ -162,6 +228,7 @@ class RaporParentingTest extends TestCase
             'kode' => 'N1', 'deskripsi' => 'TP Rapor Uji', 'urutan' => 1,
         ]);
         NilaiLm::create(['siswa_id' => $siswa->id, 'tujuan_pembelajaran_id' => $tp->id, 'tahun_ajaran_id' => $taAktifId, 'nilai' => 50]);
+        $this->rilis($siswa);
 
         $response = $this->sebagai($guru)->get(route('guru.rapor-parenting.cetak', $siswa));
 
@@ -179,6 +246,7 @@ class RaporParentingTest extends TestCase
         // Mapel ditetapkan ke kelas lewat struktur kurikulum, tapi belum ada nilai sama sekali.
         $mapel = MataPelajaran::create(['nama_mapel' => 'Mapel Belum Dinilai Uji', 'kategori' => 'Nasional', 'kode_mapel' => 'MBD-'.uniqid(), 'beban_jp' => 2]);
         KelasMataPelajaran::create(['kelas_id' => $kelas->id, 'mata_pelajaran_id' => $mapel->id, 'guru_id' => $guru->id]);
+        $this->rilis($siswa);
 
         $response = $this->sebagai($guru)->get(route('guru.rapor-parenting.cetak', $siswa));
 
@@ -202,6 +270,7 @@ class RaporParentingTest extends TestCase
             'kode' => 'N1', 'deskripsi' => 'TP Tanpa Kurikulum Uji', 'urutan' => 1,
         ]);
         NilaiLm::create(['siswa_id' => $siswa->id, 'tujuan_pembelajaran_id' => $tp->id, 'tahun_ajaran_id' => $taAktifId, 'nilai' => 80]);
+        $this->rilis($siswa);
 
         $response = $this->sebagai($guru)->get(route('guru.rapor-parenting.cetak', $siswa));
 
@@ -223,6 +292,7 @@ class RaporParentingTest extends TestCase
             'tahun_ajaran_id' => $taAktifId, 'kategori' => 'Uji', 'judul' => 'Terlambat masuk kelas',
             'deskripsi' => 'Uji', 'poin' => 5, 'tindakan' => 'Menulis surat pernyataan',
         ]);
+        $this->rilis($siswa);
 
         $response = $this->sebagai($guru)->get(route('guru.rapor-parenting.cetak', $siswa));
 

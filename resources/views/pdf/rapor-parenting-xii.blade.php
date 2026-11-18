@@ -7,6 +7,7 @@
 </head>
 <body>
     @include('pdf.partials.rapor-header2')
+    @include('pdf.partials.rapor-belum-rilis-notice')
 
     <div class="section-title">II. Perkembangan Non-Akademik &amp; Karakter</div>
     <table class="table-rapor">

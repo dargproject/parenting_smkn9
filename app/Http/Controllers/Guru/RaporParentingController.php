@@ -16,6 +16,7 @@ use App\Models\PenempatanPkl;
 use App\Models\PenguranganPoin;
 use App\Models\Presensi;
 use App\Models\PrestasiNonAkademik;
+use App\Models\RaporFinal;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use App\Services\PenilaianService;
@@ -32,6 +33,9 @@ class RaporParentingController extends Controller
      */
     public function cetak(Siswa $siswa, PenilaianService $penilaian, SanksiService $sanksi)
     {
+        $this->pastikanWaliAtauGuruWali($siswa);
+        $this->pastikanSudahDirilis($siswa);
+
         $pdf = Pdf::loadView($this->view($siswa), $this->data($siswa, $penilaian, $sanksi, forPdf: true))->setPaper('a4');
 
         return $pdf->stream('Rapor-Parenting-'.str_replace(' ', '-', $siswa->nama).'.pdf');
@@ -56,7 +60,7 @@ class RaporParentingController extends Controller
         return $siswa->kelas?->tingkat === 'XII' ? 'pdf.rapor-parenting-xii' : 'pdf.rapor-parenting';
     }
 
-    private function data(Siswa $siswa, PenilaianService $penilaian, SanksiService $sanksi, bool $forPdf): array
+    private function pastikanWaliAtauGuruWali(Siswa $siswa): void
     {
         $guru = Auth::user();
         $kelas = $siswa->kelas;
@@ -66,6 +70,32 @@ class RaporParentingController extends Controller
             403,
             'Anda bukan wali kelas atau guru wali dari siswa ini.'
         );
+    }
+
+    /**
+     * Berbeda dari Dashboard Orang Tua, preview rapor TIDAK digerbang status rilis -- supaya
+     * guru tetap bisa mengecek isi rapor sebelum memutuskan untuk merilis. Hanya mencetak PDF
+     * (cetak()) yang mensyaratkan rapor sudah dirilis, supaya dokumen resmi yang dicetak selalu
+     * konsisten dengan apa yang sudah/akan ditampilkan ke orang tua.
+     */
+    private function pastikanSudahDirilis(Siswa $siswa): void
+    {
+        $tahunAjaranAktifId = TahunAjaran::where('is_active', true)->value('id');
+        $raporFinal = $tahunAjaranAktifId
+            ? RaporFinal::where(['siswa_id' => $siswa->id, 'tahun_ajaran_id' => $tahunAjaranAktifId])->first()
+            : null;
+
+        abort_unless(
+            $raporFinal && $raporFinal->status === 'final',
+            403,
+            'Rapor belum dirilis. Klik "Finalisasi & Rilis Nilai" di portal terlebih dahulu sebelum mencetak.'
+        );
+    }
+
+    private function data(Siswa $siswa, PenilaianService $penilaian, SanksiService $sanksi, bool $forPdf): array
+    {
+        $this->pastikanWaliAtauGuruWali($siswa);
+        $kelas = $siswa->kelas;
 
         $tahunAjaranAktif = TahunAjaran::where('is_active', true)->first();
         $tahunAjaranAktifId = $tahunAjaranAktif?->id;
@@ -174,6 +204,12 @@ class RaporParentingController extends Controller
             ? PenempatanPkl::where('siswa_id', $siswa->id)->where('tahun_ajaran_id', $tahunAjaranAktifId)->with('guruPembimbing')->latest('id')->first()
             : null;
 
+        // Dipakai preview HTML untuk menampilkan keterangan "belum dirilis" -- tidak relevan
+        // untuk PDF karena cetak() sudah mensyaratkan rapor dirilis sebelum sampai ke sini.
+        $sudahDirilis = $tahunAjaranAktifId
+            ? RaporFinal::where(['siswa_id' => $siswa->id, 'tahun_ajaran_id' => $tahunAjaranAktifId])->value('status') === 'final'
+            : false;
+
         // Untuk PDF (DomPDF) pakai path filesystem langsung; untuk preview di browser pakai URL
         // publik -- path filesystem Windows tidak bisa dipakai sebagai src gambar di browser.
         $logoRelatif = setting('logo_sekolah');
@@ -208,6 +244,7 @@ class RaporParentingController extends Controller
             'peminatan' => $peminatan,
             'prestasiNonAkademik' => $prestasiNonAkademik,
             'penempatanPkl' => $penempatanPkl,
+            'tampilkanKeteranganBelumRilis' => ! $forPdf && ! $sudahDirilis,
         ];
     }
 }
