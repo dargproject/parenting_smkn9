@@ -5,10 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreMataPelajaranRequest;
 use App\Models\MataPelajaran;
+use Illuminate\Http\Request;
 
 class MataPelajaranController extends Controller
 {
-    public function index(\Illuminate\Http\Request $request)
+    public function index(Request $request)
     {
         $mapels = MataPelajaran::query()
             ->when($request->filled('q'), fn ($q) => $q->where(fn ($w) => $w->where('nama_mapel', 'like', '%'.$request->q.'%')->orWhere('kode_mapel', 'like', '%'.$request->q.'%')))
@@ -26,7 +27,10 @@ class MataPelajaranController extends Controller
 
     public function store(StoreMataPelajaranRequest $request)
     {
-        MataPelajaran::create($request->validated());
+        $data = $request->validated();
+        $data['wajib_dinilai'] = $request->boolean('wajib_dinilai');
+
+        MataPelajaran::create($data);
 
         return redirect()->route('admin.mata-pelajaran.index')->with('success', 'Mata pelajaran berhasil ditambahkan.');
     }
@@ -38,7 +42,10 @@ class MataPelajaranController extends Controller
 
     public function update(StoreMataPelajaranRequest $request, MataPelajaran $mataPelajaran)
     {
-        $mataPelajaran->update($request->validated());
+        $data = $request->validated();
+        $data['wajib_dinilai'] = $request->boolean('wajib_dinilai');
+
+        $mataPelajaran->update($data);
 
         return redirect()->route('admin.mata-pelajaran.index')->with('success', 'Mata pelajaran berhasil diperbarui.');
     }

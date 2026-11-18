@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\KelasMataPelajaran;
+use App\Models\MataPelajaran;
 use App\Models\NilaiLm;
 use App\Models\NilaiSas;
 use App\Models\Siswa;
@@ -167,9 +168,16 @@ class PenilaianService
         return $nilaiLms->filter(fn ($nl) => $nl->nilai_efektif < $this->kktpThreshold())->values();
     }
 
+    /**
+     * Mapel yang ditandai wajib_dinilai = false (mis. Bimbingan Konseling, yang sudah punya
+     * instrumen penilaiannya sendiri di modul BK) sengaja tidak ikut disyaratkan di sini,
+     * supaya rilis rapor tidak terblokir hanya karena mapel itu tidak pernah diisi NilaiSas.
+     */
     public function siswaLengkap(Siswa $siswa, int $tahunAjaranId): bool
     {
-        $mapelIds = KelasMataPelajaran::where('kelas_id', $siswa->kelas_id)->pluck('mata_pelajaran_id');
+        $mapelIds = KelasMataPelajaran::where('kelas_id', $siswa->kelas_id)
+            ->whereIn('mata_pelajaran_id', MataPelajaran::where('wajib_dinilai', true)->pluck('id'))
+            ->pluck('mata_pelajaran_id');
 
         if ($mapelIds->isEmpty()) {
             return false;

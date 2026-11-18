@@ -12,6 +12,15 @@ class MataPelajaran extends Model
         'kategori',
         'kelompok',
         'beban_jp',
+        'wajib_dinilai',
+    ];
+
+    protected $casts = [
+        'wajib_dinilai' => 'boolean',
+    ];
+
+    protected $attributes = [
+        'wajib_dinilai' => true,
     ];
 
     public function tujuanPembelajarans()
