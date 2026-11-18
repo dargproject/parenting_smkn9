@@ -17,12 +17,18 @@
             @if($kelasData['mapel']->isEmpty())
                 <p class="text-slate-400 text-sm">Belum ada jadwal mata pelajaran untuk kelas ini pada tahun ajaran berjalan.</p>
             @else
-                <div class="flex flex-wrap gap-2">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     @foreach($kelasData['mapel'] as $mp)
                         @php $lengkap = $mp['total'] > 0 && $mp['submitted'] >= $mp['total']; @endphp
-                        <x-status-badge :tone="$lengkap ? 'emerald' : 'amber'">
-                            {{ $mp['mapel']->nama_mapel }}: {{ $mp['submitted'] }}/{{ $mp['total'] }} siswa dinilai
-                        </x-status-badge>
+                        <div class="rounded-xl border border-slate-700/60 bg-slate-900 p-3">
+                            <div class="font-semibold text-slate-100 text-sm truncate" title="{{ $mp['mapel']->nama_mapel }}">{{ $mp['mapel']->nama_mapel }}</div>
+                            <div class="text-xs text-slate-400 mt-0.5 truncate" title="{{ $mp['guru']->nama ?? '' }}">
+                                <i class="fa-solid fa-chalkboard-user mr-1"></i>{{ $mp['guru']->nama ?? 'Belum ada guru pengajar' }}
+                            </div>
+                            <x-status-badge :tone="$lengkap ? 'emerald' : 'amber'" class="mt-2 inline-block">
+                                {{ $mp['submitted'] }}/{{ $mp['total'] }} siswa dinilai
+                            </x-status-badge>
+                        </div>
                     @endforeach
                 </div>
 

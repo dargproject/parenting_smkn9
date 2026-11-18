@@ -172,7 +172,9 @@ class PortalController extends Controller
                 ->unique('id')
                 ->values();
 
-            $mapelProgres = $mapelKelas->map(function ($mapel) use ($siswaKelas, $allNilaiSasKelasBinaan) {
+            $guruPerMapel = $kelasMapelSemua->where('kelas_id', $kelas->id)->keyBy('mata_pelajaran_id');
+
+            $mapelProgres = $mapelKelas->map(function ($mapel) use ($siswaKelas, $allNilaiSasKelasBinaan, $guruPerMapel) {
                 $siswaIds = $siswaKelas->pluck('id');
                 $submitted = $allNilaiSasKelasBinaan
                     ->where('mata_pelajaran_id', $mapel->id)
@@ -180,7 +182,7 @@ class PortalController extends Controller
                     ->whereNotNull('nilai')
                     ->count();
 
-                return ['mapel' => $mapel, 'submitted' => $submitted, 'total' => $siswaKelas->count()];
+                return ['mapel' => $mapel, 'guru' => $guruPerMapel[$mapel->id]->guru ?? null, 'submitted' => $submitted, 'total' => $siswaKelas->count()];
             });
 
             $rows = $siswaKelas->map(function ($siswa) use ($mapelKelas, $allNilaiLmKelasBinaan, $allNilaiSasKelasBinaan, $penilaian) {
