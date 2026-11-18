@@ -21,10 +21,30 @@
         <div x-show="!sel" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             @foreach($jadwalBinaan as $j)
                 @continue(!$j->mataPelajaran || !$j->kelas)
+                @php
+                    $siswaKelasJ = $siswas->where('kelas_id', $j->kelas_id);
+                    $tpJ = $tujuanPembelajarans->where('mata_pelajaran_id', $j->mata_pelajaran_id)->where('kelas_id', $j->kelas_id)->values();
+                @endphp
                 <button type="button" @click="pilih('{{ $j->mata_pelajaran_id }}-{{ $j->kelas_id }}')" class="text-left rounded-2xl border border-slate-700/60 bg-slate-800/80 p-5 hover:border-blue-500 transition">
                     <div class="text-xs text-slate-400 mb-1">{{ $j->mataPelajaran->kategori }}</div>
                     <div class="text-base font-bold text-slate-100">{{ $j->mataPelajaran->nama_mapel }}</div>
-                    <div class="text-sm text-slate-300 mt-1"><i class="fa-solid fa-users mr-1"></i> {{ $j->kelas->nama_kelas }} &middot; {{ $siswas->where('kelas_id', $j->kelas_id)->count() }} siswa</div>
+                    <div class="text-sm text-slate-300 mt-1"><i class="fa-solid fa-users mr-1"></i> {{ $j->kelas->nama_kelas }} &middot; {{ $siswaKelasJ->count() }} siswa</div>
+
+                    @if($tpJ->isEmpty())
+                        <div class="text-xs text-slate-500 mt-3 italic">Belum ada N ditambahkan.</div>
+                    @else
+                        <div class="flex flex-wrap gap-1 mt-3">
+                            @foreach($tpJ as $tp)
+                                @php
+                                    $lengkap = $siswaKelasJ->isNotEmpty() && $siswaKelasJ->every(fn ($s) => ($nilaiLmBinaan[$s->id.'-'.$tp->id]->nilai_efektif ?? null) !== null);
+                                @endphp
+                                <span class="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold {{ $lengkap ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/15 text-amber-400' }}" title="{{ $tp->deskripsi }}">
+                                    <i class="fa-solid {{ $lengkap ? 'fa-check' : 'fa-xmark' }}"></i> {{ $tp->kode ?: 'N'.$loop->iteration }}
+                                </span>
+                            @endforeach
+                        </div>
+                    @endif
+
                     <div class="text-xs text-blue-400 mt-3 font-semibold">Input nilai &rarr;</div>
                 </button>
             @endforeach
