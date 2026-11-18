@@ -397,6 +397,30 @@ class RaporParentingTest extends TestCase
         $response->assertSee('Catatan BK uji');
     }
 
+    public function test_peminatan_dengan_hasil_narasi_tapi_pilihan_kosong_tetap_tampil_di_rapor(): void
+    {
+        // Kasus produksi: data lama hasilnya berupa narasi lengkap di kolom hasil, tapi
+        // pilihan1/2/3 kosong (bukan diisi lewat form checklist biasa) -- harus tetap
+        // tampil di rapor, bukan dianggap "belum ada data" karena cuma cek pilihan1-3.
+        $guru = Guru::create(['nama' => 'Wali Kelas Peminatan Narasi Uji', 'nip' => '9997237', 'password' => bcrypt('password'), 'is_active' => true]);
+        $guru->roles()->attach(Role::firstOrCreate(['name' => 'wali_kelas'])->id);
+        $kelas = Kelas::create(['nama_kelas' => 'X Rapor Uji Peminatan Narasi', 'tingkat' => 'X', 'jurusan' => 'Uji', 'wali_kelas_id' => $guru->id]);
+        $siswa = Siswa::create(['nis' => '997237', 'nama' => 'Siswa Peminatan Narasi Uji', 'kelas_id' => $kelas->id, 'password' => bcrypt('password'), 'status_aktif' => true]);
+
+        Peminatan::create([
+            'siswa_id' => $siswa->id, 'tanggal' => now()->toDateString(),
+            'jawaban' => ['Linguistik' => [], 'Logis-Matematik' => [], 'Visual-Spasial' => [], 'Musikal' => [], 'Interpersonal' => [], 'Intrapersonal' => [], 'Kinestetik' => [], 'Naturalis' => []],
+            'pilihan1' => null, 'pilihan2' => null, 'pilihan3' => null,
+            'hasil' => 'Kecerdasan yang paling menonjol adalah Logis-Matematis, dengan dukungan merata pada aspek lainnya.',
+            'tampilkan_ke_ortu' => true,
+        ]);
+
+        $response = $this->sebagai($guru)->get(route('guru.rapor-parenting.preview', $siswa));
+
+        $response->assertOk();
+        $response->assertSee('Kecerdasan yang paling menonjol adalah Logis-Matematis');
+    }
+
     public function test_peminatan_yang_tidak_ditampilkan_ke_ortu_tidak_muncul_di_rapor(): void
     {
         $guru = Guru::create(['nama' => 'Wali Kelas Peminatan Privat Uji', 'nip' => '9997213', 'password' => bcrypt('password'), 'is_active' => true]);

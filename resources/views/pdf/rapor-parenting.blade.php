@@ -131,15 +131,20 @@
                 <td class="text-center font-bold">3</td>
                 <td class="font-bold">Bakat &amp; Minat (Tes BK)</td>
                 <td>
-                    @if(isset($peminatan) && $peminatan)
+                    @php $pilihanAda = isset($peminatan) && $peminatan ? collect([$peminatan->pilihan1, $peminatan->pilihan2, $peminatan->pilihan3])->filter() : collect(); @endphp
+                    @if($pilihanAda->isNotEmpty())
                         <div>
-                            @foreach(collect([$peminatan->pilihan1, $peminatan->pilihan2, $peminatan->pilihan3])->filter() as $pilihan)
+                            @foreach($pilihanAda as $pilihan)
                                 <span class="tag-item">{{ $pilihan }}</span>
                             @endforeach
                         </div>
                         @if($peminatan->catatan)
                             <div class="text-muted italic mt-1">{{ $peminatan->catatan }}</div>
                         @endif
+                    @elseif(isset($peminatan) && $peminatan && $peminatan->hasil)
+                        {{-- Data lama yang hasilnya berupa narasi lengkap (pilihan1-3 kosong) tetap
+                             ditampilkan, bukan dianggap belum ada data. --}}
+                        <div>{{ $peminatan->hasil }}</div>
                     @else
                         <span class="text-muted italic">Belum ada data Tes Peminatan BK.</span>
                     @endif
