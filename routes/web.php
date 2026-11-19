@@ -51,6 +51,7 @@ use App\Http\Controllers\KepsekController;
 use App\Http\Controllers\OrangTua\AkunController as OrangTuaAkunController;
 use App\Http\Controllers\OrangTua\DashboardController as OrangTuaDashboardController;
 use App\Http\Controllers\OrangTua\KeluargaController as OrangTuaKeluargaController;
+use App\Http\Controllers\OrangTua\PendaftaranController as OrangTuaPendaftaranController;
 use App\Http\Controllers\OrangTuaAuthController;
 use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\PwaManifestController;
@@ -93,6 +94,14 @@ Route::post('/guru/pelanggaran', [PortalController::class, 'storePelanggaran'])
 Route::get('/guru/api/siswa-poin/{siswa}', [PortalController::class, 'getPoinSiswa'])
     ->middleware('role:waka_kesiswaan,guru_mapel,tatib')
     ->name('guru.api.siswa_poin');
+
+Route::get('/guru/api/siswa-pelanggaran/{siswa}', [PortalController::class, 'getPelanggaranSiswa'])
+    ->middleware('role:waka_kesiswaan')
+    ->name('guru.api.siswa_pelanggaran');
+
+Route::delete('/guru/pelanggaran/{pelanggaran}', [PortalController::class, 'destroyPelanggaran'])
+    ->middleware('role:waka_kesiswaan')
+    ->name('guru.pelanggaran.destroy');
 
 Route::post('/guru/tatib/pengurangan-poin', [PortalController::class, 'storePenguranganPoin'])
     ->middleware('role:tatib')
@@ -273,6 +282,12 @@ Route::middleware('role:wali_kelas')->post('/guru/wali-kelas/rujukan-bk', [Penil
 
 Route::middleware('role:wali_kelas')->post('/guru/wali-kelas/pesan', [PesanWaliKelasController::class, 'store'])->name('guru.wali-kelas.pesan.store');
 
+Route::middleware('role:wali_kelas')->prefix('guru/wali-kelas/akun-ortu')->name('guru.wali-kelas.akun-ortu.')->group(function () {
+    Route::post('/{orangTua}/setujui', [PortalController::class, 'setujuiAkunOrtu'])->name('setujui');
+    Route::delete('/{orangTua}', [PortalController::class, 'tolakAkunOrtu'])->name('tolak');
+    Route::post('/{orangTua}/reset-password', [PortalController::class, 'resetPasswordAkunOrtu'])->name('reset-password');
+});
+
 Route::middleware('role:wali_kelas')->prefix('guru/wali-kelas/prestasi')->name('guru.wali-kelas.prestasi.')->group(function () {
     Route::post('/', [PrestasiNonAkademikController::class, 'store'])->name('store');
     Route::put('/{prestasi}', [PrestasiNonAkademikController::class, 'update'])->name('update');
@@ -307,6 +322,10 @@ Route::prefix('ortu')->name('ortu.')->group(function () {
     Route::post('/login', [OrangTuaAuthController::class, 'login'])->name('login.post');
     Route::post('/logout', [OrangTuaAuthController::class, 'logout'])->name('logout');
 
+    Route::get('/daftar', [OrangTuaPendaftaranController::class, 'create'])->name('daftar');
+    Route::get('/api/siswa-by-kelas/{kelas}', [OrangTuaPendaftaranController::class, 'siswaByKelas'])->name('api.siswa_by_kelas');
+    Route::post('/daftar', [OrangTuaPendaftaranController::class, 'store'])->name('daftar.store');
+
     Route::middleware('auth:orangtua')->group(function () {
         Route::get('/dashboard', [OrangTuaDashboardController::class, 'index'])->name('dashboard');
         Route::get('/mapel/{mataPelajaran}', [OrangTuaDashboardController::class, 'show'])->name('mapel.show');
@@ -330,7 +349,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::post('siswa/{siswa}/reset-password', [SiswaController::class, 'resetPassword'])->name('siswa.reset-password');
     Route::post('siswa/{siswa}/akun-ortu', [SiswaController::class, 'buatAkunOrtu'])->name('siswa.akun-ortu.store');
     Route::delete('siswa/{siswa}/akun-ortu', [SiswaController::class, 'hapusAkunOrtu'])->name('siswa.akun-ortu.destroy');
+    Route::post('siswa/{siswa}/akun-ortu/setujui', [SiswaController::class, 'setujuiAkunOrtu'])->name('siswa.akun-ortu.setujui');
+    Route::post('siswa/{siswa}/akun-ortu/reset-password', [SiswaController::class, 'resetPasswordAkunOrtu'])->name('siswa.akun-ortu.reset-password');
     Route::post('siswa-generate-akun-ortu', [SiswaController::class, 'generateAkunOrtuSemua'])->name('siswa.akun-ortu.generate-all');
+    Route::post('siswa-setujui-semua-akun-ortu', [SiswaController::class, 'setujuiSemuaAkunOrtu'])->name('siswa.akun-ortu.setujui-semua');
     Route::resource('kelas', KelasController::class)->except(['show'])->parameters(['kelas' => 'kelas']);
     Route::resource('mata-pelajaran', MataPelajaranController::class)->except(['show'])->parameters(['mata-pelajaran' => 'mataPelajaran']);
     Route::get('rombel', [RombelController::class, 'index'])->name('rombel.index');

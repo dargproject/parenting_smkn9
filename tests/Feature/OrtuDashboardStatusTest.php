@@ -2,10 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\Guru;
+use App\Models\JadwalPelajaran;
 use App\Models\MataPelajaran;
 use App\Models\NilaiLm;
 use App\Models\NilaiSas;
 use App\Models\OrangTua;
+use App\Models\Presensi;
 use App\Models\RaporFinal;
 use App\Models\TahunAjaran;
 use App\Services\PenilaianService;
@@ -87,6 +90,32 @@ class OrtuDashboardStatusTest extends TestCase
 
         // Pastikan nama mapel ditampilkan di halaman detail
         $detailResponse->assertSee($mapel->nama_mapel);
+    }
+
+    public function test_kehadiran_tampil_di_dashboard_ortu_tanpa_menunggu_rapor_dirilis(): void
+    {
+        $ta = TahunAjaran::where('is_active', true)->first();
+        $orangTua = OrangTua::with('siswa.kelas')->first();
+        $siswa = $orangTua->siswa;
+        $mapel = MataPelajaran::first();
+        $guru = Guru::create(['nama' => 'Guru Jadwal Kehadiran Uji', 'nip' => '9997241', 'password' => bcrypt('password'), 'is_active' => true]);
+
+        $jadwal = JadwalPelajaran::create([
+            'kelas_id' => $siswa->kelas_id, 'mata_pelajaran_id' => $mapel->id, 'guru_id' => $guru->id,
+            'hari' => 'Senin', 'jam_mulai' => '07:00', 'jam_selesai' => '08:00', 'ruang' => '-',
+            'tahun_ajaran_id' => $ta->id,
+        ]);
+
+        Presensi::create(['siswa_id' => $siswa->id, 'jadwal_pelajaran_id' => $jadwal->id, 'tanggal' => now()->toDateString(), 'status' => 'H', 'tahun_ajaran_id' => $ta->id]);
+        Presensi::create(['siswa_id' => $siswa->id, 'jadwal_pelajaran_id' => $jadwal->id, 'tanggal' => now()->subDay()->toDateString(), 'status' => 'A', 'tahun_ajaran_id' => $ta->id]);
+
+        // Rapor belum dirilis -- kehadiran tetap harus tampil (sama seperti Catatan Kedisiplinan).
+        $response = $this->actingAs($orangTua, 'orangtua')->get(route('ortu.dashboard'));
+
+        $response->assertOk()
+            ->assertSee('Kehadiran')
+            ->assertSee('50%', false)
+            ->assertSee($mapel->nama_mapel);
     }
 
     public function test_semester_aktif_tanpa_rapor_tetap_bisa_dipilih_dan_tidak_hilang_dari_dropdown(): void

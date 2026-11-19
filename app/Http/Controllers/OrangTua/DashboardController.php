@@ -17,6 +17,7 @@ use App\Models\Pelanggaran;
 use App\Models\Peminatan;
 use App\Models\PenguranganPoin;
 use App\Models\PesanWaliKelas;
+use App\Models\Presensi;
 use App\Models\PrestasiNonAkademik;
 use App\Models\RaporFinal;
 use App\Models\TahunAjaran;
@@ -50,12 +51,36 @@ class DashboardController extends Controller
         $poinBersih = max(0, (int) $pelanggaranSiswa->sum('poin') - $poinDikurangi);
         $statusSanksi = $sanksi->statusSemester($poinBersih);
 
+        // Kehadiran: sama seperti Catatan Kedisiplinan, dibatasi semester yang sedang dilihat
+        // tapi tidak menunggu rapor dirilis -- orang tua berhak tahu kehadiran anaknya kapan pun.
+        $presensiSiswa = $tahunAjaranAktif
+            ? Presensi::where('siswa_id', $siswa->id)->where('tahun_ajaran_id', $tahunAjaranAktif->id)->with('jadwalPelajaran.mataPelajaran')->get()
+            : collect();
+        $totalPresensi = $presensiSiswa->count();
+        $rekapKehadiran = [
+            'H' => $presensiSiswa->where('status', 'H')->count(),
+            'S' => $presensiSiswa->where('status', 'S')->count(),
+            'I' => $presensiSiswa->where('status', 'I')->count(),
+            'A' => $presensiSiswa->where('status', 'A')->count(),
+        ];
+        $persenHadir = $totalPresensi > 0 ? round($rekapKehadiran['H'] / $totalPresensi * 100, 1) : null;
+        $ketidakhadiranPerMapel = $presensiSiswa->filter(fn ($p) => $p->status !== 'H' && $p->jadwalPelajaran)
+            ->groupBy(fn ($p) => $p->jadwalPelajaran->mataPelajaran->nama_mapel ?? 'Tanpa Mapel')
+            ->map(fn ($items, $nama) => [
+                'nama' => $nama,
+                'sakit' => $items->where('status', 'S')->count(),
+                'izin' => $items->where('status', 'I')->count(),
+                'alpa' => $items->where('status', 'A')->count(),
+            ])
+            ->sortByDesc('alpa')
+            ->values();
+
         $raporFinal = $tahunAjaranAktif
             ? RaporFinal::where(['siswa_id' => $siswa->id, 'tahun_ajaran_id' => $tahunAjaranAktif->id])->first()
             : null;
 
         if (! $raporFinal || $raporFinal->status !== 'final') {
-            return view('ortu.dashboard', ['siswa' => $siswa, 'dirilis' => false, 'ringkasan' => collect(), 'riwayat' => $riwayat, 'tahunAjaranTerpilih' => $tahunAjaranAktif, 'tahunAjaranAktifSistem' => $tahunAjaranAktifSistem, 'pesanWaliKelas' => $pesanWaliKelas, 'prestasiNonAkademik' => $prestasiNonAkademik, 'pelanggaranSiswa' => $pelanggaranSiswa, 'poinBersih' => $poinBersih, 'statusSanksi' => $statusSanksi] + $infoBk);
+            return view('ortu.dashboard', ['siswa' => $siswa, 'dirilis' => false, 'ringkasan' => collect(), 'riwayat' => $riwayat, 'tahunAjaranTerpilih' => $tahunAjaranAktif, 'tahunAjaranAktifSistem' => $tahunAjaranAktifSistem, 'pesanWaliKelas' => $pesanWaliKelas, 'prestasiNonAkademik' => $prestasiNonAkademik, 'pelanggaranSiswa' => $pelanggaranSiswa, 'poinBersih' => $poinBersih, 'statusSanksi' => $statusSanksi, 'totalPresensi' => $totalPresensi, 'persenHadir' => $persenHadir, 'rekapKehadiran' => $rekapKehadiran, 'ketidakhadiranPerMapel' => $ketidakhadiranPerMapel] + $infoBk);
         }
 
         // Mapel diambil dari nilai yang tersimpan pada semester tsb, bukan kelas siswa saat ini (siswa bisa sudah naik kelas).
@@ -93,6 +118,10 @@ class DashboardController extends Controller
             'pelanggaranSiswa' => $pelanggaranSiswa,
             'poinBersih' => $poinBersih,
             'statusSanksi' => $statusSanksi,
+            'totalPresensi' => $totalPresensi,
+            'persenHadir' => $persenHadir,
+            'rekapKehadiran' => $rekapKehadiran,
+            'ketidakhadiranPerMapel' => $ketidakhadiranPerMapel,
         ] + $infoBk);
     }
 

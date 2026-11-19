@@ -124,6 +124,7 @@
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-wali-prestasi', this)"><i class="fa-solid fa-trophy w-6 text-center mr-2"></i> <span>Prestasi Non-Akademik</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-wali-chat', this)"><i class="fa-solid fa-comments w-6 text-center mr-2"></i> <span>Komunikasi Ortu</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-wali-rekap-poin', this)"><i class="fa-solid fa-scale-balanced w-6 text-center mr-2"></i> <span>Rekap Poin Siswa</span></a>
+            <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-wali-akun-ortu', this)"><i class="fa-solid fa-user-check w-6 text-center mr-2"></i> <span>Persetujuan Akun Ortu</span></a>
             <a href="#" class="flex items-center px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-colors" onclick="gotoPane('pane-rapor-parenting', this)"><i class="fa-solid fa-file-pdf w-6 text-center mr-2"></i> <span>Cetak Rapor Parenting</span></a>
         @endif
 

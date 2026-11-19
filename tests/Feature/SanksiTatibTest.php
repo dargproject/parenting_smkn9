@@ -47,6 +47,14 @@ class SanksiTatibTest extends TestCase
         return $guru;
     }
 
+    private function waka(): Guru
+    {
+        $guru = Guru::create(['nama' => 'Waka Kesiswaan Uji', 'nip' => '9996808', 'password' => bcrypt('password'), 'is_active' => true]);
+        $guru->roles()->attach(Role::firstOrCreate(['name' => 'waka_kesiswaan'])->id);
+
+        return $guru;
+    }
+
     private function kelas(): Kelas
     {
         return Kelas::firstOrCreate(['nama_kelas' => 'X Uji Sanksi'], ['tingkat' => 'X', 'jurusan' => 'Uji']);
@@ -196,6 +204,61 @@ class SanksiTatibTest extends TestCase
         $kelas->update(['wali_kelas_id' => $guru->id]);
 
         $this->sebagai($guru)->get(route('guru.portal'))->assertOk();
+    }
+
+    public function test_waka_kesiswaan_bisa_lihat_daftar_pelanggaran_siswa(): void
+    {
+        $waka = $this->waka();
+        $siswa = Siswa::create(['nis' => '996809', 'nama' => 'Siswa Daftar Pelanggaran Uji', 'kelas_id' => $this->kelas()->id, 'password' => bcrypt('password'), 'status_aktif' => true]);
+        $taAktifId = TahunAjaran::where('is_active', true)->value('id');
+        $master = $this->masterPelanggaran(10);
+
+        $pelanggaran = Pelanggaran::create([
+            'siswa_id' => $siswa->id, 'master_pelanggaran_id' => $master->id, 'tanggal' => now()->toDateString(),
+            'tahun_ajaran_id' => $taAktifId, 'kategori' => 'Uji', 'judul' => 'Uji Judul', 'deskripsi' => 'Uji', 'poin' => 10,
+        ]);
+
+        $response = $this->sebagai($waka)->getJson(route('guru.api.siswa_pelanggaran', $siswa));
+
+        $response->assertOk();
+        $response->assertJsonFragment(['id' => $pelanggaran->id, 'judul' => 'Uji Judul', 'poin' => 10]);
+    }
+
+    public function test_waka_kesiswaan_bisa_hapus_pelanggaran_yang_salah_input(): void
+    {
+        $waka = $this->waka();
+        $siswa = Siswa::create(['nis' => '996810', 'nama' => 'Siswa Hapus Pelanggaran Uji', 'kelas_id' => $this->kelas()->id, 'password' => bcrypt('password'), 'status_aktif' => true]);
+        $taAktifId = TahunAjaran::where('is_active', true)->value('id');
+        $master = $this->masterPelanggaran(10);
+
+        $pelanggaran = Pelanggaran::create([
+            'siswa_id' => $siswa->id, 'master_pelanggaran_id' => $master->id, 'tanggal' => now()->toDateString(),
+            'tahun_ajaran_id' => $taAktifId, 'kategori' => 'Uji', 'judul' => 'Uji', 'deskripsi' => 'Uji', 'poin' => 10,
+        ]);
+
+        $this->sebagai($waka)->delete(route('guru.pelanggaran.destroy', $pelanggaran))
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('pelanggarans', ['id' => $pelanggaran->id]);
+    }
+
+    public function test_tatib_tidak_bisa_hapus_pelanggaran(): void
+    {
+        $tatib = $this->tatib();
+        $siswa = Siswa::create(['nis' => '996811', 'nama' => 'Siswa Tolak Hapus Uji', 'kelas_id' => $this->kelas()->id, 'password' => bcrypt('password'), 'status_aktif' => true]);
+        $taAktifId = TahunAjaran::where('is_active', true)->value('id');
+        $master = $this->masterPelanggaran(10);
+
+        $pelanggaran = Pelanggaran::create([
+            'siswa_id' => $siswa->id, 'master_pelanggaran_id' => $master->id, 'tanggal' => now()->toDateString(),
+            'tahun_ajaran_id' => $taAktifId, 'kategori' => 'Uji', 'judul' => 'Uji', 'deskripsi' => 'Uji', 'poin' => 10,
+        ]);
+
+        $this->sebagai($tatib)->delete(route('guru.pelanggaran.destroy', $pelanggaran))
+            ->assertRedirect(route('login'));
+
+        $this->assertDatabaseHas('pelanggarans', ['id' => $pelanggaran->id]);
     }
 
     public function test_non_tatib_ditolak_kurangi_poin(): void

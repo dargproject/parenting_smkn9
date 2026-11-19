@@ -29,6 +29,10 @@
             </div>
             <button type="submit" class="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-500">Masuk</button>
         </form>
+
+        <p class="mt-4 text-center text-sm text-slate-500 dark:text-slate-400">
+            Belum punya akun? <a href="{{ route('ortu.daftar') }}" class="font-semibold text-blue-600 hover:underline dark:text-blue-400">Daftar di sini</a>
+        </p>
     </div>
 </div>
 @endsection

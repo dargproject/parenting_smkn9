@@ -1,4 +1,5 @@
 @php
+    $roles = session('roles', []);
     $sanksi = app(\App\Services\SanksiService::class);
     $rekapRows = $rekapPoin->map(function ($siswa) use ($sanksi) {
         $poin = (int) ($siswa->total_poin ?? 0);
@@ -50,6 +51,9 @@
                     <th class="px-5 py-3">Kelas</th>
                     <th class="px-5 py-3 text-center">Total Poin</th>
                     <th class="px-5 py-3 text-center">Status</th>
+                    @if(in_array('waka_kesiswaan', $roles))
+                        <th class="px-5 py-3 text-center">Aksi</th>
+                    @endif
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-700/60">
@@ -59,8 +63,9 @@
                         $status = $sanksi->statusSemester($poin);
                         $statusLabel = $status['label'];
                         $statusTone = $status['tone'];
+                        $bisaHapus = in_array('waka_kesiswaan', $roles);
                     @endphp
-                    <tr x-show="terlihat.has({{ $siswa->id }})">
+                    <tr x-show="terlihat.has({{ $siswa->id }})" @if($bisaHapus) x-data="{ buka: false, daftar: [] }" @endif>
                         <td class="px-5 py-3 font-semibold text-slate-100">{{ $siswa->nama }}</td>
                         <td class="px-5 py-3 text-slate-400">{{ $siswa->nis }}</td>
                         <td class="px-5 py-3 text-slate-400">{{ $siswa->kelas->nama_kelas ?? '-' }}</td>
@@ -68,11 +73,34 @@
                         <td class="px-5 py-3 text-center">
                             <x-status-badge :tone="$statusTone">{{ $statusLabel }}</x-status-badge>
                         </td>
+                        @if($bisaHapus)
+                            <td class="px-5 py-3 text-center relative">
+                                <button type="button" @click="buka = !buka; if (buka && !daftar.length) fetch('{{ url('/guru/api/siswa-pelanggaran') }}/{{ $siswa->id }}').then(r => r.json()).then(d => daftar = d.pelanggaran)" @click.outside="buka = false" class="text-xs font-semibold text-blue-400 hover:text-blue-300">
+                                    <span x-text="buka ? 'Tutup' : 'Rincian'"></span>
+                                </button>
+                                <div x-show="buka" style="display: none;" x-cloak class="absolute right-0 top-full z-10 mt-1 w-72 rounded-lg border border-slate-700 bg-slate-900 p-2 text-left shadow-xl">
+                                    <template x-if="!daftar.length">
+                                        <p class="px-1 py-1 text-xs text-slate-500">Tidak ada pelanggaran tercatat pada semester ini.</p>
+                                    </template>
+                                    <div class="flex flex-col gap-1.5">
+                                        <template x-for="p in daftar" :key="p.id">
+                                            <div class="flex items-center justify-between gap-2 rounded-lg bg-slate-800/80 px-2 py-1.5 text-xs">
+                                                <span class="text-slate-300"><span x-text="p.tanggal"></span> &middot; <span x-text="p.judul"></span> &middot; <span class="font-bold text-rose-400" x-text="p.poin + ' poin'"></span></span>
+                                                <form method="POST" x-bind:action="'{{ url('/guru/pelanggaran') }}/' + p.id" onsubmit="return confirm('Hapus pelanggaran ini? Tindakan ini tidak dapat dibatalkan.')">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="text-rose-400 hover:text-rose-300"><i class="fa-solid fa-trash"></i></button>
+                                                </form>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </td>
+                        @endif
                     </tr>
                 @empty
-                    <tr><td colspan="5" class="px-5 py-8 text-center text-slate-500">Belum ada data siswa.</td></tr>
+                    <tr><td colspan="{{ in_array('waka_kesiswaan', $roles) ? 6 : 5 }}" class="px-5 py-8 text-center text-slate-500">Belum ada data siswa.</td></tr>
                 @endforelse
-                <tr x-show="total === 0 && {{ $rekapPoin->count() }} > 0" style="display: none;"><td colspan="5" class="px-5 py-8 text-center text-slate-400">Tidak ada siswa yang cocok dengan pencarian/filter.</td></tr>
+                <tr x-show="total === 0 && {{ $rekapPoin->count() }} > 0" style="display: none;"><td colspan="{{ in_array('waka_kesiswaan', $roles) ? 6 : 5 }}" class="px-5 py-8 text-center text-slate-400">Tidak ada siswa yang cocok dengan pencarian/filter.</td></tr>
             </tbody>
         </table>
     </div>

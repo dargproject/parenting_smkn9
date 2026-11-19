@@ -72,6 +72,52 @@
         </div>
 
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <p class="font-semibold text-slate-900 dark:text-white mb-3"><i class="fa-solid fa-calendar-check text-blue-500 mr-2"></i>Kehadiran</p>
+
+            @if($totalPresensi > 0)
+                <div class="mb-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <div class="rounded-xl bg-emerald-50 dark:bg-emerald-500/10 px-3 py-2.5 text-center">
+                        <p class="m-0 text-lg font-bold text-emerald-600 dark:text-emerald-400">{{ $rekapKehadiran['H'] }}</p>
+                        <p class="m-0 text-xs text-slate-500 dark:text-slate-400">Hadir</p>
+                    </div>
+                    <div class="rounded-xl bg-blue-50 dark:bg-blue-500/10 px-3 py-2.5 text-center">
+                        <p class="m-0 text-lg font-bold text-blue-600 dark:text-blue-400">{{ $rekapKehadiran['S'] }}</p>
+                        <p class="m-0 text-xs text-slate-500 dark:text-slate-400">Sakit</p>
+                    </div>
+                    <div class="rounded-xl bg-amber-50 dark:bg-amber-500/10 px-3 py-2.5 text-center">
+                        <p class="m-0 text-lg font-bold text-amber-600 dark:text-amber-400">{{ $rekapKehadiran['I'] }}</p>
+                        <p class="m-0 text-xs text-slate-500 dark:text-slate-400">Izin</p>
+                    </div>
+                    <div class="rounded-xl bg-rose-50 dark:bg-rose-500/10 px-3 py-2.5 text-center">
+                        <p class="m-0 text-lg font-bold text-rose-600 dark:text-rose-400">{{ $rekapKehadiran['A'] }}</p>
+                        <p class="m-0 text-xs text-slate-500 dark:text-slate-400">Alpa</p>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-400 dark:text-slate-500 mb-3">{{ $persenHadir }}% hadir dari {{ $totalPresensi }} pertemuan pada semester {{ $tahunAjaranTerpilih->nama ?? 'ini' }}.</p>
+
+                @if($ketidakhadiranPerMapel->isNotEmpty())
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1.5">Tidak Hadir per Mata Pelajaran</p>
+                        <div class="flex flex-col gap-2">
+                            @foreach($ketidakhadiranPerMapel as $m)
+                                <div class="rounded-xl bg-slate-50 px-4 py-2.5 dark:bg-slate-900/60 text-sm flex items-center justify-between gap-2">
+                                    <span class="font-semibold text-slate-800 dark:text-slate-100">{{ $m['nama'] }}</span>
+                                    <span class="flex items-center gap-1.5 whitespace-nowrap">
+                                        @if($m['alpa'] > 0) <x-status-badge tone="rose" light>Alpa {{ $m['alpa'] }}</x-status-badge> @endif
+                                        @if($m['sakit'] > 0) <x-status-badge tone="blue" light>Sakit {{ $m['sakit'] }}</x-status-badge> @endif
+                                        @if($m['izin'] > 0) <x-status-badge tone="amber" light>Izin {{ $m['izin'] }}</x-status-badge> @endif
+                                    </span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+            @else
+                <p class="text-sm text-slate-500 dark:text-slate-400 m-0">Belum ada data presensi pada semester ini.</p>
+            @endif
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
             <p class="font-semibold text-slate-900 dark:text-white mb-1"><i class="fa-solid fa-hand-holding-heart text-emerald-500 mr-2"></i>Bimbingan Konseling</p>
             <p class="text-xs text-slate-400 dark:text-slate-500 mb-3">Hanya informasi yang dibagikan guru BK yang tampil di sini -- isi konseling tetap rahasia.</p>
 

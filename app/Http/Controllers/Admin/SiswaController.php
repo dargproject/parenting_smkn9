@@ -25,6 +25,7 @@ class SiswaController extends Controller
             'siswas' => $siswas,
             'kelasOptions' => Kelas::orderBy('tingkat')->orderBy('nama_kelas')->pluck('nama_kelas', 'id'),
             'totalSiswaKeseluruhan' => Siswa::count(),
+            'totalAkunOrtuPending' => OrangTua::where('is_active', false)->count(),
         ]);
     }
 
@@ -160,5 +161,51 @@ class SiswaController extends Controller
         $siswa->orangTua->delete();
 
         return back()->with('success', 'Akun orang tua berhasil dihapus. Data nilai, presensi, dan pesan siswa ini tidak terpengaruh.');
+    }
+
+    /**
+     * Reset password akun ortu ke default, untuk kasus orang tua lupa password -- sama seperti
+     * resetPassword milik Guru/Siswa, cuma untuk akun ortu.
+     */
+    public function resetPasswordAkunOrtu(Siswa $siswa)
+    {
+        if (! $siswa->orangTua) {
+            return back()->with('error', 'Siswa ini belum punya akun orang tua.');
+        }
+
+        $siswa->orangTua->update(['password' => Hash::make('password'), 'harus_lengkapi_profil' => true]);
+
+        return back()->with('success', 'Password akun orang tua direset ke password default.');
+    }
+
+    /**
+     * Setujui pendaftaran akun ortu mandiri lewat Admin -- jalur cepat lintas kelas, tidak
+     * terbatas kelas binaan seperti persetujuan wali kelas (lihat PortalController::setujuiAkunOrtu).
+     */
+    public function setujuiAkunOrtu(Siswa $siswa)
+    {
+        if (! $siswa->orangTua) {
+            return back()->with('error', 'Siswa ini belum punya akun orang tua.');
+        }
+
+        $siswa->orangTua->update(['is_active' => true]);
+
+        return back()->with('success', 'Akun orang tua '.$siswa->nama.' berhasil disetujui dan sudah bisa login.');
+    }
+
+    /**
+     * Setujui semua pendaftaran akun ortu mandiri yang masih menunggu, lintas semua kelas.
+     */
+    public function setujuiSemuaAkunOrtu()
+    {
+        $jumlah = OrangTua::where('is_active', false)->count();
+
+        if ($jumlah === 0) {
+            return back()->with('error', 'Tidak ada pendaftaran akun orang tua yang menunggu persetujuan.');
+        }
+
+        OrangTua::where('is_active', false)->update(['is_active' => true]);
+
+        return back()->with('success', "{$jumlah} akun orang tua berhasil disetujui dan sudah bisa login.");
     }
 }

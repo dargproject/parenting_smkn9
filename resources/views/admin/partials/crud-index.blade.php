@@ -6,12 +6,34 @@
         <div><h1 class="text-2xl font-bold">{{ $title }}</h1><p class="text-sm text-slate-500 dark:text-slate-400">{{ $description }}</p></div>
         <div class="flex items-center gap-2">
             @if($resource === 'admin.siswa' && ($totalSiswaKeseluruhan ?? 0) > 0)
+                @if(($totalAkunOrtuPending ?? 0) > 0)
+                    <button type="button" onclick="document.getElementById('modal-setujui-semua-akun-ortu').style.display='flex'" class="rounded-lg border border-emerald-500 px-4 py-2.5 text-sm font-semibold text-emerald-500 hover:bg-emerald-500/10">Setujui Semua Akun Ortu ({{ $totalAkunOrtuPending }})</button>
+                @endif
                 <button type="button" onclick="document.getElementById('modal-generate-akun-ortu').style.display='flex'" class="rounded-lg border border-emerald-500 px-4 py-2.5 text-sm font-semibold text-emerald-500 hover:bg-emerald-500/10">Generate Akun Ortu</button>
                 <button type="button" onclick="document.getElementById('modal-hapus-semua-siswa-1').style.display='flex'" class="rounded-lg border border-rose-500 px-4 py-2.5 text-sm font-semibold text-rose-500 hover:bg-rose-500/10">Hapus Semua Siswa</button>
             @endif
             <a href="{{ $createRoute }}" class="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-500">Tambah</a>
         </div>
     </div>
+
+    @if($resource === 'admin.siswa' && ($totalAkunOrtuPending ?? 0) > 0)
+        {{-- Modal: konfirmasi setujui semua akun ortu yang menunggu persetujuan --}}
+        <div id="modal-setujui-semua-akun-ortu" class="fixed inset-0 z-[100] items-center justify-center p-4 bg-black/50" style="display: none;">
+            <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl dark:border-slate-700/60 dark:bg-slate-800">
+                <h5 class="admin-title m-0 font-bold">Setujui Semua Akun Orang Tua</h5>
+                <p class="admin-body mt-3 text-sm">
+                    Akan menyetujui <span class="font-bold text-emerald-500">{{ $totalAkunOrtuPending }} akun orang tua</span> yang mendaftar sendiri dan masih menunggu persetujuan wali kelas, lintas semua kelas. Setelah disetujui, akun tersebut langsung bisa login.
+                </p>
+                <div class="mt-5 flex justify-end gap-2">
+                    <button type="button" onclick="document.getElementById('modal-setujui-semua-akun-ortu').style.display='none'" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold dark:border-slate-600">Batal</button>
+                    <form method="POST" action="{{ route('admin.siswa.akun-ortu.setujui-semua') }}">
+                        @csrf
+                        <button type="submit" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500">Ya, Setujui Semua</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
 
     @if($resource === 'admin.siswa' && ($totalSiswaKeseluruhan ?? 0) > 0)
         {{-- Modal: konfirmasi generate akun orang tua massal --}}
@@ -93,7 +115,7 @@
             <thead class="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900"><tr>@foreach($columns as $column)<th class="px-5 py-3">{{ $column['label'] }}</th>@endforeach<th class="px-5 py-3 text-right">Aksi</th></tr></thead>
             <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                 @forelse($items as $item)
-                    <tr>@foreach($columns as $column)<td class="px-5 py-4 {{ $loop->first ? 'font-semibold' : 'text-slate-600 dark:text-slate-300' }}">{{ $column['key'] === 'status_aktif' ? ($item->status_aktif ? 'Aktif' : 'Nonaktif') : ($column['key'] === 'roles.*.name' ? $item->roles->pluck('name')->map(fn ($role) => str_replace('_', ' ', $role))->implode(', ') : (data_get($item, $column['key'], '-') ?: '-')) }}</td>@endforeach<td class="px-5 py-4"><div class="flex justify-end gap-3"><a href="{{ route($resource.'.edit', $item) }}" class="text-blue-500">Edit</a>@if(in_array($resource, ['admin.guru', 'admin.siswa']))<form method="POST" action="{{ route($resource.'.reset-password', $item) }}">@csrf<button class="text-amber-500">Reset Password</button></form>@endif @if($resource === 'admin.siswa') @if($item->orangTua)<span class="text-emerald-500" title="Username akun ortu: {{ $item->orangTua->username }}">Akun Ortu &#10003;</span> <form method="POST" action="{{ route('admin.siswa.akun-ortu.destroy', $item) }}" onsubmit="return confirm('Hapus akun orang tua ini? Data nilai, presensi, dan pesan siswa TIDAK akan ikut terhapus.')">@csrf @method('DELETE')<button class="text-rose-400" style="font-size:11px;">(Hapus Akun)</button></form>@elseif($item->no_hp_ortu)<form method="POST" action="{{ route('admin.siswa.akun-ortu.store', $item) }}">@csrf<button class="text-emerald-600">Buat Akun Ortu</button></form>@else<span class="text-slate-400" title="Isi No. HP Orang Tua dahulu">Akun Ortu -</span>@endif @endif <form method="POST" action="{{ route($resource.'.destroy', $item) }}" onsubmit="return confirm('Hapus data ini?')">@csrf @method('DELETE')<button class="text-rose-500">Hapus</button></form></div></td></tr>
+                    <tr>@foreach($columns as $column)<td class="px-5 py-4 {{ $loop->first ? 'font-semibold' : 'text-slate-600 dark:text-slate-300' }}">{{ $column['key'] === 'status_aktif' ? ($item->status_aktif ? 'Aktif' : 'Nonaktif') : ($column['key'] === 'roles.*.name' ? $item->roles->pluck('name')->map(fn ($role) => str_replace('_', ' ', $role))->implode(', ') : (data_get($item, $column['key'], '-') ?: '-')) }}</td>@endforeach<td class="px-5 py-4"><div class="flex justify-end gap-3"><a href="{{ route($resource.'.edit', $item) }}" class="text-blue-500">Edit</a>@if(in_array($resource, ['admin.guru', 'admin.siswa']))<form method="POST" action="{{ route($resource.'.reset-password', $item) }}">@csrf<button class="text-amber-500">Reset Password</button></form>@endif @if($resource === 'admin.siswa') @if($item->orangTua && $item->orangTua->is_active)<span class="text-emerald-500" title="Username akun ortu: {{ $item->orangTua->username }}">Akun Ortu &#10003;</span> <form method="POST" action="{{ route('admin.siswa.akun-ortu.reset-password', $item) }}" onsubmit="return confirm('Reset password akun orang tua ini ke \'password\'? Orang tua wajib menggantinya saat login berikutnya.')">@csrf<button class="text-blue-500" style="font-size:11px;">Reset Password Ortu</button></form> <form method="POST" action="{{ route('admin.siswa.akun-ortu.destroy', $item) }}" onsubmit="return confirm('Hapus akun orang tua ini? Data nilai, presensi, dan pesan siswa TIDAK akan ikut terhapus.')">@csrf @method('DELETE')<button class="text-rose-400" style="font-size:11px;">(Hapus Akun)</button></form>@elseif($item->orangTua)<span class="text-amber-500" title="Mendaftar sendiri, username: {{ $item->orangTua->username }}">&#9203; Menunggu Persetujuan</span> <form method="POST" action="{{ route('admin.siswa.akun-ortu.setujui', $item) }}">@csrf<button class="text-emerald-600" style="font-size:11px;">Setujui</button></form> <form method="POST" action="{{ route('admin.siswa.akun-ortu.destroy', $item) }}" onsubmit="return confirm('Tolak pendaftaran akun orang tua ini? Pendaftarannya akan dihapus.')">@csrf @method('DELETE')<button class="text-rose-400" style="font-size:11px;">Tolak</button></form>@elseif($item->no_hp_ortu)<form method="POST" action="{{ route('admin.siswa.akun-ortu.store', $item) }}">@csrf<button class="text-emerald-600">Buat Akun Ortu</button></form>@else<span class="text-slate-400" title="Isi No. HP Orang Tua dahulu">Akun Ortu -</span>@endif @endif <form method="POST" action="{{ route($resource.'.destroy', $item) }}" onsubmit="return confirm('Hapus data ini?')">@csrf @method('DELETE')<button class="text-rose-500">Hapus</button></form></div></td></tr>
                 @empty
                     <tr><td colspan="{{ count($columns) + 1 }}" class="px-5 py-8 text-center text-slate-500">{{ request()->query() ? 'Tidak ada data yang cocok dengan pencarian/filter.' : 'Belum ada data.' }}</td></tr>
                 @endforelse

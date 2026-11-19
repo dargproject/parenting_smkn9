@@ -21,6 +21,7 @@ use App\Models\MataPelajaran;
 use App\Models\NilaiLm;
 use App\Models\NilaiPklUkk;
 use App\Models\NilaiSas;
+use App\Models\OrangTua;
 use App\Models\PanggilanOrtu;
 use App\Models\Pelanggaran;
 use App\Models\PenguranganPoin;
@@ -37,6 +38,7 @@ use App\Services\SanksiService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 
 class PortalController extends Controller
@@ -219,6 +221,11 @@ class PortalController extends Controller
         $prestasiNonAkademikWali = PrestasiNonAkademik::whereIn('siswa_id', $siswaWali->pluck('id'))->latest('tanggal')->get()->groupBy('siswa_id');
         $rujukanBkSaya = RujukanBk::with('siswa')->where('dirujuk_oleh', $guru->id)->latest()->limit(10)->get();
         $rekapPoinWali = $rekapPoin->whereIn('id', $siswaWali->pluck('id'))->values();
+
+        // Semua akun ortu siswa binaan -- yang is_active=false menunggu persetujuan pendaftaran
+        // mandiri (lihat OrangTuaPendaftaranController), yang is_active=true bisa direset
+        // password-nya di sini juga kalau orang tuanya lupa password.
+        $akunOrtuWali = OrangTua::with('siswa')->whereIn('siswa_id', $siswaWali->pluck('id'))->latest()->get();
         $logPerubahanNilaiBinaan = $tahunAjaranAktif
             ? LogPerubahanNilai::whereHas('nilaiLm', fn ($q) => $q->whereIn('siswa_id', $siswaBinaan->pluck('id'))->where('tahun_ajaran_id', $tahunAjaranAktifId))
                 ->with(['nilaiLm.siswa.kelas', 'nilaiLm.tujuanPembelajaran.mataPelajaran', 'guru'])
@@ -288,7 +295,7 @@ class PortalController extends Controller
             'kelasBinaan', 'siswaBinaan', 'rerataBinaan', 'peringkatBinaan',
             'tahunAjaranAktif', 'mapelBinaan', 'tujuanPembelajarans',
             'nilaiLmBinaan', 'nilaiSasBinaan', 'catatanKompetensiBinaan', 'nilaiPklUkkBinaan',
-            'matrixPerKelas', 'raporFinalBinaan', 'logPerubahanNilaiBinaan', 'siswaWali', 'catatanWaliKelasWali', 'pesanWaliKelasWali', 'prestasiNonAkademikWali', 'siswaBinaanLengkap', 'rujukanBkSaya', 'rekapPoinWali', 'siswaRaporParenting',
+            'matrixPerKelas', 'raporFinalBinaan', 'logPerubahanNilaiBinaan', 'siswaWali', 'catatanWaliKelasWali', 'pesanWaliKelasWali', 'prestasiNonAkademikWali', 'siswaBinaanLengkap', 'rujukanBkSaya', 'rekapPoinWali', 'siswaRaporParenting', 'akunOrtuWali',
             'kelasWaliList', 'rekapPresensiWali', 'rekapHarianWali', 'tanggalPresensiTerbaruWali', 'tanggalPresensiDipilih', 'jadwalHariPresensiDipilih', 'presensiHariDipilihWali', 'presensiWali',
             'siswaPeringatanMingguan', 'ambangAlpaMingguan',
             'jadwalGuruMapel', 'jadwalHariIni', 'jurnalHariIniIds', 'namaHariIni',
@@ -506,6 +513,81 @@ class PortalController extends Controller
             'poin_harian' => $poinHarian,
             'status_harian' => $sanksi->statusHarian($poinHarian),
         ]);
+    }
+
+    /**
+     * Daftar pelanggaran individual siswa pada tahun ajaran aktif -- dipakai waka_kesiswaan
+     * di Rekap Poin untuk melihat rinciannya sebelum menghapus pelanggaran yang salah input.
+     */
+    public function getPelanggaranSiswa(Siswa $siswa)
+    {
+        $tahunAjaranId = TahunAjaran::where('is_active', true)->value('id');
+
+        $pelanggaran = Pelanggaran::where('siswa_id', $siswa->id)
+            ->where('tahun_ajaran_id', $tahunAjaranId)
+            ->orderByDesc('tanggal')
+            ->get(['id', 'tanggal', 'judul', 'poin']);
+
+        return response()->json(['pelanggaran' => $pelanggaran]);
+    }
+
+    /**
+     * Hapus pelanggaran yang salah input -- khusus waka_kesiswaan (bukan tatib/guru_mapel yang
+     * mencatat) supaya ada kontrol atas penghapusan, bukan sembarang pencatat bisa menghapus.
+     */
+    public function destroyPelanggaran(Pelanggaran $pelanggaran)
+    {
+        $pelanggaran->delete();
+
+        return back()->with('success', 'Pelanggaran berhasil dihapus.');
+    }
+
+    private function pastikanWaliKelasSiswa(OrangTua $orangTua): void
+    {
+        $guru = Auth::user();
+
+        abort_unless($orangTua->siswa?->kelas?->wali_kelas_id === $guru->id, 403, 'Anda bukan wali kelas siswa ini.');
+    }
+
+    /**
+     * Setujui pendaftaran akun ortu mandiri -- mengaktifkan akun (is_active jadi true) supaya
+     * bisa login, dilakukan wali kelas yang memang kenal langsung orang tua muridnya sendiri
+     * karena tidak ada data (No. HP/Tanggal Lahir) yang bisa diverifikasi otomatis.
+     */
+    public function setujuiAkunOrtu(OrangTua $orangTua)
+    {
+        $this->pastikanWaliKelasSiswa($orangTua);
+
+        $orangTua->update(['is_active' => true]);
+
+        return back()->with('success', 'Akun orang tua '.$orangTua->siswa->nama.' berhasil disetujui dan sudah bisa login.');
+    }
+
+    /**
+     * Tolak pendaftaran akun ortu mandiri -- hapus baris pendaftarannya supaya siswa ini bisa
+     * didaftarkan ulang (siswa_id unik di tabel orang_tuas, jadi tidak bisa ditimpa langsung).
+     */
+    public function tolakAkunOrtu(OrangTua $orangTua)
+    {
+        $this->pastikanWaliKelasSiswa($orangTua);
+
+        $nama = $orangTua->siswa->nama;
+        $orangTua->delete();
+
+        return back()->with('success', "Pendaftaran akun orang tua {$nama} ditolak.");
+    }
+
+    /**
+     * Reset password akun ortu siswa binaan ke default, untuk kasus orang tua lupa password
+     * (beda dari setujuiAkunOrtu/tolakAkunOrtu yang menangani pendaftaran baru).
+     */
+    public function resetPasswordAkunOrtu(OrangTua $orangTua)
+    {
+        $this->pastikanWaliKelasSiswa($orangTua);
+
+        $orangTua->update(['password' => Hash::make('password'), 'harus_lengkapi_profil' => true]);
+
+        return back()->with('success', 'Password akun orang tua '.$orangTua->siswa->nama.' berhasil direset ke "password". Orang tua wajib menggantinya saat login berikutnya.');
     }
 
     /**

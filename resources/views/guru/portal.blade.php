@@ -881,6 +881,7 @@
         @endif
     </div>
     @include('kesiswaan.wali-rekap-poin')
+    @include('kesiswaan.wali-akun-ortu')
     @unless($raporParentingRendered)
         @include('guru.partials.rapor-parenting')
         @php $raporParentingRendered = true; @endphp

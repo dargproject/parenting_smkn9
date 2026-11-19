@@ -18,6 +18,7 @@ class OrangTua extends Authenticatable
     ];
 
     protected $casts = [
+        'is_active' => 'boolean',
         'harus_lengkapi_profil' => 'boolean',
     ];
 
