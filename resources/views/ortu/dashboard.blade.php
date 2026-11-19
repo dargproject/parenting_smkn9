@@ -93,7 +93,7 @@
                         <p class="m-0 text-xs text-slate-500 dark:text-slate-400">Alpa</p>
                     </div>
                 </div>
-                <p class="text-xs text-slate-400 dark:text-slate-500 mb-3">{{ $persenHadir }}% hadir dari {{ $totalPresensi }} pertemuan pada semester {{ $tahunAjaranTerpilih->nama ?? 'ini' }}.</p>
+                <p class="text-xs text-slate-400 dark:text-slate-500 mb-3">{{ $persenHadir }}% hadir dari {{ $totalPresensi }} hari pada semester {{ $tahunAjaranTerpilih->nama ?? 'ini' }}.</p>
 
                 @php
                     $statusLabel = ['A' => ['Alpa', 'rose'], 'S' => ['Sakit', 'blue'], 'I' => ['Izin', 'amber']];

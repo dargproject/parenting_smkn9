@@ -56,12 +56,17 @@ class DashboardController extends Controller
         $presensiSiswa = $tahunAjaranAktif
             ? Presensi::where('siswa_id', $siswa->id)->where('tahun_ajaran_id', $tahunAjaranAktif->id)->with('jadwalPelajaran.mataPelajaran')->get()
             : collect();
-        $totalPresensi = $presensiSiswa->count();
+        // Rekap per HARI (bukan per baris presensi/per mapel) -- satu hari dengan banyak jadwal
+        // mapel seharusnya dihitung sekali, bukan sebanyak jumlah mapelnya. Hari yang campur
+        // statusnya (sebagian) tidak masuk ke salah satu dari keempat ini -- itu dirinci
+        // terpisah di bagian "Hari Campur" di bawah.
+        $rekapHarian = $penilaian->rekapHarian($presensiSiswa);
+        $totalPresensi = $rekapHarian['total_hari'];
         $rekapKehadiran = [
-            'H' => $presensiSiswa->where('status', 'H')->count(),
-            'S' => $presensiSiswa->where('status', 'S')->count(),
-            'I' => $presensiSiswa->where('status', 'I')->count(),
-            'A' => $presensiSiswa->where('status', 'A')->count(),
+            'H' => $rekapHarian['penuh'],
+            'S' => $rekapHarian['sakit'],
+            'I' => $rekapHarian['izin'],
+            'A' => $rekapHarian['alpa'],
         ];
         $persenHadir = $totalPresensi > 0 ? round($rekapKehadiran['H'] / $totalPresensi * 100, 1) : null;
 

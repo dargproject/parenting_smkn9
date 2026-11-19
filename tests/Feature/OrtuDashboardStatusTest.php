@@ -151,6 +151,34 @@ class OrtuDashboardStatusTest extends TestCase
             ->assertSee($mapelAlpa->nama_mapel);
     }
 
+    public function test_rekap_kehadiran_dihitung_per_hari_bukan_per_mapel(): void
+    {
+        $ta = TahunAjaran::where('is_active', true)->first();
+        $orangTua = OrangTua::with('siswa.kelas')->first();
+        $siswa = $orangTua->siswa;
+        $mapelSatu = MataPelajaran::first();
+        $mapelDua = MataPelajaran::skip(1)->first();
+        $guru = Guru::create(['nama' => 'Guru Jadwal Kehadiran Per Hari Uji', 'nip' => '9997243', 'password' => bcrypt('password'), 'is_active' => true]);
+
+        $jadwalSatu = JadwalPelajaran::create([
+            'kelas_id' => $siswa->kelas_id, 'mata_pelajaran_id' => $mapelSatu->id, 'guru_id' => $guru->id,
+            'hari' => 'Senin', 'jam_mulai' => '07:00', 'jam_selesai' => '08:00', 'ruang' => '-', 'tahun_ajaran_id' => $ta->id,
+        ]);
+        $jadwalDua = JadwalPelajaran::create([
+            'kelas_id' => $siswa->kelas_id, 'mata_pelajaran_id' => $mapelDua->id, 'guru_id' => $guru->id,
+            'hari' => 'Senin', 'jam_mulai' => '08:00', 'jam_selesai' => '09:00', 'ruang' => '-', 'tahun_ajaran_id' => $ta->id,
+        ]);
+
+        // Satu hari, dua mapel, sama-sama Hadir -- harus terhitung 1 hari, bukan 2 baris presensi.
+        $tanggal = now()->toDateString();
+        Presensi::create(['siswa_id' => $siswa->id, 'jadwal_pelajaran_id' => $jadwalSatu->id, 'tanggal' => $tanggal, 'status' => 'H', 'tahun_ajaran_id' => $ta->id]);
+        Presensi::create(['siswa_id' => $siswa->id, 'jadwal_pelajaran_id' => $jadwalDua->id, 'tanggal' => $tanggal, 'status' => 'H', 'tahun_ajaran_id' => $ta->id]);
+
+        $response = $this->actingAs($orangTua, 'orangtua')->get(route('ortu.dashboard'));
+
+        $response->assertOk()->assertSee('100% hadir dari 1 hari', false);
+    }
+
     public function test_semester_aktif_tanpa_rapor_tetap_bisa_dipilih_dan_tidak_hilang_dari_dropdown(): void
     {
         $ganjil = TahunAjaran::where('is_active', true)->first();
