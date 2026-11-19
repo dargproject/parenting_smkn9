@@ -116,7 +116,8 @@ class OrtuDashboardStatusTest extends TestCase
             ->assertSee('Kehadiran')
             ->assertSee('50%', false)
             ->assertSee('Alpa:', false)
-            ->assertSee(now()->subDay()->translatedFormat('d M'));
+            ->assertSee(now()->subDay()->translatedFormat('d M'))
+            ->assertDontSee('Hari Campur', false);
     }
 
     public function test_kehadiran_hari_campur_menampilkan_nama_mapel_yang_alpa(): void
@@ -145,6 +146,7 @@ class OrtuDashboardStatusTest extends TestCase
         $response = $this->actingAs($orangTua, 'orangtua')->get(route('ortu.dashboard'));
 
         $response->assertOk()
+            ->assertSee('Hari Campur', false)
             ->assertSee(now()->subDay()->translatedFormat('d M'))
             ->assertSee($mapelAlpa->nama_mapel);
     }
