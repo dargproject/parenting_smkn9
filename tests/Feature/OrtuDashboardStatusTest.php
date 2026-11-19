@@ -115,7 +115,8 @@ class OrtuDashboardStatusTest extends TestCase
         $response->assertOk()
             ->assertSee('Kehadiran')
             ->assertSee('50%', false)
-            ->assertSee($mapel->nama_mapel);
+            ->assertSee('Alpa:', false)
+            ->assertSee(now()->subDay()->translatedFormat('d M'));
     }
 
     public function test_semester_aktif_tanpa_rapor_tetap_bisa_dipilih_dan_tidak_hilang_dari_dropdown(): void

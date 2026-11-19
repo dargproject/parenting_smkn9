@@ -95,21 +95,32 @@
                 </div>
                 <p class="text-xs text-slate-400 dark:text-slate-500 mb-3">{{ $persenHadir }}% hadir dari {{ $totalPresensi }} pertemuan pada semester {{ $tahunAjaranTerpilih->nama ?? 'ini' }}.</p>
 
-                @if($ketidakhadiranPerMapel->isNotEmpty())
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1.5">Tidak Hadir per Mata Pelajaran</p>
-                        <div class="flex flex-col gap-2">
-                            @foreach($ketidakhadiranPerMapel as $m)
-                                <div class="rounded-xl bg-slate-50 px-4 py-2.5 dark:bg-slate-900/60 text-sm flex items-center justify-between gap-2">
-                                    <span class="font-semibold text-slate-800 dark:text-slate-100">{{ $m['nama'] }}</span>
-                                    <span class="flex items-center gap-1.5 whitespace-nowrap">
-                                        @if($m['alpa'] > 0) <x-status-badge tone="rose" light>Alpa {{ $m['alpa'] }}</x-status-badge> @endif
-                                        @if($m['sakit'] > 0) <x-status-badge tone="blue" light>Sakit {{ $m['sakit'] }}</x-status-badge> @endif
-                                        @if($m['izin'] > 0) <x-status-badge tone="amber" light>Izin {{ $m['izin'] }}</x-status-badge> @endif
-                                    </span>
-                                </div>
-                            @endforeach
-                        </div>
+                @if($tanggalTidakHadir['A']->isNotEmpty() || $tanggalTidakHadir['S']->isNotEmpty() || $tanggalTidakHadir['I']->isNotEmpty())
+                    <div class="flex flex-col gap-2.5">
+                        @if($tanggalTidakHadir['A']->isNotEmpty())
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <span class="text-sm font-semibold text-rose-600 dark:text-rose-400">Alpa:</span>
+                                @foreach($tanggalTidakHadir['A'] as $t)
+                                    <x-status-badge tone="rose" light>{{ \Carbon\Carbon::parse($t)->translatedFormat('d M') }}</x-status-badge>
+                                @endforeach
+                            </div>
+                        @endif
+                        @if($tanggalTidakHadir['S']->isNotEmpty())
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <span class="text-sm font-semibold text-blue-600 dark:text-blue-400">Sakit:</span>
+                                @foreach($tanggalTidakHadir['S'] as $t)
+                                    <x-status-badge tone="blue" light>{{ \Carbon\Carbon::parse($t)->translatedFormat('d M') }}</x-status-badge>
+                                @endforeach
+                            </div>
+                        @endif
+                        @if($tanggalTidakHadir['I']->isNotEmpty())
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <span class="text-sm font-semibold text-amber-600 dark:text-amber-400">Izin:</span>
+                                @foreach($tanggalTidakHadir['I'] as $t)
+                                    <x-status-badge tone="amber" light>{{ \Carbon\Carbon::parse($t)->translatedFormat('d M') }}</x-status-badge>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
                 @endif
             @else
