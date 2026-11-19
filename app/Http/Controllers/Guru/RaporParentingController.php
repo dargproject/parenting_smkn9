@@ -34,7 +34,12 @@ class RaporParentingController extends Controller
     public function cetak(Siswa $siswa, PenilaianService $penilaian, SanksiService $sanksi)
     {
         $this->pastikanWaliAtauGuruWali($siswa);
-        $this->pastikanSudahDirilis($siswa);
+
+        // Kelas XII pakai template PKL (tanpa nilai akademik/Bakat Minat BK), jadi tidak
+        // digerbang status Finalisasi & Rilis Nilai yang mengecek kelengkapan nilai akademik itu.
+        if ($siswa->kelas?->tingkat !== 'XII') {
+            $this->pastikanSudahDirilis($siswa);
+        }
 
         $pdf = Pdf::loadView($this->view($siswa), $this->data($siswa, $penilaian, $sanksi, forPdf: true))->setPaper('a4');
 
@@ -206,9 +211,10 @@ class RaporParentingController extends Controller
 
         // Dipakai preview HTML untuk menampilkan keterangan "belum dirilis" -- tidak relevan
         // untuk PDF karena cetak() sudah mensyaratkan rapor dirilis sebelum sampai ke sini.
-        $sudahDirilis = $tahunAjaranAktifId
+        // Kelas XII dianggap selalu "dirilis" karena cetak() tidak mensyaratkan rilis untuk kelas ini.
+        $sudahDirilis = $kelas?->tingkat === 'XII' || ($tahunAjaranAktifId
             ? RaporFinal::where(['siswa_id' => $siswa->id, 'tahun_ajaran_id' => $tahunAjaranAktifId])->value('status') === 'final'
-            : false;
+            : false);
 
         // Untuk PDF (DomPDF) pakai path filesystem langsung; untuk preview di browser pakai URL
         // publik -- path filesystem Windows tidak bisa dipakai sebagai src gambar di browser.

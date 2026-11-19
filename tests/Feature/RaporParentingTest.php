@@ -68,6 +68,33 @@ class RaporParentingTest extends TestCase
         $this->sebagai($guru)->get(route('guru.rapor-parenting.cetak', $siswa))->assertStatus(403);
     }
 
+    public function test_cetak_rapor_kelas_xii_tidak_perlu_dirilis(): void
+    {
+        // Kelas XII pakai template PKL (bukan nilai akademik/BK), jadi tidak digerbang status
+        // Finalisasi & Rilis Nilai seperti kelas X/XI.
+        $guru = Guru::create(['nama' => 'Wali Kelas XII Tanpa Rilis Uji', 'nip' => '9997239', 'password' => bcrypt('password'), 'is_active' => true]);
+        $guru->roles()->attach(Role::firstOrCreate(['name' => 'wali_kelas'])->id);
+        $kelas = Kelas::create(['nama_kelas' => 'XII Rapor Uji Tanpa Rilis', 'tingkat' => 'XII', 'jurusan' => 'Uji', 'wali_kelas_id' => $guru->id]);
+        $siswa = Siswa::create(['nis' => '997239', 'nama' => 'Siswa XII Tanpa Rilis Uji', 'kelas_id' => $kelas->id, 'password' => bcrypt('password'), 'status_aktif' => true]);
+
+        $response = $this->sebagai($guru)->get(route('guru.rapor-parenting.cetak', $siswa));
+
+        $response->assertOk();
+        $this->assertStringContainsString('application/pdf', $response->headers->get('Content-Type'));
+    }
+
+    public function test_preview_rapor_kelas_xii_tidak_tampilkan_keterangan_belum_rilis(): void
+    {
+        $guru = Guru::create(['nama' => 'Wali Kelas XII Preview Tanpa Rilis Uji', 'nip' => '9997240', 'password' => bcrypt('password'), 'is_active' => true]);
+        $guru->roles()->attach(Role::firstOrCreate(['name' => 'wali_kelas'])->id);
+        $kelas = Kelas::create(['nama_kelas' => 'XII Rapor Uji Preview Tanpa Rilis', 'tingkat' => 'XII', 'jurusan' => 'Uji', 'wali_kelas_id' => $guru->id]);
+        $siswa = Siswa::create(['nis' => '997240', 'nama' => 'Siswa XII Preview Tanpa Rilis Uji', 'kelas_id' => $kelas->id, 'password' => bcrypt('password'), 'status_aktif' => true]);
+
+        $this->sebagai($guru)->get(route('guru.rapor-parenting.preview', $siswa))
+            ->assertOk()
+            ->assertDontSee('belum difinalisasi', false);
+    }
+
     public function test_preview_rapor_tetap_bisa_diakses_walau_belum_dirilis(): void
     {
         $guru = Guru::create(['nama' => 'Wali Kelas Preview Belum Rilis Uji', 'nip' => '9997234', 'password' => bcrypt('password'), 'is_active' => true]);
