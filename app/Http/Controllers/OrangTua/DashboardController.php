@@ -65,12 +65,28 @@ class DashboardController extends Controller
         ];
         $persenHadir = $totalPresensi > 0 ? round($rekapKehadiran['H'] / $totalPresensi * 100, 1) : null;
 
-        // Tanggal tidak hadir per status -- supaya orang tua tahu persis kapan anaknya
-        // sakit/izin/alpa, bukan cuma jumlahnya. Lebih sederhana dari rincian per mapel
-        // sebelumnya (satu baris per status, bukan satu blok per mapel).
-        $tanggalTidakHadir = collect(['S', 'I', 'A'])->mapWithKeys(fn ($status) => [
-            $status => $presensiSiswa->where('status', $status)->pluck('tanggal')->unique()->sortDesc()->values(),
-        ]);
+        // Tanggal tidak hadir per status, urut dari yang paling lama -- supaya orang tua tahu
+        // persis kapan anaknya sakit/izin/alpa. Presensi dicatat per jadwal (per mapel), jadi
+        // satu hari bisa campur (mis. izin di jam 1 tapi hadir di jam lain) -- "penuh" = seluruh
+        // jadwal hari itu berstatus sama (sama seperti definisi "Alpa Penuh" di PenilaianService::
+        // rekapHarian), kalau tidak, tampilkan nama mapelnya supaya jelas bukan sehari penuh.
+        $presensiPerHari = $presensiSiswa->groupBy('tanggal');
+        $tanggalTidakHadir = collect(['S', 'I', 'A'])->mapWithKeys(function ($status) use ($presensiSiswa, $presensiPerHari) {
+            $daftar = $presensiSiswa->where('status', $status)->pluck('tanggal')->unique()->sort()->values()
+                ->map(function ($tanggal) use ($status, $presensiPerHari) {
+                    $sehari = $presensiPerHari->get($tanggal, collect());
+                    $penuh = $sehari->pluck('status')->unique()->count() === 1;
+
+                    return [
+                        'tanggal' => $tanggal,
+                        'penuh' => $penuh,
+                        'mapel' => $penuh ? collect() : $sehari->where('status', $status)
+                            ->pluck('jadwalPelajaran.mataPelajaran.nama_mapel')->filter()->unique()->values(),
+                    ];
+                });
+
+            return [$status => $daftar];
+        });
 
         $raporFinal = $tahunAjaranAktif
             ? RaporFinal::where(['siswa_id' => $siswa->id, 'tahun_ajaran_id' => $tahunAjaranAktif->id])->first()

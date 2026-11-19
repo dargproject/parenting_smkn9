@@ -100,24 +100,24 @@
                         @if($tanggalTidakHadir['A']->isNotEmpty())
                             <div class="flex flex-wrap items-center gap-1.5">
                                 <span class="text-sm font-semibold text-rose-600 dark:text-rose-400">Alpa:</span>
-                                @foreach($tanggalTidakHadir['A'] as $t)
-                                    <x-status-badge tone="rose" light>{{ \Carbon\Carbon::parse($t)->translatedFormat('d M') }}</x-status-badge>
+                                @foreach($tanggalTidakHadir['A'] as $item)
+                                    <x-status-badge tone="rose" light>{{ \Carbon\Carbon::parse($item['tanggal'])->translatedFormat('d M') }}@unless($item['penuh']) &middot; {{ $item['mapel']->implode(', ') }}@endunless</x-status-badge>
                                 @endforeach
                             </div>
                         @endif
                         @if($tanggalTidakHadir['S']->isNotEmpty())
                             <div class="flex flex-wrap items-center gap-1.5">
                                 <span class="text-sm font-semibold text-blue-600 dark:text-blue-400">Sakit:</span>
-                                @foreach($tanggalTidakHadir['S'] as $t)
-                                    <x-status-badge tone="blue" light>{{ \Carbon\Carbon::parse($t)->translatedFormat('d M') }}</x-status-badge>
+                                @foreach($tanggalTidakHadir['S'] as $item)
+                                    <x-status-badge tone="blue" light>{{ \Carbon\Carbon::parse($item['tanggal'])->translatedFormat('d M') }}@unless($item['penuh']) &middot; {{ $item['mapel']->implode(', ') }}@endunless</x-status-badge>
                                 @endforeach
                             </div>
                         @endif
                         @if($tanggalTidakHadir['I']->isNotEmpty())
                             <div class="flex flex-wrap items-center gap-1.5">
                                 <span class="text-sm font-semibold text-amber-600 dark:text-amber-400">Izin:</span>
-                                @foreach($tanggalTidakHadir['I'] as $t)
-                                    <x-status-badge tone="amber" light>{{ \Carbon\Carbon::parse($t)->translatedFormat('d M') }}</x-status-badge>
+                                @foreach($tanggalTidakHadir['I'] as $item)
+                                    <x-status-badge tone="amber" light>{{ \Carbon\Carbon::parse($item['tanggal'])->translatedFormat('d M') }}@unless($item['penuh']) &middot; {{ $item['mapel']->implode(', ') }}@endunless</x-status-badge>
                                 @endforeach
                             </div>
                         @endif

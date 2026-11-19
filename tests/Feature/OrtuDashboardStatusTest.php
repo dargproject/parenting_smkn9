@@ -119,6 +119,36 @@ class OrtuDashboardStatusTest extends TestCase
             ->assertSee(now()->subDay()->translatedFormat('d M'));
     }
 
+    public function test_kehadiran_hari_campur_menampilkan_nama_mapel_yang_alpa(): void
+    {
+        $ta = TahunAjaran::where('is_active', true)->first();
+        $orangTua = OrangTua::with('siswa.kelas')->first();
+        $siswa = $orangTua->siswa;
+        $mapelHadir = MataPelajaran::first();
+        $mapelAlpa = MataPelajaran::skip(1)->first();
+        $guru = Guru::create(['nama' => 'Guru Jadwal Kehadiran Campur Uji', 'nip' => '9997242', 'password' => bcrypt('password'), 'is_active' => true]);
+
+        $jadwalHadir = JadwalPelajaran::create([
+            'kelas_id' => $siswa->kelas_id, 'mata_pelajaran_id' => $mapelHadir->id, 'guru_id' => $guru->id,
+            'hari' => 'Senin', 'jam_mulai' => '07:00', 'jam_selesai' => '08:00', 'ruang' => '-', 'tahun_ajaran_id' => $ta->id,
+        ]);
+        $jadwalAlpa = JadwalPelajaran::create([
+            'kelas_id' => $siswa->kelas_id, 'mata_pelajaran_id' => $mapelAlpa->id, 'guru_id' => $guru->id,
+            'hari' => 'Senin', 'jam_mulai' => '08:00', 'jam_selesai' => '09:00', 'ruang' => '-', 'tahun_ajaran_id' => $ta->id,
+        ]);
+
+        // Satu hari yang sama, tapi cuma salah satu mapel yang alpa -- bukan sehari penuh.
+        $tanggal = now()->subDay()->toDateString();
+        Presensi::create(['siswa_id' => $siswa->id, 'jadwal_pelajaran_id' => $jadwalHadir->id, 'tanggal' => $tanggal, 'status' => 'H', 'tahun_ajaran_id' => $ta->id]);
+        Presensi::create(['siswa_id' => $siswa->id, 'jadwal_pelajaran_id' => $jadwalAlpa->id, 'tanggal' => $tanggal, 'status' => 'A', 'tahun_ajaran_id' => $ta->id]);
+
+        $response = $this->actingAs($orangTua, 'orangtua')->get(route('ortu.dashboard'));
+
+        $response->assertOk()
+            ->assertSee(now()->subDay()->translatedFormat('d M'))
+            ->assertSee($mapelAlpa->nama_mapel);
+    }
+
     public function test_semester_aktif_tanpa_rapor_tetap_bisa_dipilih_dan_tidak_hilang_dari_dropdown(): void
     {
         $ganjil = TahunAjaran::where('is_active', true)->first();
