@@ -25,7 +25,7 @@ class OrtuCatatanKedisiplinanTest extends TestCase
 
     public function test_dashboard_tanpa_pelanggaran_menampilkan_status_aman(): void
     {
-        $orangTua = OrangTua::with('siswa')->firstOrFail();
+        $orangTua = OrangTua::with('siswas')->whereHas('siswas')->firstOrFail();
 
         $this->actingAs($orangTua, 'orangtua')->get(route('ortu.dashboard'))
             ->assertOk()
@@ -36,8 +36,8 @@ class OrtuCatatanKedisiplinanTest extends TestCase
 
     public function test_dashboard_menampilkan_poin_bersih_dan_tindakan(): void
     {
-        $orangTua = OrangTua::with('siswa')->firstOrFail();
-        $siswa = $orangTua->siswa;
+        $orangTua = OrangTua::with('siswas')->whereHas('siswas')->firstOrFail();
+        $siswa = $orangTua->siswas->first();
         $ta = TahunAjaran::where('is_active', true)->first();
 
         $jenis = JenisPelanggaran::create(['kode' => 'J-ortu-uji', 'nama' => 'Jenis Uji Ortu', 'poin' => 15]);

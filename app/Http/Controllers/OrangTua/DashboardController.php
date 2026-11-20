@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\OrangTua;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\OrangTua\Concerns\MemilihSiswaAktif;
 use App\Models\CatatanKompetensi;
 use App\Models\CatatanWaliKelas;
 use App\Models\GayaBelajar;
@@ -27,10 +28,18 @@ use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
+    use MemilihSiswaAktif;
+
     public function index(PenilaianService $penilaian, SanksiService $sanksi)
     {
         $orangTua = Auth::guard('orangtua')->user();
-        $siswa = $orangTua->siswa;
+        $siswa = $this->siswaAktif($orangTua);
+
+        if (! $siswa) {
+            return view('ortu.belum-ada-anak');
+        }
+
+        $daftarAnak = $this->daftarAnak($orangTua);
         [$riwayat, $tahunAjaranAktif] = $this->pilihTahunAjaran($siswa);
         $tahunAjaranAktifSistem = TahunAjaran::where('is_active', true)->first();
 
@@ -98,7 +107,7 @@ class DashboardController extends Controller
             : null;
 
         if (! $raporFinal || $raporFinal->status !== 'final') {
-            return view('ortu.dashboard', ['siswa' => $siswa, 'dirilis' => false, 'ringkasan' => collect(), 'riwayat' => $riwayat, 'tahunAjaranTerpilih' => $tahunAjaranAktif, 'tahunAjaranAktifSistem' => $tahunAjaranAktifSistem, 'pesanWaliKelas' => $pesanWaliKelas, 'prestasiNonAkademik' => $prestasiNonAkademik, 'pelanggaranSiswa' => $pelanggaranSiswa, 'poinBersih' => $poinBersih, 'statusSanksi' => $statusSanksi, 'totalPresensi' => $totalPresensi, 'persenHadir' => $persenHadir, 'rekapKehadiran' => $rekapKehadiran, 'tanggalTidakHadir' => $tanggalTidakHadir] + $infoBk);
+            return view('ortu.dashboard', ['siswa' => $siswa, 'daftarAnak' => $daftarAnak, 'dirilis' => false, 'ringkasan' => collect(), 'riwayat' => $riwayat, 'tahunAjaranTerpilih' => $tahunAjaranAktif, 'tahunAjaranAktifSistem' => $tahunAjaranAktifSistem, 'pesanWaliKelas' => $pesanWaliKelas, 'prestasiNonAkademik' => $prestasiNonAkademik, 'pelanggaranSiswa' => $pelanggaranSiswa, 'poinBersih' => $poinBersih, 'statusSanksi' => $statusSanksi, 'totalPresensi' => $totalPresensi, 'persenHadir' => $persenHadir, 'rekapKehadiran' => $rekapKehadiran, 'tanggalTidakHadir' => $tanggalTidakHadir] + $infoBk);
         }
 
         // Mapel diambil dari nilai yang tersimpan pada semester tsb, bukan kelas siswa saat ini (siswa bisa sudah naik kelas).
@@ -125,6 +134,7 @@ class DashboardController extends Controller
 
         return view('ortu.dashboard', [
             'siswa' => $siswa,
+            'daftarAnak' => $daftarAnak,
             'dirilis' => true,
             'ringkasan' => $ringkasan,
             'riwayat' => $riwayat,
@@ -167,7 +177,8 @@ class DashboardController extends Controller
     public function show(MataPelajaran $mataPelajaran, PenilaianService $penilaian)
     {
         $orangTua = Auth::guard('orangtua')->user();
-        $siswa = $orangTua->siswa;
+        $siswa = $this->siswaAktif($orangTua);
+        abort_if(! $siswa, 404);
         [, $tahunAjaranAktif] = $this->pilihTahunAjaran($siswa);
 
         $raporFinal = $tahunAjaranAktif

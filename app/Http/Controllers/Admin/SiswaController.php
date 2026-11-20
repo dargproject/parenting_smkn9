@@ -7,6 +7,7 @@ use App\Http\Requests\StoreSiswaRequest;
 use App\Http\Requests\UpdateSiswaRequest;
 use App\Models\Kelas;
 use App\Models\OrangTua;
+use App\Models\OrangTuaSiswa;
 use App\Models\Siswa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -15,7 +16,7 @@ class SiswaController extends Controller
 {
     public function index(Request $request)
     {
-        $siswas = Siswa::with(['kelas', 'orangTua'])
+        $siswas = Siswa::with(['kelas', 'orangTua', 'linkOrtu'])
             ->when($request->filled('q'), fn ($q) => $q->where(fn ($w) => $w->where('nama', 'like', '%'.$request->q.'%')->orWhere('nis', 'like', '%'.$request->q.'%')->orWhere('nisn', 'like', '%'.$request->q.'%')->orWhere('nipd', 'like', '%'.$request->q.'%')))
             ->when($request->filled('kelas_id'), fn ($q) => $q->where('kelas_id', $request->kelas_id))
             ->when($request->filled('status'), fn ($q) => $q->where('status_aktif', $request->status === 'aktif'))
@@ -25,7 +26,7 @@ class SiswaController extends Controller
             'siswas' => $siswas,
             'kelasOptions' => Kelas::orderBy('tingkat')->orderBy('nama_kelas')->pluck('nama_kelas', 'id'),
             'totalSiswaKeseluruhan' => Siswa::count(),
-            'totalAkunOrtuPending' => OrangTua::where('is_active', false)->count(),
+            'totalAkunOrtuPending' => OrangTuaSiswa::where('is_active', false)->count(),
         ]);
     }
 
@@ -82,6 +83,11 @@ class SiswaController extends Controller
         return back()->with('success', 'Password direset ke password default.');
     }
 
+    /**
+     * Kalau No. HP ortu-nya sama dengan akun yang sudah ada (kakak/adik, anak kembar), siswa ini
+     * ditautkan ke akun itu juga -- bukan dianggap bentrok -- supaya satu akun bisa dipakai untuk
+     * memantau semua anaknya di sekolah ini dengan satu No. HP & password yang sama.
+     */
     public function buatAkunOrtu(Siswa $siswa)
     {
         if (! $siswa->no_hp_ortu) {
@@ -93,19 +99,22 @@ class SiswaController extends Controller
         }
 
         $username = preg_replace('/\D/', '', $siswa->no_hp_ortu);
+        $existing = OrangTua::where('username', $username)->first();
 
-        if (OrangTua::where('username', $username)->exists()) {
-            return back()->with('error', "Nomor HP {$siswa->no_hp_ortu} sudah dipakai sebagai username akun orang tua siswa lain. Gunakan nomor HP yang berbeda untuk siswa ini.");
+        if ($existing) {
+            $existing->links()->create(['siswa_id' => $siswa->id, 'is_active' => true]);
+
+            return back()->with('success', "Siswa ini ditautkan ke akun orang tua yang sudah ada (username: {$username}), karena No. HP-nya sama dengan siswa lain.");
         }
 
-        OrangTua::create([
-            'siswa_id' => $siswa->id,
+        $orangTua = OrangTua::create([
             'nama' => 'Orang Tua/Wali '.$siswa->nama,
             'username' => $username,
             'password' => Hash::make('password'),
             'is_active' => true,
             'harus_lengkapi_profil' => true,
         ]);
+        $orangTua->links()->create(['siswa_id' => $siswa->id, 'is_active' => true]);
 
         return back()->with('success', "Akun orang tua berhasil dibuat. Username: {$username}, password default: password");
     }
@@ -113,8 +122,8 @@ class SiswaController extends Controller
     /**
      * Buat akun orang tua sekaligus untuk semua siswa yang belum punya akun tapi sudah
      * punya No. HP Ortu -- alternatif lebih cepat dari klik "Buat Akun Ortu" satu per satu.
-     * Nomor yang bentrok (dipakai siswa lain, termasuk sesama kakak-adik di batch yang sama)
-     * dilewati, bukan menimpa akun yang sudah ada.
+     * Nomor yang sama dengan siswa lain (termasuk sesama kakak-adik di batch yang sama) ditautkan
+     * ke akun yang sama, bukan dilewati -- satu No. HP memang bisa dipakai untuk banyak anak.
      */
     public function generateAkunOrtuSemua()
     {
@@ -122,50 +131,73 @@ class SiswaController extends Controller
         $tanpaNoHp = Siswa::whereDoesntHave('orangTua')->count() - $kandidat->count();
 
         $dibuat = 0;
+        $ditautkan = 0;
         $dilewati = 0;
 
         foreach ($kandidat as $siswa) {
             $username = preg_replace('/\D/', '', $siswa->no_hp_ortu);
 
-            if ($username === '' || OrangTua::where('username', $username)->exists()) {
+            if ($username === '') {
                 $dilewati++;
 
                 continue;
             }
 
-            OrangTua::create([
-                'siswa_id' => $siswa->id,
+            $existing = OrangTua::where('username', $username)->first();
+
+            if ($existing) {
+                $existing->links()->create(['siswa_id' => $siswa->id, 'is_active' => true]);
+                $ditautkan++;
+
+                continue;
+            }
+
+            $orangTua = OrangTua::create([
                 'nama' => 'Orang Tua/Wali '.$siswa->nama,
                 'username' => $username,
                 'password' => Hash::make('password'),
                 'is_active' => true,
                 'harus_lengkapi_profil' => true,
             ]);
+            $orangTua->links()->create(['siswa_id' => $siswa->id, 'is_active' => true]);
 
             $dibuat++;
         }
 
-        if ($dibuat === 0 && $dilewati === 0 && $tanpaNoHp === 0) {
+        if ($dibuat === 0 && $ditautkan === 0 && $dilewati === 0 && $tanpaNoHp === 0) {
             return back()->with('error', 'Semua siswa sudah punya akun orang tua.');
         }
 
-        return back()->with('success', "Generate akun orang tua selesai: {$dibuat} akun baru dibuat, {$dilewati} dilewati (No. HP Ortu sudah dipakai siswa lain), {$tanpaNoHp} siswa belum diisi No. HP Ortu.");
+        return back()->with('success', "Generate akun orang tua selesai: {$dibuat} akun baru dibuat, {$ditautkan} ditautkan ke akun kakak/adiknya, {$dilewati} dilewati (No. HP Ortu tidak valid), {$tanpaNoHp} siswa belum diisi No. HP Ortu.");
     }
 
+    /**
+     * Hapus tautan siswa ini saja -- bukan seluruh akun, supaya anak lain yang tertaut ke akun
+     * yang sama (kakak/adik) tidak ikut kehilangan akunnya. Akun baru dihapus kalau ini satu-
+     * satunya tautan yang dimilikinya.
+     */
     public function hapusAkunOrtu(Siswa $siswa)
     {
-        if (! $siswa->orangTua) {
+        $link = $siswa->linkOrtu;
+
+        if (! $link) {
             return back()->with('error', 'Siswa ini belum punya akun orang tua.');
         }
 
-        $siswa->orangTua->delete();
+        $orangTua = $link->orangTua;
+        $link->delete();
+
+        if ($orangTua->links()->count() === 0) {
+            $orangTua->delete();
+        }
 
         return back()->with('success', 'Akun orang tua berhasil dihapus. Data nilai, presensi, dan pesan siswa ini tidak terpengaruh.');
     }
 
     /**
      * Reset password akun ortu ke default, untuk kasus orang tua lupa password -- sama seperti
-     * resetPassword milik Guru/Siswa, cuma untuk akun ortu.
+     * resetPassword milik Guru/Siswa, cuma untuk akun ortu. Satu akun bisa tertaut ke beberapa
+     * anak, jadi ini mereset password akunnya (berlaku untuk semua anak), bukan per anak.
      */
     public function resetPasswordAkunOrtu(Siswa $siswa)
     {
@@ -181,31 +213,40 @@ class SiswaController extends Controller
     /**
      * Setujui pendaftaran akun ortu mandiri lewat Admin -- jalur cepat lintas kelas, tidak
      * terbatas kelas binaan seperti persetujuan wali kelas (lihat PortalController::setujuiAkunOrtu).
+     * Yang disetujui adalah tautan siswa ini saja (pivot), bukan seluruh akun -- akun bisa saja
+     * sudah aktif lebih dulu lewat anak lain di akun yang sama.
      */
     public function setujuiAkunOrtu(Siswa $siswa)
     {
-        if (! $siswa->orangTua) {
+        $link = $siswa->linkOrtu;
+
+        if (! $link) {
             return back()->with('error', 'Siswa ini belum punya akun orang tua.');
         }
 
-        $siswa->orangTua->update(['is_active' => true]);
+        $link->update(['is_active' => true]);
+        $link->orangTua->update(['is_active' => true]);
 
         return back()->with('success', 'Akun orang tua '.$siswa->nama.' berhasil disetujui dan sudah bisa login.');
     }
 
     /**
-     * Setujui semua pendaftaran akun ortu mandiri yang masih menunggu, lintas semua kelas.
+     * Setujui semua pendaftaran akun ortu mandiri yang masih menunggu, lintas semua kelas --
+     * per tautan (pivot), bukan per akun, supaya anak lain di akun yang sama yang belum disetujui
+     * tidak ikut disetujui kalau belum waktunya (meski dalam praktiknya biasanya memang semua
+     * tautan pending disetujui bersamaan lewat tombol ini).
      */
     public function setujuiSemuaAkunOrtu()
     {
-        $jumlah = OrangTua::where('is_active', false)->count();
+        $pending = OrangTuaSiswa::where('is_active', false)->get();
 
-        if ($jumlah === 0) {
+        if ($pending->isEmpty()) {
             return back()->with('error', 'Tidak ada pendaftaran akun orang tua yang menunggu persetujuan.');
         }
 
-        OrangTua::where('is_active', false)->update(['is_active' => true]);
+        OrangTua::whereIn('id', $pending->pluck('orang_tua_id')->unique())->update(['is_active' => true]);
+        OrangTuaSiswa::whereIn('id', $pending->pluck('id'))->update(['is_active' => true]);
 
-        return back()->with('success', "{$jumlah} akun orang tua berhasil disetujui dan sudah bisa login.");
+        return back()->with('success', $pending->count().' akun orang tua berhasil disetujui dan sudah bisa login.');
     }
 }

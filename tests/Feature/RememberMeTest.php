@@ -59,9 +59,10 @@ class RememberMeTest extends TestCase
     {
         $siswa = Siswa::whereDoesntHave('orangTua')->firstOrFail();
         $ortu = OrangTua::create([
-            'siswa_id' => $siswa->id, 'nama' => 'Ortu Remember Uji',
+            'nama' => 'Ortu Remember Uji',
             'username' => 'ortu_remember_uji', 'password' => bcrypt('password'), 'is_active' => true,
         ]);
+        $ortu->links()->create(['siswa_id' => $siswa->id, 'is_active' => true]);
 
         $this->assertNull($ortu->remember_token);
 
@@ -88,9 +89,10 @@ class RememberMeTest extends TestCase
     {
         $siswa = Siswa::whereDoesntHave('orangTua')->firstOrFail();
         $ortu = OrangTua::create([
-            'siswa_id' => $siswa->id, 'nama' => 'Ortu Login Uji',
+            'nama' => 'Ortu Login Uji',
             'username' => 'ortu_login_uji', 'password' => bcrypt('password'), 'is_active' => true,
         ]);
+        $ortu->links()->create(['siswa_id' => $siswa->id, 'is_active' => true]);
 
         $this->actingAs($ortu, 'orangtua')->get(route('ortu.login'))->assertRedirect(route('ortu.dashboard'));
     }

@@ -11,7 +11,7 @@ class OrangTua extends Authenticatable
 
     protected $table = 'orang_tuas';
 
-    protected $fillable = ['siswa_id', 'nama', 'username', 'email', 'password', 'is_active', 'harus_lengkapi_profil'];
+    protected $fillable = ['nama', 'username', 'email', 'password', 'is_active', 'harus_lengkapi_profil'];
 
     protected $hidden = [
         'password',
@@ -22,8 +22,26 @@ class OrangTua extends Authenticatable
         'harus_lengkapi_profil' => 'boolean',
     ];
 
-    public function siswa()
+    public function links()
     {
-        return $this->belongsTo(Siswa::class);
+        return $this->hasMany(OrangTuaSiswa::class);
+    }
+
+    /**
+     * Semua siswa yang tertaut ke akun ini (anak kembar/kakak-adik bisa lebih dari satu),
+     * lengkap dengan status persetujuan per anak lewat pivot.is_active.
+     */
+    public function siswas()
+    {
+        return $this->belongsToMany(Siswa::class, 'orang_tua_siswa')->withPivot('is_active')->withTimestamps();
+    }
+
+    /**
+     * Anak yang tautannya sudah disetujui -- yang ditampilkan di pemilih anak & dashboard.
+     * Anak yang masih menunggu persetujuan tidak ikut di sini.
+     */
+    public function siswaAktif()
+    {
+        return $this->siswas()->wherePivot('is_active', true)->orderBy('nama');
     }
 }

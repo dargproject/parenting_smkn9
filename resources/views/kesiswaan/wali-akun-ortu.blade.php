@@ -19,8 +19,8 @@
             <tbody class="divide-y divide-slate-700/60">
                 @forelse($akunOrtuWali as $akun)
                     <tr>
-                        <td class="px-5 py-3 font-semibold text-slate-100">{{ $akun->nama }}</td>
-                        <td class="px-5 py-3 text-slate-400">{{ $akun->username }}</td>
+                        <td class="px-5 py-3 font-semibold text-slate-100">{{ $akun->orangTua->nama }}</td>
+                        <td class="px-5 py-3 text-slate-400">{{ $akun->orangTua->username }}</td>
                         <td class="px-5 py-3 text-slate-400">{{ $akun->siswa->nama ?? '-' }}</td>
                         <td class="px-5 py-3 text-slate-400">{{ $akun->siswa->kelas->nama_kelas ?? '-' }}</td>
                         <td class="px-5 py-3 text-center">
@@ -29,20 +29,20 @@
                         <td class="px-5 py-3 text-center">
                             <div class="flex items-center justify-center gap-2">
                                 @if($akun->is_active)
-                                    <form method="POST" action="{{ route('guru.wali-kelas.akun-ortu.reset-password', $akun) }}" onsubmit="return confirm('Reset password akun orang tua ini ke \'password\'? Orang tua wajib menggantinya saat login berikutnya.')">
+                                    <form method="POST" action="{{ route('guru.wali-kelas.akun-ortu.reset-password', $akun->siswa) }}" onsubmit="return confirm('Reset password akun orang tua ini ke \'password\'? Orang tua wajib menggantinya saat login berikutnya.')">
                                         @csrf
                                         <button type="submit" class="rounded-lg border border-blue-500/40 px-3 py-1 text-xs font-semibold text-blue-400 hover:bg-blue-500/10">
                                             <i class="fa-solid fa-key mr-1"></i> Reset Password
                                         </button>
                                     </form>
                                 @else
-                                    <form method="POST" action="{{ route('guru.wali-kelas.akun-ortu.setujui', $akun) }}" onsubmit="return confirm('Setujui akun orang tua ini? Pastikan Anda memang kenal dengan pendaftarnya.')">
+                                    <form method="POST" action="{{ route('guru.wali-kelas.akun-ortu.setujui', $akun->siswa) }}" onsubmit="return confirm('Setujui akun orang tua ini? Pastikan Anda memang kenal dengan pendaftarnya.')">
                                         @csrf
                                         <button type="submit" class="rounded-lg border border-emerald-500/40 px-3 py-1 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/10">
                                             <i class="fa-solid fa-check mr-1"></i> Setujui
                                         </button>
                                     </form>
-                                    <form method="POST" action="{{ route('guru.wali-kelas.akun-ortu.tolak', $akun) }}" onsubmit="return confirm('Tolak pendaftaran akun orang tua ini? Pendaftarannya akan dihapus.')">
+                                    <form method="POST" action="{{ route('guru.wali-kelas.akun-ortu.tolak', $akun->siswa) }}" onsubmit="return confirm('Tolak pendaftaran akun orang tua ini? Pendaftarannya akan dihapus.')">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="rounded-lg border border-rose-500/40 px-3 py-1 text-xs font-semibold text-rose-400 hover:bg-rose-500/10">
                                             <i class="fa-solid fa-xmark mr-1"></i> Tolak

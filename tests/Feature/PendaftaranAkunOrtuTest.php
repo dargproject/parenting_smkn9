@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Guru;
 use App\Models\Kelas;
 use App\Models\OrangTua;
+use App\Models\OrangTuaSiswa;
 use App\Models\Role;
 use App\Models\Siswa;
 use Database\Seeders\DatabaseSeeder;
@@ -31,12 +32,20 @@ class PendaftaranAkunOrtuTest extends TestCase
         ]);
     }
 
-    private function siapkanKelasDanSiswa(?Guru $waliKelas = null): array
+    private function siapkanKelasDanSiswa(?Guru $waliKelas = null, string $nis = '998301'): array
     {
-        $kelas = Kelas::create(['nama_kelas' => 'X Daftar Ortu Uji', 'tingkat' => 'X', 'jurusan' => 'Uji', 'wali_kelas_id' => $waliKelas?->id]);
-        $siswa = Siswa::create(['nis' => '998301', 'nama' => 'Siswa Daftar Ortu Uji', 'kelas_id' => $kelas->id, 'password' => bcrypt('password'), 'status_aktif' => true]);
+        $kelas = Kelas::firstOrCreate(['nama_kelas' => 'X Daftar Ortu Uji'], ['tingkat' => 'X', 'jurusan' => 'Uji', 'wali_kelas_id' => $waliKelas?->id]);
+        $siswa = Siswa::create(['nis' => $nis, 'nama' => 'Siswa Daftar Ortu Uji '.$nis, 'kelas_id' => $kelas->id, 'password' => bcrypt('password'), 'status_aktif' => true]);
 
         return [$kelas, $siswa];
+    }
+
+    private function buatAkunOrtu(Siswa $siswa, string $username, string $password = 'password', bool $aktif = true): OrangTua
+    {
+        $orangTua = OrangTua::create(['nama' => 'Ortu Lama', 'username' => $username, 'password' => bcrypt($password), 'is_active' => $aktif]);
+        $orangTua->links()->create(['siswa_id' => $siswa->id, 'is_active' => $aktif]);
+
+        return $orangTua;
     }
 
     public function test_siswa_yang_belum_punya_akun_ortu_muncul_di_dropdown_kelas(): void
@@ -51,7 +60,7 @@ class PendaftaranAkunOrtuTest extends TestCase
     public function test_siswa_yang_sudah_punya_akun_ortu_tidak_muncul_lagi_di_dropdown(): void
     {
         [$kelas, $siswa] = $this->siapkanKelasDanSiswa();
-        OrangTua::create(['siswa_id' => $siswa->id, 'nama' => 'Ortu Lama', 'username' => '81200000001', 'password' => bcrypt('password'), 'is_active' => true]);
+        $this->buatAkunOrtu($siswa, '81200000001');
 
         $response = $this->getJson(route('ortu.api.siswa_by_kelas', $kelas));
 
@@ -73,11 +82,11 @@ class PendaftaranAkunOrtuTest extends TestCase
         $response->assertRedirect(route('ortu.login'));
 
         $this->assertDatabaseHas('orang_tuas', [
-            'siswa_id' => $siswa->id,
             'nama' => 'Budi Orang Tua Uji',
             'username' => '081234567890',
             'is_active' => false,
         ]);
+        $this->assertDatabaseHas('orang_tua_siswa', ['siswa_id' => $siswa->id, 'is_active' => false]);
         $this->assertSame('081234567890', $siswa->fresh()->no_hp_ortu);
     }
 
@@ -103,7 +112,7 @@ class PendaftaranAkunOrtuTest extends TestCase
     public function test_daftar_ulang_untuk_siswa_yang_sudah_punya_akun_ditolak(): void
     {
         [, $siswa] = $this->siapkanKelasDanSiswa();
-        OrangTua::create(['siswa_id' => $siswa->id, 'nama' => 'Ortu Lama', 'username' => '81200000001', 'password' => bcrypt('password'), 'is_active' => false]);
+        $this->buatAkunOrtu($siswa, '81200000001', aktif: false);
 
         $this->post(route('ortu.daftar.store'), [
             'siswa_id' => $siswa->id,
@@ -113,24 +122,45 @@ class PendaftaranAkunOrtuTest extends TestCase
             'password_confirmation' => 'password123',
         ])->assertSessionHas('error');
 
-        $this->assertSame(1, OrangTua::where('siswa_id', $siswa->id)->count());
+        $this->assertSame(1, OrangTuaSiswa::where('siswa_id', $siswa->id)->count());
     }
 
-    public function test_no_hp_yang_sudah_dipakai_siswa_lain_ditolak(): void
+    public function test_no_hp_yang_sudah_terdaftar_dengan_password_benar_menautkan_anak_kedua(): void
     {
-        [$kelas, $siswaA] = $this->siapkanKelasDanSiswa();
+        [$kelas, $siswaA] = $this->siapkanKelasDanSiswa(nis: '998301');
         $siswaB = Siswa::create(['nis' => '998302', 'nama' => 'Siswa Daftar Ortu Uji B', 'kelas_id' => $kelas->id, 'password' => bcrypt('password'), 'status_aktif' => true]);
-        OrangTua::create(['siswa_id' => $siswaA->id, 'nama' => 'Ortu A', 'username' => '081234567890', 'password' => bcrypt('password'), 'is_active' => true]);
+        $akunA = $this->buatAkunOrtu($siswaA, '081234567890', password: 'passwordlama', aktif: true);
 
         $this->post(route('ortu.daftar.store'), [
             'siswa_id' => $siswaB->id,
-            'nama' => 'Ortu B',
+            'nama' => 'Nama Diabaikan',
             'no_hp' => '081234567890',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'passwordlama',
+            'password_confirmation' => 'passwordlama',
+        ])->assertRedirect(route('ortu.login'))->assertSessionHas('success');
+
+        // Siswa B ditautkan ke akun yang SAMA dengan siswa A, bukan akun baru.
+        $this->assertSame(1, OrangTua::where('username', '081234567890')->count());
+        $this->assertDatabaseHas('orang_tua_siswa', ['orang_tua_id' => $akunA->id, 'siswa_id' => $siswaB->id, 'is_active' => false]);
+        // Tautan siswa A (sudah aktif lebih dulu) tidak terganggu.
+        $this->assertTrue((bool) $siswaA->linkOrtu->fresh()->is_active);
+    }
+
+    public function test_no_hp_yang_sudah_terdaftar_dengan_password_salah_ditolak(): void
+    {
+        [$kelas, $siswaA] = $this->siapkanKelasDanSiswa(nis: '998303');
+        $siswaB = Siswa::create(['nis' => '998304', 'nama' => 'Siswa Daftar Ortu Uji C', 'kelas_id' => $kelas->id, 'password' => bcrypt('password'), 'status_aktif' => true]);
+        $this->buatAkunOrtu($siswaA, '081234567891', password: 'passwordlama', aktif: true);
+
+        $this->post(route('ortu.daftar.store'), [
+            'siswa_id' => $siswaB->id,
+            'nama' => 'Orang Lain',
+            'no_hp' => '081234567891',
+            'password' => 'password-tebakan',
+            'password_confirmation' => 'password-tebakan',
         ])->assertSessionHas('error');
 
-        $this->assertDatabaseMissing('orang_tuas', ['siswa_id' => $siswaB->id]);
+        $this->assertDatabaseMissing('orang_tua_siswa', ['siswa_id' => $siswaB->id]);
     }
 
     public function test_wali_kelas_bisa_menyetujui_akun_ortu_siswa_binaannya(): void
@@ -138,13 +168,14 @@ class PendaftaranAkunOrtuTest extends TestCase
         $waliKelas = Guru::create(['nama' => 'Wali Kelas Setujui Uji', 'nip' => '9998301', 'password' => bcrypt('password'), 'is_active' => true]);
         $waliKelas->roles()->attach(Role::firstOrCreate(['name' => 'wali_kelas'])->id);
         [, $siswa] = $this->siapkanKelasDanSiswa($waliKelas);
-        $akun = OrangTua::create(['siswa_id' => $siswa->id, 'nama' => 'Ortu Baru', 'username' => '081234567890', 'password' => bcrypt('password123'), 'is_active' => false]);
+        $this->buatAkunOrtu($siswa, '081234567890', password: 'password123', aktif: false);
 
-        $this->sebagai($waliKelas)->post(route('guru.wali-kelas.akun-ortu.setujui', $akun))
+        $this->sebagai($waliKelas)->post(route('guru.wali-kelas.akun-ortu.setujui', $siswa))
             ->assertRedirect()
             ->assertSessionHas('success');
 
-        $this->assertTrue((bool) $akun->fresh()->is_active);
+        $this->assertTrue((bool) $siswa->linkOrtu->fresh()->is_active);
+        $this->assertTrue((bool) $siswa->orangTua->fresh()->is_active);
 
         // Setelah disetujui, akun bisa login dengan No. HP + password yang didaftarkan sendiri.
         $this->post(route('ortu.login.post'), ['username' => '081234567890', 'password' => 'password123'])
@@ -157,13 +188,31 @@ class PendaftaranAkunOrtuTest extends TestCase
         $waliKelas = Guru::create(['nama' => 'Wali Kelas Tolak Uji', 'nip' => '9998302', 'password' => bcrypt('password'), 'is_active' => true]);
         $waliKelas->roles()->attach(Role::firstOrCreate(['name' => 'wali_kelas'])->id);
         [, $siswa] = $this->siapkanKelasDanSiswa($waliKelas);
-        $akun = OrangTua::create(['siswa_id' => $siswa->id, 'nama' => 'Ortu Baru', 'username' => '081234567890', 'password' => bcrypt('password123'), 'is_active' => false]);
+        $akun = $this->buatAkunOrtu($siswa, '081234567890', password: 'password123', aktif: false);
 
-        $this->sebagai($waliKelas)->delete(route('guru.wali-kelas.akun-ortu.tolak', $akun))
+        $this->sebagai($waliKelas)->delete(route('guru.wali-kelas.akun-ortu.tolak', $siswa))
             ->assertRedirect()
             ->assertSessionHas('success');
 
         $this->assertDatabaseMissing('orang_tuas', ['id' => $akun->id]);
+    }
+
+    public function test_wali_kelas_menolak_anak_kedua_tidak_menghapus_akun_yang_dipakai_anak_pertama(): void
+    {
+        $waliKelas = Guru::create(['nama' => 'Wali Kelas Tolak Dua Anak Uji', 'nip' => '9998308', 'password' => bcrypt('password'), 'is_active' => true]);
+        $waliKelas->roles()->attach(Role::firstOrCreate(['name' => 'wali_kelas'])->id);
+        [$kelas, $siswaSatu] = $this->siapkanKelasDanSiswa($waliKelas, '998309');
+        $siswaDua = Siswa::create(['nis' => '998310', 'nama' => 'Siswa Tolak Dua Anak Uji', 'kelas_id' => $kelas->id, 'password' => bcrypt('password'), 'status_aktif' => true]);
+        $akun = $this->buatAkunOrtu($siswaSatu, '081234567920', aktif: true);
+        $akun->links()->create(['siswa_id' => $siswaDua->id, 'is_active' => false]);
+
+        $this->sebagai($waliKelas)->delete(route('guru.wali-kelas.akun-ortu.tolak', $siswaDua))
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('orang_tua_siswa', ['siswa_id' => $siswaDua->id]);
+        $this->assertDatabaseHas('orang_tuas', ['id' => $akun->id]);
+        $this->assertDatabaseHas('orang_tua_siswa', ['siswa_id' => $siswaSatu->id]);
     }
 
     public function test_wali_kelas_bisa_reset_password_akun_ortu_siswa_binaannya(): void
@@ -171,9 +220,10 @@ class PendaftaranAkunOrtuTest extends TestCase
         $waliKelas = Guru::create(['nama' => 'Wali Kelas Reset Password Uji', 'nip' => '9998305', 'password' => bcrypt('password'), 'is_active' => true]);
         $waliKelas->roles()->attach(Role::firstOrCreate(['name' => 'wali_kelas'])->id);
         [, $siswa] = $this->siapkanKelasDanSiswa($waliKelas);
-        $akun = OrangTua::create(['siswa_id' => $siswa->id, 'nama' => 'Ortu Lupa Password', 'username' => '081234567890', 'password' => bcrypt('password-lama'), 'is_active' => true, 'harus_lengkapi_profil' => false]);
+        $akun = $this->buatAkunOrtu($siswa, '081234567890', password: 'password-lama', aktif: true);
+        $akun->update(['harus_lengkapi_profil' => false]);
 
-        $this->sebagai($waliKelas)->post(route('guru.wali-kelas.akun-ortu.reset-password', $akun))
+        $this->sebagai($waliKelas)->post(route('guru.wali-kelas.akun-ortu.reset-password', $siswa))
             ->assertRedirect()
             ->assertSessionHas('success');
 
@@ -189,9 +239,9 @@ class PendaftaranAkunOrtuTest extends TestCase
         $waliKelasB = Guru::create(['nama' => 'Wali Kelas Reset B Uji', 'nip' => '9998307', 'password' => bcrypt('password'), 'is_active' => true]);
         $waliKelasB->roles()->attach(Role::firstOrCreate(['name' => 'wali_kelas'])->id);
         [, $siswa] = $this->siapkanKelasDanSiswa($waliKelasA);
-        $akun = OrangTua::create(['siswa_id' => $siswa->id, 'nama' => 'Ortu Lupa Password', 'username' => '081234567890', 'password' => bcrypt('password-lama'), 'is_active' => true]);
+        $akun = $this->buatAkunOrtu($siswa, '081234567890', password: 'password-lama', aktif: true);
 
-        $this->sebagai($waliKelasB)->post(route('guru.wali-kelas.akun-ortu.reset-password', $akun))->assertStatus(403);
+        $this->sebagai($waliKelasB)->post(route('guru.wali-kelas.akun-ortu.reset-password', $siswa))->assertStatus(403);
 
         $this->assertTrue(Hash::check('password-lama', $akun->fresh()->password));
     }
@@ -203,10 +253,10 @@ class PendaftaranAkunOrtuTest extends TestCase
         $waliKelasB = Guru::create(['nama' => 'Wali Kelas B Uji', 'nip' => '9998304', 'password' => bcrypt('password'), 'is_active' => true]);
         $waliKelasB->roles()->attach(Role::firstOrCreate(['name' => 'wali_kelas'])->id);
         [, $siswa] = $this->siapkanKelasDanSiswa($waliKelasA);
-        $akun = OrangTua::create(['siswa_id' => $siswa->id, 'nama' => 'Ortu Baru', 'username' => '081234567890', 'password' => bcrypt('password123'), 'is_active' => false]);
+        $this->buatAkunOrtu($siswa, '081234567890', password: 'password123', aktif: false);
 
-        $this->sebagai($waliKelasB)->post(route('guru.wali-kelas.akun-ortu.setujui', $akun))->assertStatus(403);
+        $this->sebagai($waliKelasB)->post(route('guru.wali-kelas.akun-ortu.setujui', $siswa))->assertStatus(403);
 
-        $this->assertFalse((bool) $akun->fresh()->is_active);
+        $this->assertFalse((bool) $siswa->linkOrtu->fresh()->is_active);
     }
 }

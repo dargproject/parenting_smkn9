@@ -67,6 +67,16 @@
                 <span class="font-bold text-slate-900 dark:text-white">Portal Orang Tua &mdash; {{ setting('nama_sekolah', 'SMKN 9 Malang') }}</span>
             </div>
             <div class="flex items-center gap-3">
+                @if(($daftarAnakOrtu ?? collect())->count() > 1)
+                    <form method="POST" action="{{ route('ortu.pilih-anak') }}">
+                        @csrf
+                        <select name="siswa_id" onchange="this.form.submit()" class="rounded-lg border border-slate-300 bg-transparent px-2.5 py-1.5 text-sm text-slate-700 dark:border-slate-600 dark:text-slate-200">
+                            @foreach($daftarAnakOrtu as $anak)
+                                <option value="{{ $anak->id }}" @selected($siswaDipilihOrtu?->id === $anak->id)>{{ $anak->nama }}</option>
+                            @endforeach
+                        </select>
+                    </form>
+                @endif
                 @include('partials.pwa-install-button', [
                     'buttonClass' => 'rounded-full p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700',
                 ])

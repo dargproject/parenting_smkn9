@@ -95,10 +95,10 @@ class PrestasiNonAkademikTest extends TestCase
 
     public function test_prestasi_non_akademik_tampil_di_dashboard_orangtua(): void
     {
-        $orangTua = OrangTua::with('siswa')->firstOrFail();
+        $orangTua = OrangTua::with('siswas')->whereHas('siswas')->firstOrFail();
 
         PrestasiNonAkademik::create([
-            'siswa_id' => $orangTua->siswa_id,
+            'siswa_id' => $orangTua->siswas->first()->id,
             'nama_prestasi' => 'Juara 1 Lomba Pidato',
             'tingkat' => 'Provinsi',
             'peringkat' => 'Juara 1',

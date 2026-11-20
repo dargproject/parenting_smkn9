@@ -22,6 +22,7 @@ use App\Models\NilaiLm;
 use App\Models\NilaiPklUkk;
 use App\Models\NilaiSas;
 use App\Models\OrangTua;
+use App\Models\OrangTuaSiswa;
 use App\Models\PanggilanOrtu;
 use App\Models\Pelanggaran;
 use App\Models\PenguranganPoin;
@@ -222,10 +223,11 @@ class PortalController extends Controller
         $rujukanBkSaya = RujukanBk::with('siswa')->where('dirujuk_oleh', $guru->id)->latest()->limit(10)->get();
         $rekapPoinWali = $rekapPoin->whereIn('id', $siswaWali->pluck('id'))->values();
 
-        // Semua akun ortu siswa binaan -- yang is_active=false menunggu persetujuan pendaftaran
-        // mandiri (lihat OrangTuaPendaftaranController), yang is_active=true bisa direset
-        // password-nya di sini juga kalau orang tuanya lupa password.
-        $akunOrtuWali = OrangTua::with('siswa')->whereIn('siswa_id', $siswaWali->pluck('id'))->latest()->get();
+        // Tautan akun ortu siswa binaan (satu baris per anak, bukan per akun -- satu akun bisa
+        // tertaut ke beberapa anak) -- yang is_active=false menunggu persetujuan pendaftaran
+        // mandiri (lihat OrangTua\PendaftaranController), yang is_active=true bisa direset
+        // password akunnya di sini juga kalau orang tuanya lupa password.
+        $akunOrtuWali = OrangTuaSiswa::with(['orangTua', 'siswa.kelas'])->whereIn('siswa_id', $siswaWali->pluck('id'))->latest()->get();
         $logPerubahanNilaiBinaan = $tahunAjaranAktif
             ? LogPerubahanNilai::whereHas('nilaiLm', fn ($q) => $q->whereIn('siswa_id', $siswaBinaan->pluck('id'))->where('tahun_ajaran_id', $tahunAjaranAktifId))
                 ->with(['nilaiLm.siswa.kelas', 'nilaiLm.tujuanPembelajaran.mataPelajaran', 'guru'])
@@ -542,52 +544,70 @@ class PortalController extends Controller
         return back()->with('success', 'Pelanggaran berhasil dihapus.');
     }
 
-    private function pastikanWaliKelasSiswa(OrangTua $orangTua): void
+    private function pastikanWaliKelasSiswa(Siswa $siswa): void
     {
         $guru = Auth::user();
 
-        abort_unless($orangTua->siswa?->kelas?->wali_kelas_id === $guru->id, 403, 'Anda bukan wali kelas siswa ini.');
+        abort_unless($siswa->kelas?->wali_kelas_id === $guru->id, 403, 'Anda bukan wali kelas siswa ini.');
     }
 
     /**
-     * Setujui pendaftaran akun ortu mandiri -- mengaktifkan akun (is_active jadi true) supaya
-     * bisa login, dilakukan wali kelas yang memang kenal langsung orang tua muridnya sendiri
-     * karena tidak ada data (No. HP/Tanggal Lahir) yang bisa diverifikasi otomatis.
+     * Setujui pendaftaran akun ortu mandiri -- mengaktifkan tautan siswa ini (pivot.is_active
+     * jadi true) dan akunnya sendiri (kalau belum aktif, mis. baru daftar untuk anak pertama),
+     * dilakukan wali kelas yang memang kenal langsung orang tua muridnya sendiri karena tidak
+     * ada data (No. HP/Tanggal Lahir) yang bisa diverifikasi otomatis.
      */
-    public function setujuiAkunOrtu(OrangTua $orangTua)
+    public function setujuiAkunOrtu(Siswa $siswa)
     {
-        $this->pastikanWaliKelasSiswa($orangTua);
+        $this->pastikanWaliKelasSiswa($siswa);
 
-        $orangTua->update(['is_active' => true]);
+        $link = $siswa->linkOrtu;
+        abort_if(! $link, 404);
 
-        return back()->with('success', 'Akun orang tua '.$orangTua->siswa->nama.' berhasil disetujui dan sudah bisa login.');
+        $link->update(['is_active' => true]);
+        $link->orangTua->update(['is_active' => true]);
+
+        return back()->with('success', 'Akun orang tua '.$siswa->nama.' berhasil disetujui dan sudah bisa login.');
     }
 
     /**
-     * Tolak pendaftaran akun ortu mandiri -- hapus baris pendaftarannya supaya siswa ini bisa
-     * didaftarkan ulang (siswa_id unik di tabel orang_tuas, jadi tidak bisa ditimpa langsung).
+     * Tolak pendaftaran akun ortu mandiri -- hapus tautan siswa ini saja (siswa_id unik di
+     * orang_tua_siswa, jadi tidak bisa ditimpa langsung, tapi anak lain di akun yang sama kalau
+     * ada tidak boleh ikut kehilangan akunnya). Akun ikut dihapus hanya kalau ini satu-satunya
+     * tautan yang tersisa.
      */
-    public function tolakAkunOrtu(OrangTua $orangTua)
+    public function tolakAkunOrtu(Siswa $siswa)
     {
-        $this->pastikanWaliKelasSiswa($orangTua);
+        $this->pastikanWaliKelasSiswa($siswa);
 
-        $nama = $orangTua->siswa->nama;
-        $orangTua->delete();
+        $link = $siswa->linkOrtu;
+        abort_if(! $link, 404);
 
-        return back()->with('success', "Pendaftaran akun orang tua {$nama} ditolak.");
+        $orangTua = $link->orangTua;
+        $link->delete();
+
+        if ($orangTua->links()->count() === 0) {
+            $orangTua->delete();
+        }
+
+        return back()->with('success', "Pendaftaran akun orang tua {$siswa->nama} ditolak.");
     }
 
     /**
      * Reset password akun ortu siswa binaan ke default, untuk kasus orang tua lupa password
-     * (beda dari setujuiAkunOrtu/tolakAkunOrtu yang menangani pendaftaran baru).
+     * (beda dari setujuiAkunOrtu/tolakAkunOrtu yang menangani pendaftaran baru). Satu akun bisa
+     * tertaut ke beberapa anak, jadi ini mereset password akunnya (berlaku untuk semua anak).
      */
-    public function resetPasswordAkunOrtu(OrangTua $orangTua)
+    public function resetPasswordAkunOrtu(Siswa $siswa)
     {
-        $this->pastikanWaliKelasSiswa($orangTua);
+        $this->pastikanWaliKelasSiswa($siswa);
+
+        $orangTua = $siswa->orangTua;
+        abort_if(! $orangTua, 404);
 
         $orangTua->update(['password' => Hash::make('password'), 'harus_lengkapi_profil' => true]);
 
-        return back()->with('success', 'Password akun orang tua '.$orangTua->siswa->nama.' berhasil direset ke "password". Orang tua wajib menggantinya saat login berikutnya.');
+        return back()->with('success', 'Password akun orang tua '.$siswa->nama.' berhasil direset ke "password". Orang tua wajib menggantinya saat login berikutnya.');
     }
 
     /**

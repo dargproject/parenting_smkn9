@@ -72,10 +72,11 @@ class PenilaianSeeder extends Seeder
                 ['status' => 'final', 'dirilis_at' => now(), 'dirilis_oleh' => $pakHendra->id]
             );
 
-            OrangTua::updateOrCreate(
+            $ortuAndi = OrangTua::updateOrCreate(
                 ['username' => 'ortu.andi'],
-                ['siswa_id' => $andi->id, 'nama' => 'Bpk. Susanto', 'password' => Hash::make('password'), 'is_active' => true]
+                ['nama' => 'Bpk. Susanto', 'password' => Hash::make('password'), 'is_active' => true]
             );
+            $ortuAndi->links()->updateOrCreate(['siswa_id' => $andi->id], ['is_active' => true]);
         }
     }
 }

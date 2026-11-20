@@ -57,6 +57,7 @@
             <div>
                 <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
                 <input type="password" name="password" required minlength="6" class="w-full rounded-lg border border-slate-300 bg-transparent px-4 py-2.5 text-sm text-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:text-white">
+                <p class="mt-1 text-xs text-slate-400 dark:text-slate-500">Sudah punya anak lain terdaftar dengan No. HP ini? Isi password akun itu di sini untuk menautkan anak ini ke akun yang sama.</p>
             </div>
 
             <div>

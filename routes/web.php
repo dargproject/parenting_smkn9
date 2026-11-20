@@ -52,6 +52,7 @@ use App\Http\Controllers\OrangTua\AkunController as OrangTuaAkunController;
 use App\Http\Controllers\OrangTua\DashboardController as OrangTuaDashboardController;
 use App\Http\Controllers\OrangTua\KeluargaController as OrangTuaKeluargaController;
 use App\Http\Controllers\OrangTua\PendaftaranController as OrangTuaPendaftaranController;
+use App\Http\Controllers\OrangTua\PilihAnakController as OrangTuaPilihAnakController;
 use App\Http\Controllers\OrangTuaAuthController;
 use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\PwaManifestController;
@@ -283,9 +284,9 @@ Route::middleware('role:wali_kelas')->post('/guru/wali-kelas/rujukan-bk', [Penil
 Route::middleware('role:wali_kelas')->post('/guru/wali-kelas/pesan', [PesanWaliKelasController::class, 'store'])->name('guru.wali-kelas.pesan.store');
 
 Route::middleware('role:wali_kelas')->prefix('guru/wali-kelas/akun-ortu')->name('guru.wali-kelas.akun-ortu.')->group(function () {
-    Route::post('/{orangTua}/setujui', [PortalController::class, 'setujuiAkunOrtu'])->name('setujui');
-    Route::delete('/{orangTua}', [PortalController::class, 'tolakAkunOrtu'])->name('tolak');
-    Route::post('/{orangTua}/reset-password', [PortalController::class, 'resetPasswordAkunOrtu'])->name('reset-password');
+    Route::post('/{siswa}/setujui', [PortalController::class, 'setujuiAkunOrtu'])->name('setujui');
+    Route::delete('/{siswa}', [PortalController::class, 'tolakAkunOrtu'])->name('tolak');
+    Route::post('/{siswa}/reset-password', [PortalController::class, 'resetPasswordAkunOrtu'])->name('reset-password');
 });
 
 Route::middleware('role:wali_kelas')->prefix('guru/wali-kelas/prestasi')->name('guru.wali-kelas.prestasi.')->group(function () {
@@ -333,6 +334,7 @@ Route::prefix('ortu')->name('ortu.')->group(function () {
         Route::put('/keluarga', [OrangTuaKeluargaController::class, 'update'])->name('keluarga.update');
         Route::get('/akun', [OrangTuaAkunController::class, 'edit'])->name('akun.edit');
         Route::put('/akun', [OrangTuaAkunController::class, 'update'])->name('akun.update');
+        Route::post('/pilih-anak', [OrangTuaPilihAnakController::class, 'pilih'])->name('pilih-anak');
     });
 });
 

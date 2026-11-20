@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\OrangTua;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\OrangTua\Concerns\MemilihSiswaAktif;
 use App\Http\Requests\StoreDataKeluargaSiswaRequest;
 use App\Models\DataKeluargaSiswa;
 use App\Models\TahunAjaran;
@@ -10,9 +11,12 @@ use Illuminate\Support\Facades\Auth;
 
 class KeluargaController extends Controller
 {
+    use MemilihSiswaAktif;
+
     public function edit()
     {
-        $siswa = Auth::guard('orangtua')->user()->siswa;
+        $siswa = $this->siswaAktif(Auth::guard('orangtua')->user());
+        abort_if(! $siswa, 404);
         $siswa->load('dataKeluarga');
 
         return view('ortu.keluarga', ['siswa' => $siswa, 'keluarga' => $siswa->dataKeluarga]);
@@ -20,7 +24,8 @@ class KeluargaController extends Controller
 
     public function update(StoreDataKeluargaSiswaRequest $request)
     {
-        $siswa = Auth::guard('orangtua')->user()->siswa;
+        $siswa = $this->siswaAktif(Auth::guard('orangtua')->user());
+        abort_if(! $siswa, 404);
 
         DataKeluargaSiswa::updateOrCreate(
             ['siswa_id' => $siswa->id],

@@ -44,14 +44,19 @@ class OrtuBkBridgeTest extends TestCase
 
     private function orangTua(): OrangTua
     {
-        return OrangTua::with('siswa.kelas')->firstOrFail();
+        return OrangTua::with('siswas.kelas')->whereHas('siswas')->firstOrFail();
+    }
+
+    private function siswaOrangTua(OrangTua $orangTua): Siswa
+    {
+        return $orangTua->siswas->first();
     }
 
     public function test_dashboard_ortu_menampilkan_nama_konselor_bk_dari_alokasi_kelas(): void
     {
         $orangTua = $this->orangTua();
         $guruBk = $this->guruBk();
-        $guruBk->kelasBk()->attach($orangTua->siswa->kelas_id);
+        $guruBk->kelasBk()->attach($this->siswaOrangTua($orangTua)->kelas_id);
 
         $this->actingAs($orangTua, 'orangtua')->get(route('ortu.dashboard'))
             ->assertOk()
@@ -61,7 +66,7 @@ class OrtuBkBridgeTest extends TestCase
     public function test_dashboard_ortu_hanya_menampilkan_layanan_bk_yang_di_flag_tampilkan_ke_ortu(): void
     {
         $orangTua = $this->orangTua();
-        $siswa = $orangTua->siswa;
+        $siswa = $this->siswaOrangTua($orangTua);
         $guruBk = $this->guruBk();
 
         $kasusTampil = KasusBk::create([
@@ -92,7 +97,7 @@ class OrtuBkBridgeTest extends TestCase
         $guruBk = $this->guruBk();
 
         PanggilanOrtu::create([
-            'siswa_id' => $orangTua->siswa->id,
+            'siswa_id' => $this->siswaOrangTua($orangTua)->id,
             'tanggal' => now()->toDateString(),
             'waktu' => '10:00',
             'ruang' => 'Ruang BK',
@@ -109,7 +114,7 @@ class OrtuBkBridgeTest extends TestCase
     public function test_kunjungan_rumah_dan_konferensi_hilang_dari_dashboard_ortu_saat_kasus_selesai(): void
     {
         $orangTua = $this->orangTua();
-        $siswa = $orangTua->siswa;
+        $siswa = $this->siswaOrangTua($orangTua);
         $guruBk = $this->guruBk();
 
         $kasusKunjungan = KasusBk::create([
@@ -138,7 +143,7 @@ class OrtuBkBridgeTest extends TestCase
         $guruBk = $this->guruBk();
 
         PanggilanOrtu::create([
-            'siswa_id' => $orangTua->siswa->id,
+            'siswa_id' => $this->siswaOrangTua($orangTua)->id,
             'tanggal' => now()->toDateString(),
             'waktu' => '10:00',
             'ruang' => 'Ruang BK',
@@ -165,7 +170,7 @@ class OrtuBkBridgeTest extends TestCase
         ])->assertRedirect(route('ortu.keluarga.edit'));
 
         $this->assertDatabaseHas('data_keluarga_siswas', [
-            'siswa_id' => $orangTua->siswa->id,
+            'siswa_id' => $this->siswaOrangTua($orangTua)->id,
             'nama_ayah' => 'Bapak Uji',
             'punya_kamar_sendiri' => true,
         ]);
@@ -174,7 +179,7 @@ class OrtuBkBridgeTest extends TestCase
     public function test_ortu_tidak_bisa_mengubah_data_keluarga_siswa_lain(): void
     {
         $orangTua = $this->orangTua();
-        $siswaLain = Siswa::where('id', '!=', $orangTua->siswa_id)->firstOrFail();
+        $siswaLain = Siswa::whereNotIn('id', $orangTua->siswas->pluck('id'))->firstOrFail();
 
         DataKeluargaSiswa::create(['siswa_id' => $siswaLain->id, 'nama_ayah' => 'Punya Orang Lain']);
 
@@ -188,7 +193,7 @@ class OrtuBkBridgeTest extends TestCase
     public function test_guru_bk_dapat_membuat_panggilan_ortu(): void
     {
         $guruBk = $this->guruBk();
-        $siswa = $this->orangTua()->siswa;
+        $siswa = $this->siswaOrangTua($this->orangTua());
 
         $this->sebagai($guruBk)->post(route('guru.bk.panggilan-ortu.store'), [
             'siswa_id' => $siswa->id,
@@ -211,7 +216,7 @@ class OrtuBkBridgeTest extends TestCase
             ->firstOrFail();
 
         $this->sebagai($guruMapel)->post(route('guru.bk.panggilan-ortu.store'), [
-            'siswa_id' => $this->orangTua()->siswa->id,
+            'siswa_id' => $this->siswaOrangTua($this->orangTua())->id,
             'tanggal' => now()->toDateString(),
             'waktu' => '09:00',
             'alasan' => 'X',
@@ -221,7 +226,7 @@ class OrtuBkBridgeTest extends TestCase
     public function test_guru_bk_dapat_mengubah_flag_tampilkan_ke_ortu_pada_gaya_belajar(): void
     {
         $guruBk = $this->guruBk();
-        $siswa = $this->orangTua()->siswa;
+        $siswa = $this->siswaOrangTua($this->orangTua());
 
         $gayaBelajar = GayaBelajar::create([
             'siswa_id' => $siswa->id,

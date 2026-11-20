@@ -28,11 +28,14 @@ class OrtuLengkapiProfilTest extends TestCase
             'password' => bcrypt('password'), 'status_aktif' => true,
         ]);
 
-        return OrangTua::create([
-            'siswa_id' => $siswa->id, 'nama' => 'Orang Tua/Wali Siswa Lengkapi Profil Uji',
+        $orangTua = OrangTua::create([
+            'nama' => 'Orang Tua/Wali Siswa Lengkapi Profil Uji',
             'username' => '998950ortu', 'password' => Hash::make('password'), 'is_active' => true,
             'harus_lengkapi_profil' => $harusLengkapiProfil,
         ]);
+        $orangTua->links()->create(['siswa_id' => $siswa->id, 'is_active' => true]);
+
+        return $orangTua;
     }
 
     public function test_modal_lengkapi_profil_tampil_untuk_akun_yang_dibuatkan_admin(): void

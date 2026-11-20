@@ -48,9 +48,9 @@ class OrtuDashboardStatusTest extends TestCase
     public function test_dashboard_displays_correct_status_and_detail_page_removes_blue_boxes(): void
     {
         $ta = TahunAjaran::where('is_active', true)->first();
-        $orangTua = OrangTua::with('siswa')->first();
+        $orangTua = OrangTua::with('siswas')->whereHas('siswas')->first();
 
-        $siswa = $orangTua->siswa;
+        $siswa = $orangTua->siswas->first();
         RaporFinal::updateOrCreate(
             ['siswa_id' => $siswa->id, 'tahun_ajaran_id' => $ta->id],
             ['status' => 'final', 'tanggal_final' => now()]
@@ -95,8 +95,8 @@ class OrtuDashboardStatusTest extends TestCase
     public function test_kehadiran_tampil_di_dashboard_ortu_tanpa_menunggu_rapor_dirilis(): void
     {
         $ta = TahunAjaran::where('is_active', true)->first();
-        $orangTua = OrangTua::with('siswa.kelas')->first();
-        $siswa = $orangTua->siswa;
+        $orangTua = OrangTua::with('siswas.kelas')->whereHas('siswas')->first();
+        $siswa = $orangTua->siswas->first();
         $mapel = MataPelajaran::first();
         $guru = Guru::create(['nama' => 'Guru Jadwal Kehadiran Uji', 'nip' => '9997241', 'password' => bcrypt('password'), 'is_active' => true]);
 
@@ -123,8 +123,8 @@ class OrtuDashboardStatusTest extends TestCase
     public function test_kehadiran_hari_campur_menampilkan_nama_mapel_yang_alpa(): void
     {
         $ta = TahunAjaran::where('is_active', true)->first();
-        $orangTua = OrangTua::with('siswa.kelas')->first();
-        $siswa = $orangTua->siswa;
+        $orangTua = OrangTua::with('siswas.kelas')->whereHas('siswas')->first();
+        $siswa = $orangTua->siswas->first();
         $mapelHadir = MataPelajaran::first();
         $mapelAlpa = MataPelajaran::skip(1)->first();
         $guru = Guru::create(['nama' => 'Guru Jadwal Kehadiran Campur Uji', 'nip' => '9997242', 'password' => bcrypt('password'), 'is_active' => true]);
@@ -154,8 +154,8 @@ class OrtuDashboardStatusTest extends TestCase
     public function test_rekap_kehadiran_dihitung_per_hari_bukan_per_mapel(): void
     {
         $ta = TahunAjaran::where('is_active', true)->first();
-        $orangTua = OrangTua::with('siswa.kelas')->first();
-        $siswa = $orangTua->siswa;
+        $orangTua = OrangTua::with('siswas.kelas')->whereHas('siswas')->first();
+        $siswa = $orangTua->siswas->first();
         $mapelSatu = MataPelajaran::first();
         $mapelDua = MataPelajaran::skip(1)->first();
         $guru = Guru::create(['nama' => 'Guru Jadwal Kehadiran Per Hari Uji', 'nip' => '9997243', 'password' => bcrypt('password'), 'is_active' => true]);
@@ -182,8 +182,8 @@ class OrtuDashboardStatusTest extends TestCase
     public function test_semester_aktif_tanpa_rapor_tetap_bisa_dipilih_dan_tidak_hilang_dari_dropdown(): void
     {
         $ganjil = TahunAjaran::where('is_active', true)->first();
-        $orangTua = OrangTua::with('siswa')->firstOrFail();
-        $siswa = $orangTua->siswa;
+        $orangTua = OrangTua::with('siswas')->whereHas('siswas')->firstOrFail();
+        $siswa = $orangTua->siswas->first();
 
         RaporFinal::updateOrCreate(
             ['siswa_id' => $siswa->id, 'tahun_ajaran_id' => $ganjil->id],
